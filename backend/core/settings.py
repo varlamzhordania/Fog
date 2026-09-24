@@ -33,19 +33,22 @@ LOCAL_APPS = [
 
 THIRD_PARTY_APPS = [
     # 'ckeditor',
-    # 'django_ckeditor_5',
+    'django_ckeditor_5',
     # 'mptt',
-    # 'nested_admin',
-    # 'rest_framework'
-    # 'corsheaders'
-    # 'drf_spectacular',
+    'nested_admin',
+    'rest_framework',
+    'corsheaders',
+    'drf_spectacular',
     # "phonenumber_field",
     # 'hijack',
     # 'hijack.contrib.admin',
+    'oauth2_provider',
+    'social_django',
+    'drf_social_oauth2',
 
     # 'rosetta', # translate panel
     # 'parler',  # translate models content
-    # 'import_export', # import and export via django panel
+    'import_export', # import and export via django panel
 ]
 
 INSTALLED_APPS = [
@@ -65,7 +68,7 @@ INSTALLED_APPS += THIRD_PARTY_APPS
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
-    # 'corsheaders.middleware.CorsMiddleware',
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
@@ -87,6 +90,8 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+                'social_django.context_processors.backends',
+                'social_django.context_processors.login_redirect',
             ],
         },
     },
@@ -187,8 +192,8 @@ STATICFILES_DIRS = [
 ]
 
 # Uncomment if using ckeditor
-# CKEDITOR_BASEPATH = "/static/ckeditor/ckeditor/"
-# CKEDITOR_UPLOAD_PATH = "uploads/"
+CKEDITOR_BASEPATH = "/static/ckeditor/ckeditor/"
+CKEDITOR_UPLOAD_PATH = "uploads/"
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
@@ -196,8 +201,11 @@ AUTH_USER_MODEL = "account.User"
 
 AUTHENTICATION_BACKENDS = [
     'account.backends.EmailBackend',
+    'drf_social_oauth2.backends.DjangoOAuth2',
     'django.contrib.auth.backends.ModelBackend',
 ]
+
+ACTIVATE_JWT = True
 
 # REST Framework Settings
 REST_FRAMEWORK = {
@@ -205,6 +213,8 @@ REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
         'rest_framework.authentication.SessionAuthentication',
         'rest_framework.authentication.TokenAuthentication',
+        'oauth2_provider.contrib.rest_framework.OAuth2Authentication',
+        'drf_social_oauth2.authentication.SocialAuthentication',
     ],
 
     'DEFAULT_PERMISSION_CLASSES': [
@@ -223,12 +233,12 @@ REST_FRAMEWORK = {
 
     'DEFAULT_PAGINATION_CLASS': 'core.pagination.CustomPageNumberPagination',
     'PAGE_SIZE': 25,
-    # 'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
+    'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
 }
 
 SPECTACULAR_SETTINGS = {
-    'TITLE': 'App Name',
-    'DESCRIPTION': '',
+    'TITLE': 'FOG E-commerce',
+    'DESCRIPTION': 'FOG E-commerce website API guide',
     'VERSION': '1.0.0',
     'SERVE_INCLUDE_SCHEMA': False,
     # OTHER SETTINGS
