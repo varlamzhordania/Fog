@@ -1,3 +1,4 @@
+import uuid
 import os
 from django.db import models
 from django.utils.deconstruct import deconstructible
@@ -154,3 +155,4 @@ class SeoModel(models.Model):
 
     class Meta:
         abstract = True
+

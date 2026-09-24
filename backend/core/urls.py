@@ -46,6 +46,7 @@ urlpatterns += [
     # re_path(r'^rosetta/', include('rosetta.urls')),
     # path('hijack/', include('hijack.urls')),
     path("ckeditor5/", include('django_ckeditor_5.urls')),
+    path("_nested_admin/", include("nested_admin.urls")),
 ]
 
 urlpatterns += static(

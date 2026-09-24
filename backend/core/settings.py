@@ -29,12 +29,14 @@ ALLOWED_HOSTS = env.list('DJANGO_ALLOWED_HOSTS', default=['*'])
 
 LOCAL_APPS = [
     'account.apps.AccountConfig',
+    'inventory.apps.InventoryConfig',
 ]
 
 THIRD_PARTY_APPS = [
     # 'ckeditor',
     'django_ckeditor_5',
     # 'mptt',
+    "treebeard",
     'nested_admin',
     'rest_framework',
     'corsheaders',
@@ -48,7 +50,7 @@ THIRD_PARTY_APPS = [
 
     # 'rosetta', # translate panel
     # 'parler',  # translate models content
-    'import_export', # import and export via django panel
+    'import_export',  # import and export via django panel
 ]
 
 INSTALLED_APPS = [
@@ -110,7 +112,8 @@ if DB_ENGINE == "postgresql":
             'USER': env('DB_USER', default='myuser'),
             'PASSWORD': env('DB_PASSWORD', default='mypassword'),
             'HOST': env('DB_HOST', default='localhost'),
-            'PORT': env('DB_PORT', default='5432'),  # Default port for PostgreSQL
+            'PORT': env('DB_PORT', default='5432'),
+            # Default port for PostgreSQL
         }
     }
 elif DB_ENGINE == "mysql":
@@ -121,7 +124,8 @@ elif DB_ENGINE == "mysql":
             'USER': env("DB_USER", default='myuser'),
             'PASSWORD': env("DB_PASSWORD", default='mypassword'),
             'HOST': env("DB_HOST", default='localhost'),
-            'PORT': env("DB_PORT", default='3306'),  # Default port for MySQL
+            'PORT': env("DB_PORT", default='3306'),
+            # Default port for MySQL
         }
     }
 else:
@@ -173,7 +177,8 @@ PARLER_LANGUAGES = {
     ),
     'default': {
         'fallback': 'en',  # defaults to PARLER_DEFAULT_LANGUAGE_CODE
-        'hide_untranslated': False,  # the default; let .active_translations() return fallbacks too.
+        'hide_untranslated': False,
+        # the default; let .active_translations() return fallbacks too.
     }
 }
 
@@ -223,12 +228,15 @@ REST_FRAMEWORK = {
     ],
 
     'DEFAULT_THROTTLE_CLASSES': [
-        'rest_framework.throttling.AnonRateThrottle',  # Rate limiting for anonymous users
-        'rest_framework.throttling.UserRateThrottle',  # Rate limiting for authenticated users
+        'rest_framework.throttling.AnonRateThrottle',
+        # Rate limiting for anonymous users
+        'rest_framework.throttling.UserRateThrottle',
+        # Rate limiting for authenticated users
     ],
     'DEFAULT_THROTTLE_RATES': {
         'anon': '100/day',  # Limit anonymous users to 100 requests per day
-        'user': '1000/day',  # Limit authenticated users to 1000 requests per day
+        'user': '1000/day',
+        # Limit authenticated users to 1000 requests per day
     },
 
     'DEFAULT_PAGINATION_CLASS': 'core.pagination.CustomPageNumberPagination',
@@ -243,8 +251,6 @@ SPECTACULAR_SETTINGS = {
     'SERVE_INCLUDE_SCHEMA': False,
     # OTHER SETTINGS
 }
-
-
 
 # Channels Settings
 CHANNEL_LAYERS = {
@@ -306,7 +312,8 @@ if not DEBUG:
             # 'BACKEND': 'django.core.cache.backends.memcached.PyMemcacheCache',
             "BACKEND": "django.core.cache.backends.redis.RedisCache",
             # 'LOCATION': env('MEMCACHE_HOST', default='127.0.0.1:11211'),
-            'LOCATION': env("REDIS_HOST"),  # Use the REDIS_HOST environment variable
+            'LOCATION': env("REDIS_HOST"),
+            # Use the REDIS_HOST environment variable
         }
 
     }
@@ -350,51 +357,102 @@ CELERY_BEAT_SCHEDULE = {
 CKEDITOR_5_CONFIGS = BASE_CKEDITOR_5_CONFIGS
 PHONENUMBER_DEFAULT_FORMAT = "INTERNATIONAL"
 
+# Base log configuration
+LOG_LEVEL = env("LOG_LEVEL", default="INFO").upper()
+LOGS_DIR = BASE_DIR / "logs"
+LOGS_DIR.mkdir(exist_ok=True)
+
 LOGGING = {
-    'version': 1,
-    'disable_existing_loggers': False,
-    'formatters': {
-        'verbose': {
-            'format': '{levelname} {asctime} {module} {message}',
-            'style': '{',
+    "version": 1,
+    "disable_existing_loggers": False,
+    "filters": {
+        "require_debug_false": {
+            "()": "django.utils.log.RequireDebugFalse",
         },
-        'simple': {
-            'format': '{levelname} {message}',
-            'style': '{',
+        "require_debug_true": {
+            "()": "django.utils.log.RequireDebugTrue",
         },
-    },
-    'handlers': {
-        'file': {
-            'level': 'DEBUG',
-            'class': 'logging.FileHandler',
-            'filename': 'debug.log',
-            'formatter': 'verbose',
-        },
-        'console': {
-            'level': 'DEBUG',
-            'class': 'logging.StreamHandler',
-            'formatter': 'simple',
+        "sensitive_data_filter": {
+            "()": "core.logging.SensitiveDataFilter",
         },
     },
-    'root': {
-        'handlers': ['file', 'console'],
-        'level': 'DEBUG',
+    "formatters": {
+        "verbose": {
+            "format": "[{asctime}] {levelname} [{name}:{lineno}] {message}",
+            "style": "{",
+            "datefmt": "%Y-%m-%d %H:%M:%S",
+        },
+        "json": {
+            "()": "pythonjsonlogger.jsonlogger.JsonFormatter",
+            "format": "%(asctime)s %(levelname)s %(name)s %(module)s %(lineno)d %(process)d %(thread)d %(message)s",
+            "datefmt": "%Y-%m-%dT%H:%M:%SZ",
+        },
+    },
+    "handlers": {
+        "console_dev": {
+            "level": "DEBUG",
+            "filters": ["require_debug_true", "sensitive_data_filter"],
+            "class": "logging.StreamHandler",
+            "formatter": "verbose",
+        },
+        "console_prod": {
+            "level": LOG_LEVEL,
+            "filters": ["require_debug_false", "sensitive_data_filter"],
+            "class": "logging.StreamHandler",
+            "formatter": "json",
+        },
+        "file_app": {
+            "level": LOG_LEVEL,
+            "filters": ["sensitive_data_filter"],
+            "class": "logging.handlers.RotatingFileHandler",
+            "filename": LOGS_DIR / "fog.log",
+            "maxBytes": 1024 * 1024 * 15,  # 15 MB
+            "backupCount": 10,
+            "formatter": "json" if not DEBUG else "verbose",
+            "encoding": "utf-8",
+        },
+        "file_errors": {
+            "level": "ERROR",
+            "filters": ["sensitive_data_filter"],
+            "class": "logging.handlers.RotatingFileHandler",
+            "filename": LOGS_DIR / "errors.log",
+            "maxBytes": 1024 * 1024 * 15,  # 15 MB
+            "backupCount": 10,
+            "formatter": "json" if not DEBUG else "verbose",
+            "encoding": "utf-8",
+        },
+    },
+    "loggers": {
+        # Root logger
+        "": {
+            "handlers": ["console_dev", "console_prod", "file_app"],
+            "level": LOG_LEVEL,
+        },
+        # Primary application logger (Use in views, services, tasks)
+        "fog": {
+            "handlers": ["console_dev", "console_prod", "file_app",
+                         "file_errors"],
+            "level": LOG_LEVEL,
+            "propagate": False,
+        },
+        # Django HTTP & Core
+        "django": {
+            "handlers": ["console_dev", "console_prod", "file_app"],
+            "level": "INFO",
+            "propagate": False,
+        },
+        "django.request": {
+            "handlers": ["console_dev", "console_prod", "file_errors"],
+            "level": "WARNING",
+            "propagate": False,
+        },
+        # Celery logger
+        "celery": {
+            "handlers": ["console_dev", "console_prod", "file_app"],
+            "level": LOG_LEVEL,
+            "propagate": False,
+        },
     },
 }
-
-if not DEBUG:
-    LOGGING['handlers'] = {
-        'file': {
-            'level': 'ERROR',
-            'class': 'logging.FileHandler',
-            'filename': 'error.log',
-            'formatter': 'verbose',
-        },
-        'console': {
-            'level': 'ERROR',
-            'class': 'logging.StreamHandler',
-            'formatter': 'simple',
-        },
-    }
 
 STATIC_VERSION = "1"
