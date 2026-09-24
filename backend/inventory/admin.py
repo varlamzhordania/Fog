@@ -28,12 +28,13 @@ class ProductMediaInline(nested_admin.NestedTabularInline):
 
 class ProductStockInline(nested_admin.NestedStackedInline):
     model = ProductStock
-    extra = 0
+    extra = 1
     can_delete = False
-    fields = [
-        ("quantity", "reserved_quantity"),
-        ("low_stock_threshold", "is_available"),
-    ]
+    fields = ["quantity",
+              "reserved_quantity",
+              "low_stock_threshold",
+              "is_available",
+              ]
 
 
 class StockReservationInline(nested_admin.NestedTabularInline):
@@ -116,6 +117,7 @@ class ProductAdmin(ImportExportMixin, nested_admin.NestedModelAdmin):
             },
         ),
     ]
+    readonly_fields = ["id", "slug", "created_at", "updated_at"]
 
     @admin.display(description=_("Inventory on Hand (Avail / Res)"))
     def stock_status(self, obj):

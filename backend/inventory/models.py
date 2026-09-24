@@ -16,7 +16,6 @@ from core.models import BaseModel, UploadPath, FileSizeValidator
 
 User = get_user_model()
 
-
 class Media(BaseModel):
     class TypeChoices(models.TextChoices):
         IMAGE = "IMAGE", _("Image")
@@ -117,15 +116,40 @@ class Category(MP_Node, BaseModel):
         ancestors.append(self.name)
         return " > ".join(ancestors)
 
+class Tag(BaseModel):
+    name = models.CharField(
+        max_length=64,
+        unique=True,
+        verbose_name=_("Tag Name"),
+    )
+    slug = AutoSlugField(
+        populate_from="name",
+        max_length=80,
+        unique=True,
+        blank=True,
+        allow_unicode=True,
+        editable=False,
+        always_update=False,
+        verbose_name=_("Slug"),
+    )
+
+    class Meta:
+        verbose_name = _("Tag")
+        verbose_name_plural = _("Tags")
+        ordering = ["name"]
+        indexes = [
+            models.Index(fields=["slug"]),
+            models.Index(fields=["is_active"]),
+        ]
+
+    def __str__(self):
+        return self.name
 
 class Product(BaseModel):
     class ProductType(models.TextChoices):
-        SPORE_SYRINGE = "spore_syringe", _("Spore Syringe (10ml)")
-        SPORE_PRINT = "spore_print", _("Spore Print")
-        LIQUID_CULTURE = "liquid_culture", _("Liquid Culture (Isolated)")
-        AGAR_CULTURE = "agar_culture", _("Agar Plate / Slant")
-        SUBSTRATE = "substrate", _("Sterilized Grain / Substrate")
-        EQUIPMENT = "equipment", _("Lab & Cultivation Equipment")
+        PHYSICAL = "physical", _("Physical Goods")
+        DIGITAL = "digital", _("Digital Service / Key")
+        DOWNLOADABLE = "downloadable", _("Downloadable File / Guide")
         OTHER = "other", _("Other")
 
     category = models.ForeignKey(
@@ -135,6 +159,12 @@ class Product(BaseModel):
         blank=True,
         related_name="products",
         verbose_name=_("Category"),
+    )
+    tags = models.ManyToManyField(
+        Tag,
+        blank=True,
+        related_name="products",
+        verbose_name=_("Tags"),
     )
     name = models.CharField(max_length=255, verbose_name=_("Product Name"))
     slug = AutoSlugField(
@@ -155,7 +185,7 @@ class Product(BaseModel):
     product_type = models.CharField(
         max_length=30,
         choices=ProductType.choices,
-        default=ProductType.SPORE_SYRINGE,
+        default=ProductType.PHYSICAL,
         verbose_name=_("Product Type"),
     )
     short_description = models.CharField(
@@ -333,7 +363,7 @@ class StockReservation(BaseModel):
         editable=False,
     )
     order = models.ForeignKey(
-        "inventory.Order",
+        "checkout.Order",
         on_delete=models.CASCADE,
         related_name="stock_reservations",
         verbose_name=_("Order"),

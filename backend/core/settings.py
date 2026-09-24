@@ -30,6 +30,7 @@ ALLOWED_HOSTS = env.list('DJANGO_ALLOWED_HOSTS', default=['*'])
 LOCAL_APPS = [
     'account.apps.AccountConfig',
     'inventory.apps.InventoryConfig',
+    'checkout.apps.CheckoutConfig',
 ]
 
 THIRD_PARTY_APPS = [

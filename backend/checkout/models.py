@@ -6,7 +6,6 @@ from django.contrib.auth import get_user_model
 from django.core.validators import MinValueValidator
 
 from core.models import BaseModel
-from inventory.models import Product
 
 User = get_user_model()
 
@@ -94,7 +93,7 @@ class OrderItem(BaseModel):
         verbose_name=_("Order"),
     )
     product = models.ForeignKey(
-        Product,
+        "inventory.Product",
         on_delete=models.PROTECT,
         related_name="order_items",
         verbose_name=_("Product"),
