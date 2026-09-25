@@ -1,117 +1,140 @@
-import nested_admin
 from django.contrib import admin
-from django.utils.html import format_html
-from django.utils.translation import gettext_lazy as _
-from import_export.admin import ImportExportMixin
+from import_export.admin import ExportMixin
+from nested_admin import (
+    NestedModelAdmin,
+    NestedTabularInline,
+    NestedStackedInline,
+)
 
 from .models import (
+    PaymentMethod,
+    ShoppingCart,
+    ShoppingCartItem,
+    OrderPayment,
     Order,
     OrderItem,
-    Shipment,
+    OrderShipment,
 )
-from .resource import OrderResource
+from .resources import (
+    ShoppingCartResource,
+    ShoppingCartItemResource,
+    PaymentResource,
+    OrderResource,
+    OrderItemResource,
+    OrderShipmentResource,
+    PaymentMethodResource,
+)
 
-from inventory.admin import StockReservationInline
+
+class ShoppingCartItemInline(NestedTabularInline):
+    model = ShoppingCartItem
+    extra = 0
+    fields = ('product', 'quantity')
 
 
-class OrderItemInline(nested_admin.NestedTabularInline):
+@admin.register(PaymentMethod)
+class PaymentMethodAdmin(ExportMixin):
+    resource_class = PaymentMethodResource
+    list_display = (
+        'name', 'code', 'min_amount',
+        'is_active', 'created_at', 'updated_at')
+    search_fields = ('name',)
+    ordering = ('name',)
+
+
+@admin.register(ShoppingCart)
+class ShoppingCartAdmin(ExportMixin, NestedModelAdmin):
+    resource_class = ShoppingCartResource
+    list_display = ('user', 'created_at', 'updated_at')
+    search_fields = ('user__email',)
+    ordering = ('-created_at',)
+    inlines = (ShoppingCartItemInline,)
+
+
+@admin.register(ShoppingCartItem)
+class ShoppingCartItemAdmin(ExportMixin):
+    resource_class = ShoppingCartItemResource
+    list_display = (
+        'cart', 'product', 'quantity',
+        'created_at',
+        'updated_at')
+    search_fields = ('product__name',)
+    ordering = ('-created_at',)
+
+
+@admin.register(OrderPayment)
+class PaymentAdmin(ExportMixin):
+    resource_class = PaymentResource
+    list_display = (
+        'order', 'amount', 'status', 'method', 'paid_at',
+        'created_at')
+    search_fields = ('order__id', 'transaction_id', 'method')
+    list_filter = ('status', 'method', 'currency')
+    ordering = ('-created_at',)
+
+
+class OrderPaymentInline(NestedStackedInline):
+    model = OrderPayment
+    extra = 0
+    fields = (
+        "order",
+        "amount",
+        "status",
+        "method",
+        "transaction_id",
+        "paid_at",
+        "created_at",
+        "updated_at"
+    )
+    readonly_fields = (
+        'amount', 'transaction_id', 'paid_at', 'created_at',
+        'updated_at')
+
+
+class OrderItemInline(NestedStackedInline):
     model = OrderItem
     extra = 0
-    fields = ["product", "quantity", "unit_price", "total_price"]
-    readonly_fields = ["product", "quantity", "unit_price", "total_price"]
-    can_delete = False
+    fields = (
+        'product', 'quantity', 'unit_price',
+        'total_price')
+    readonly_fields = ('total_price',)
 
 
-class ShipmentInline(nested_admin.NestedStackedInline):
-    model = Shipment
+class OrderShipmentInline(NestedStackedInline):
+    model = OrderShipment
     extra = 0
-    fields = [
-        ("carrier", "tracking_number"),
-        ("status", "dispatched_at", "delivered_at"),
-    ]
-
+    fields = (
+        'tracking_number', 'carrier', 'status', 'shipped_at',
+        'delivered_at')
 
 
 @admin.register(Order)
-class OrderAdmin(ImportExportMixin, nested_admin.NestedModelAdmin):
-    resource_classes = [OrderResource]
-    inlines = [OrderItemInline, ShipmentInline, StockReservationInline]
-
-    list_display = [
-        "id_short",
-        "status_badge",
-        "total_amount",
-        "customer_info",
-        "created_at",
-    ]
-    list_filter = ["status", "created_at"]
-    search_fields = ["id", "order_token", "user__email"]
-    readonly_fields = [
-        "id",
-        "order_token",
-        "created_at",
-        "updated_at",
-    ]
-    ordering = ["-created_at"]
-
-    fieldsets = [
-        (
-            _("Order Identification"),
-            {
-                "fields": (
-                    "id", "order_token", "user", "status", "total_amount")
-            },
-        ),
-        (
-            _("Encrypted Shipping Information (PGP)"),
-            {
-                "fields": ("encrypted_shipping_address", "customer_notes"),
-                "classes": ["collapse"],
-            },
-        ),
-        (
-            _("System Timestamps"),
-            {
-                "fields": ("created_at", "updated_at"),
-            },
-        ),
-    ]
-
-    @admin.display(description=_("Order ID"))
-    def id_short(self, obj):
-        return str(obj.id)[:8]
-
-    @admin.display(description=_("Customer"))
-    def customer_info(self, obj):
-        if obj.user:
-            return obj.user.email
-        return format_html(
-            '<span style="color: gray; font-style: italic;">Anonymous Guest</span>'
-        )
-
-    @admin.display(description=_("Status"))
-    def status_badge(self, obj):
-        colors = {
-            Order.StatusChoices.PENDING_PAYMENT: "orange",
-            Order.StatusChoices.PAYMENT_DETECTED: "blue",
-            Order.StatusChoices.PAID: "green",
-            Order.StatusChoices.PROCESSING: "teal",
-            Order.StatusChoices.SHIPPED: "purple",
-            Order.StatusChoices.DELIVERED: "darkgreen",
-            Order.StatusChoices.EXPIRED: "gray",
-            Order.StatusChoices.CANCELLED: "red",
-        }
-        color = colors.get(obj.status, "black")
-        return format_html(
-            '<span style="color: {}; font-weight: bold;">{}</span>',
-            color,
-            obj.get_status_display(),
-        )
+class OrderAdmin(ExportMixin, NestedModelAdmin):
+    resource_class = OrderResource
+    list_display = (
+        'id', 'user', 'status', 'total_price', 'is_active',
+        'created_at',
+        'updated_at')
+    list_filter = ('status', 'is_active', 'created_at')
+    search_fields = ('user__email', 'notes')
+    inlines = [OrderPaymentInline, OrderShipmentInline, OrderItemInline]
 
 
-@admin.register(Shipment)
-class ShipmentAdmin(admin.ModelAdmin):
-    list_display = ["order", "carrier", "tracking_number", "status",
-                    "dispatched_at"]
-    list_filter = ["status", "carrier"]
-    search_fields = ["tracking_number", "order__id"]
+@admin.register(OrderItem)
+class OrderItemAdmin(ExportMixin):
+    resource_class = OrderItemResource
+    list_display = (
+        'order', 'product', 'quantity',
+        'unit_price', 'total_price')
+    list_filter = ('order__status',)
+    search_fields = ('product__name', 'order__user__email')
+
+
+@admin.register(OrderShipment)
+class OrderShipmentAdmin(ExportMixin):
+    resource_class = OrderShipmentResource
+    list_display = (
+        'order', 'tracking_number', 'carrier', 'status', 'shipped_at',
+        'delivered_at')
+    list_filter = ('status', 'carrier')
+    search_fields = ('tracking_number', 'order__user__email')

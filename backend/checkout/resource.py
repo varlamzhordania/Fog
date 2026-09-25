@@ -1,22 +1,45 @@
-from import_export import fields, resources
+from import_export import resources
+from .models import (
+    PaymentMethod,
+    ShoppingCart,
+    ShoppingCartItem,
+    OrderPayment,
+    Order,
+    OrderItem,
+    OrderShipment,
+)
 
-from .models import Order
+
+class PaymentMethodResource(resources.ModelResource):
+    class Meta:
+        model = PaymentMethod
+
+
+class ShoppingCartResource(resources.ModelResource):
+    class Meta:
+        model = ShoppingCart
+
+
+class ShoppingCartItemResource(resources.ModelResource):
+    class Meta:
+        model = ShoppingCartItem
+
+
+class PaymentResource(resources.ModelResource):
+    class Meta:
+        model = OrderPayment
+
 
 class OrderResource(resources.ModelResource):
-    user_email = fields.Field(column_name="customer_email")
-
     class Meta:
         model = Order
-        import_id_fields = ["id"]
-        fields = [
-            "id",
-            "order_token",
-            "user_email",
-            "total_amount",
-            "status",
-            "created_at",
-        ]
-        export_order = fields
 
-    def dehydrate_user_email(self, order):
-        return order.user.email if order.user else "Anonymous"
+
+class OrderItemResource(resources.ModelResource):
+    class Meta:
+        model = OrderItem
+
+
+class OrderShipmentResource(resources.ModelResource):
+    class Meta:
+        model = OrderShipment

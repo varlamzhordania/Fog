@@ -1,181 +1,376 @@
-import uuid
 from decimal import Decimal
+
+from django.core.validators import MinValueValidator
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 from django.contrib.auth import get_user_model
-from django.core.validators import MinValueValidator
+from django.utils import timezone
 
-from core.models import BaseModel
+from core.models import BaseModel, UploadPath
 
 User = get_user_model()
 
-class Order(BaseModel):
-    class StatusChoices(models.TextChoices):
-        PENDING_PAYMENT = "pending_payment", _("Pending Crypto Payment")
-        PAYMENT_DETECTED = "payment_detected", _(
-            "Payment Detected (Awaiting Confirmations)"
-        )
-        PAID = "paid", _("Payment Confirmed")
-        PROCESSING = "processing", _("Processing / Packing")
-        SHIPPED = "shipped", _("Shipped")
-        DELIVERED = "delivered", _("Delivered")
-        EXPIRED = "expired", _("Expired (Window Elapsed)")
-        CANCELLED = "cancelled", _("Cancelled")
 
-    id = models.UUIDField(
-        primary_key=True,
-        default=uuid.uuid4,
-        editable=False,
-    )
-    order_token = models.UUIDField(
-        default=uuid.uuid4,
+class PaymentMethod(BaseModel):
+    name = models.CharField(
+        max_length=100,
         unique=True,
-        editable=False,
-        db_index=True,
+        verbose_name=_("Name"),
         help_text=_(
-            "Secret token allowing anonymous buyers to poll status without logging in."
-        ),
+            "Name of the payment method, e.g., Stripe, PayPal, crypto"
+        )
     )
-    user = models.ForeignKey(
-        User,
-        on_delete=models.SET_NULL,
-        null=True,
+    code = models.CharField(
+        max_length=50,
+        unique=True,
+        verbose_name=_("Code"),
+        help_text=_("Short code identifier, e.g., stripe, paypal, crypto")
+    )
+    description = models.TextField(
         blank=True,
-        related_name="orders",
-        verbose_name=_("Customer (Optional)"),
+        null=True,
+        verbose_name=_("Description"),
+        help_text=_("Optional description for the payment method")
     )
-    total_amount = models.DecimalField(
+    icon = models.ImageField(
+        upload_to=UploadPath(folder="public", sub_path="images"),
+        blank=True,
+        null=True,
+        verbose_name=_("Icon"),
+        help_text=_("Optional for payment method icon/logo")
+    )
+    min_amount = models.DecimalField(
         max_digits=12,
         decimal_places=2,
-        validators=[MinValueValidator(Decimal("0.00"))],
-        verbose_name=_("Total Amount (USD)"),
-    )
-    status = models.CharField(
-        max_length=32,
-        choices=StatusChoices.choices,
-        default=StatusChoices.PENDING_PAYMENT,
-        db_index=True,
-        verbose_name=_("Order Status"),
-    )
-    encrypted_shipping_address = models.TextField(
-        blank=True,
-        null=True,
-        verbose_name=_("Encrypted Shipping Address / PGP"),
+        default=Decimal("0.00"),
+        verbose_name=_("Minimum amount"),
         help_text=_(
-            "Client-side PGP encrypted delivery address or server encrypted payload."
-        ),
-    )
-    customer_notes = models.TextField(
-        blank=True,
-        null=True,
-        verbose_name=_("Customer Notes"),
+            "Minimum order total required to use this payment method"
+        )
     )
 
     class Meta:
-        verbose_name = _("Order")
-        verbose_name_plural = _("Orders")
-        ordering = ["-created_at"]
+        verbose_name = _("Payment Method")
+        verbose_name_plural = _("Payment Methods")
+        ordering = ['name']
+
+    def __str__(self):
+        return self.name
+
+
+class ShoppingCart(BaseModel):
+    user = models.OneToOneField(
+        User,
+        on_delete=models.CASCADE,
+        related_name='shopping_carts',
+        verbose_name=_('User'),
+    )
+
+    class Meta:
+        verbose_name = _('Shopping Cart')
+        verbose_name_plural = _('Shopping Carts')
+        ordering = ['-created_at']
         indexes = [
-            models.Index(fields=["order_token"]),
-            models.Index(fields=["status"]),
-            models.Index(fields=["created_at"]),
+            models.Index(fields=['created_at']),
         ]
 
     def __str__(self):
-        return f"Order #{self.id} [{self.get_status_display()}]"
+        return f"Cart for {self.user.get_full_name()}"
+
+
+class ShoppingCartItem(BaseModel):
+    cart = models.ForeignKey(
+        ShoppingCart,
+        on_delete=models.CASCADE,
+        related_name='items',
+        verbose_name=_('Shopping Cart'),
+    )
+    product = models.ForeignKey(
+        'inventory.Product',
+        on_delete=models.PROTECT,
+        related_name='cart_items',
+        verbose_name=_('Inventory Item'),
+    )
+    quantity = models.PositiveSmallIntegerField(
+        verbose_name=_('Quantity'),
+        help_text=_('The quantity of the item.'),
+        validators=[MinValueValidator(1)],
+        default=1,
+    )
+
+    class Meta:
+        verbose_name = _('Shopping Cart Item')
+        verbose_name_plural = _('Shopping Cart Items')
+        unique_together = ('cart', 'product')
+        ordering = ['cart', 'created_at']
+        indexes = [
+            models.Index(fields=['cart']),
+            models.Index(fields=['product']),
+            models.Index(
+                fields=['cart', 'product',]
+            ),
+            models.Index(fields=['created_at']),
+        ]
+
+    def __str__(self):
+        return f"{self.product} x {self.quantity}"
+
+
+class Order(BaseModel):
+    class StatusChoices(models.TextChoices):
+        PAYMENT = 'payment', _('Payment')
+        PENDING = 'pending', _('Pending')
+        PROCESSING = 'processing', _('Processing')
+        SHIPPED = 'shipped', _('Shipped')
+        DELIVERED = 'delivered', _('Delivered')
+        CANCELLED = 'cancelled', _('Cancelled')
+
+    user = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name='orders',
+        verbose_name=_('Customer'),
+    )
+    delivery_address = models.ForeignKey(
+        "account.Address",
+        on_delete=models.PROTECT,
+        related_name='orders',
+        verbose_name=_('Delivery Address'),
+    )
+    status = models.CharField(
+        max_length=20,
+        choices=StatusChoices.choices,
+        default=StatusChoices.PAYMENT,
+        verbose_name=_('Status'),
+    )
+    total_price = models.DecimalField(
+        max_digits=12,
+        decimal_places=4,
+        verbose_name=_('Total Price'),
+    )
+    notes = models.TextField(
+        blank=True,
+        null=True,
+        verbose_name=_('Notes'),
+    )
+
+    class Meta:
+        verbose_name = _('Order')
+        verbose_name_plural = _('Orders')
+        ordering = ['-created_at']
+        indexes = [
+            models.Index(fields=['user']),
+            models.Index(fields=['status']),
+            models.Index(fields=['created_at']),
+        ]
+
+    def __str__(self):
+        return f"Order #{self.id} - {self.user.get_full_name()}"
 
 
 class OrderItem(BaseModel):
     order = models.ForeignKey(
         Order,
         on_delete=models.CASCADE,
-        related_name="items",
-        verbose_name=_("Order"),
+        related_name='items',
+        verbose_name=_('Order'),
     )
     product = models.ForeignKey(
-        "inventory.Product",
+        'inventory.Product',
         on_delete=models.PROTECT,
-        related_name="order_items",
-        verbose_name=_("Product"),
+        null=True,
+        related_name='order_items',
+        verbose_name=_('Product'),
     )
-    quantity = models.PositiveIntegerField(
-        default=1,
+    quantity = models.PositiveSmallIntegerField(
+        verbose_name=_('Quantity'),
         validators=[MinValueValidator(1)],
-        verbose_name=_("Quantity"),
+        default=1,
     )
     unit_price = models.DecimalField(
         max_digits=12,
-        decimal_places=2,
-        verbose_name=_("Unit Price (USD)"),
+        decimal_places=4,
+        verbose_name=_('Unit Price'),
     )
     total_price = models.DecimalField(
         max_digits=12,
-        decimal_places=2,
-        verbose_name=_("Total Price (USD)"),
+        decimal_places=4,
+        verbose_name=_('Total Price'),
     )
 
     class Meta:
-        verbose_name = _("Order Item")
-        verbose_name_plural = _("Order Items")
-        ordering = ["order", "created_at"]
+        verbose_name = _('Order Item')
+        verbose_name_plural = _('Order Items')
+        ordering = ['order']
         indexes = [
-            models.Index(fields=["order"]),
-            models.Index(fields=["product"]),
+            models.Index(fields=['order']),
+            models.Index(fields=['product']),
         ]
 
     def __str__(self):
-        return f"{self.quantity}x {self.product.name}"
+        return f"{self.product} x {self.quantity}"
 
 
-class Shipment(BaseModel):
+class OrderShipment(BaseModel):
     class StatusChoices(models.TextChoices):
-        PREPARING = "preparing", _("Preparing Stealth Packaging")
-        DISPATCHED = "dispatched", _("Dispatched / In Transit")
-        DELIVERED = "delivered", _("Delivered")
-        FAILED = "failed", _("Delivery Failed / Returned")
+        PENDING = 'pending', _('Pending')
+        IN_TRANSIT = 'in_transit', _('In Transit')
+        DELIVERED = 'delivered', _('Delivered')
 
     order = models.OneToOneField(
         Order,
         on_delete=models.CASCADE,
-        related_name="shipment",
-        verbose_name=_("Order"),
+        related_name='shipment',
+        verbose_name=_('Order'),
     )
-    carrier = models.CharField(
+    tracking_number = models.CharField(
+        verbose_name=_("Tracking Number"),
         max_length=100,
         blank=True,
         null=True,
-        verbose_name=_("Carrier"),
+        help_text=_("Tracking number provided by the carrier."),
     )
-    tracking_number = models.CharField(
-        max_length=255,
+    carrier = models.CharField(
+        verbose_name=_("Carrier"),
+        max_length=100,
         blank=True,
         null=True,
-        verbose_name=_("Tracking Identifier"),
+        help_text=_("Shipping carrier or provider name."),
     )
     status = models.CharField(
-        max_length=30,
+        verbose_name=_("Status"),
+        max_length=50,
         choices=StatusChoices.choices,
-        default=StatusChoices.PREPARING,
-        verbose_name=_("Shipment Status"),
+        default=StatusChoices.PENDING,
+        db_index=True,
     )
-    dispatched_at = models.DateTimeField(
+    shipped_at = models.DateTimeField(
+        verbose_name=_("Shipped At"),
         blank=True,
         null=True,
-        verbose_name=_("Dispatched At"),
+        db_index=True,
     )
     delivered_at = models.DateTimeField(
+        verbose_name=_("Delivered At"),
         blank=True,
         null=True,
-        verbose_name=_("Delivered At"),
+        db_index=True,
+    )
+    notes = models.TextField(
+        verbose_name=_("Notes"),
+        blank=True,
+        null=True,
+        help_text=_("Optional notes or instructions for the shipment."),
     )
 
     class Meta:
-        verbose_name = _("Shipment")
-        verbose_name_plural = _("Shipments")
+        verbose_name = _('Order Shipment')
+        verbose_name_plural = _('Order Shipments')
         indexes = [
-            models.Index(fields=["order"]),
-            models.Index(fields=["status"]),
+            models.Index(fields=['order']),
+            models.Index(fields=['status']),
+            models.Index(fields=['carrier']),
+            models.Index(fields=['shipped_at']),
+            models.Index(fields=['delivered_at']),
         ]
+        ordering = ['-shipped_at', '-delivered_at']
 
     def __str__(self):
         return f"Shipment for Order #{self.order.id} ({self.get_status_display()})"
+
+    @property
+    def is_shipped(self) -> bool:
+        return self.status in [self.StatusChoices.IN_TRANSIT, self.StatusChoices.DELIVERED]
+
+    @property
+    def is_delivered(self) -> bool:
+        return self.status == self.StatusChoices.DELIVERED
+
+    def mark_shipped(self, tracking_number: str = None, carrier: str = None, notes: str = None):
+        self.status = self.StatusChoices.IN_TRANSIT
+        self.shipped_at = timezone.now()
+        if tracking_number:
+            self.tracking_number = tracking_number
+        if carrier:
+            self.carrier = carrier
+        if notes:
+            self.notes = notes
+        self.save(update_fields=['status', 'shipped_at', 'tracking_number', 'carrier', 'notes'])
+
+    def mark_delivered(self, notes: str = None):
+        self.status = self.StatusChoices.DELIVERED
+        self.delivered_at = timezone.now()
+        if notes:
+            self.notes = notes
+        self.save(update_fields=['status', 'delivered_at', 'notes'])
+
+
+
+class OrderPayment(BaseModel):
+    class StatusChoices(models.TextChoices):
+        PENDING = 'PENDING', _('Pending')
+        COMPLETED = 'COMPLETED', _('Completed')
+        FAILED = 'FAILED', _('Failed')
+        REFUNDED = 'REFUNDED', _('Refunded')
+
+    order = models.OneToOneField(
+        Order,
+        on_delete=models.CASCADE,
+        related_name='payment',
+        verbose_name=_('Order'),
+    )
+    amount = models.DecimalField(
+        max_digits=12,
+        decimal_places=2,
+        verbose_name=_('Amount'),
+    )
+    status = models.CharField(
+        max_length=20,
+        choices=StatusChoices.choices,
+        default=StatusChoices.PENDING,
+        verbose_name=_('Status'),
+    )
+    method = models.CharField(
+        max_length=50,
+        verbose_name=_('Payment Method'),
+        help_text=_('e.g. Stripe, Crypto, PayPal'),
+    )
+    transaction_id = models.CharField(
+        max_length=100,
+        blank=True,
+        null=True,
+        verbose_name=_('Transaction ID'),
+        help_text=_('Unique ID returned by payment gateway'),
+        db_index=True,
+        unique=True,
+    )
+    paid_at = models.DateTimeField(
+        blank=True,
+        null=True,
+        verbose_name=_('Paid At'),
+        help_text=_('Timestamp when payment was confirmed'),
+    )
+
+    class Meta:
+        verbose_name = _('Order Payment')
+        verbose_name_plural = _('Orders Payments')
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"Payment for Order #{self.order.id} - {self.get_status_display()}"
+
+    def mark_completed(self, transaction_id=None):
+        self.status = self.StatusChoices.COMPLETED
+        if transaction_id:
+            self.transaction_id = transaction_id
+        self.paid_at = timezone.now()
+        self.save(update_fields=['status', 'transaction_id', 'paid_at'])
+
+    def mark_failed(self, transaction_id=None):
+        self.status = self.StatusChoices.FAILED
+        if transaction_id:
+            self.transaction_id = transaction_id
+        self.save(update_fields=['status', 'transaction_id'])
+
+    def is_paid(self):
+        return self.status == self.StatusChoices.COMPLETED and self.paid_at is not None
