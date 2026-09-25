@@ -16,7 +16,7 @@ from .models import (
     StockReservation,
     StockTransactionLog,
 )
-from .resource import ProductResource
+from .resources import ProductResource
 
 
 class ProductMediaInline(nested_admin.NestedTabularInline):

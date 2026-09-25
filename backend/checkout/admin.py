@@ -33,7 +33,7 @@ class ShoppingCartItemInline(NestedTabularInline):
 
 
 @admin.register(PaymentMethod)
-class PaymentMethodAdmin(ExportMixin):
+class PaymentMethodAdmin(ExportMixin, admin.ModelAdmin):
     resource_class = PaymentMethodResource
     list_display = (
         'name', 'code', 'min_amount',
@@ -52,7 +52,7 @@ class ShoppingCartAdmin(ExportMixin, NestedModelAdmin):
 
 
 @admin.register(ShoppingCartItem)
-class ShoppingCartItemAdmin(ExportMixin):
+class ShoppingCartItemAdmin(ExportMixin, admin.ModelAdmin):
     resource_class = ShoppingCartItemResource
     list_display = (
         'cart', 'product', 'quantity',
@@ -63,13 +63,13 @@ class ShoppingCartItemAdmin(ExportMixin):
 
 
 @admin.register(OrderPayment)
-class PaymentAdmin(ExportMixin):
+class PaymentAdmin(ExportMixin, admin.ModelAdmin):
     resource_class = PaymentResource
     list_display = (
         'order', 'amount', 'status', 'method', 'paid_at',
         'created_at')
     search_fields = ('order__id', 'transaction_id', 'method')
-    list_filter = ('status', 'method', 'currency')
+    list_filter = ('status', 'method')
     ordering = ('-created_at',)
 
 
@@ -121,7 +121,7 @@ class OrderAdmin(ExportMixin, NestedModelAdmin):
 
 
 @admin.register(OrderItem)
-class OrderItemAdmin(ExportMixin):
+class OrderItemAdmin(ExportMixin, admin.ModelAdmin):
     resource_class = OrderItemResource
     list_display = (
         'order', 'product', 'quantity',
@@ -131,7 +131,7 @@ class OrderItemAdmin(ExportMixin):
 
 
 @admin.register(OrderShipment)
-class OrderShipmentAdmin(ExportMixin):
+class OrderShipmentAdmin(ExportMixin, admin.ModelAdmin):
     resource_class = OrderShipmentResource
     list_display = (
         'order', 'tracking_number', 'carrier', 'status', 'shipped_at',
