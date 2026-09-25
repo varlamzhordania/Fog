@@ -1,5 +1,6 @@
 import nested_admin
-from django.contrib import admin
+from unfold import admin
+from django.contrib import admin as django_admin
 from django.utils import timezone
 from django.utils.html import format_html
 from django.utils.translation import gettext_lazy as _
@@ -46,14 +47,14 @@ class StockReservationInline(nested_admin.NestedTabularInline):
     classes = ["collapse"]
 
 
-@admin.register(Media)
+@django_admin.register(Media)
 class MediaAdmin(admin.ModelAdmin):
     list_display = ["preview", "title", "media_type", "file", "created_at"]
     list_filter = ["media_type", "created_at"]
     search_fields = ["title", "alt_text", "file"]
     readonly_fields = ["id", "created_at", "updated_at"]
 
-    @admin.display(description=_("Preview"))
+    @django_admin.display(description=_("Preview"))
     def preview(self, obj):
         if obj.media_type == Media.TypeChoices.IMAGE and obj.file:
             return format_html(
@@ -63,16 +64,20 @@ class MediaAdmin(admin.ModelAdmin):
         return "—"
 
 
-@admin.register(Category)
-class CategoryAdmin(TreeAdmin):
+@django_admin.register(Category)
+class CategoryAdmin(TreeAdmin, admin.ModelAdmin):
     form = movenodeform_factory(Category)
     list_display = ["name", "slug", "is_active", "created_at"]
     list_filter = ["is_active"]
     search_fields = ["name", "slug"]
 
 
-@admin.register(Product)
-class ProductAdmin(ImportExportMixin, nested_admin.NestedModelAdmin):
+@django_admin.register(Product)
+class ProductAdmin(
+    ImportExportMixin,
+    admin.ModelAdmin,
+    nested_admin.NestedModelAdmin
+):
     resource_classes = [ProductResource]
     inlines = [ProductStockInline, ProductMediaInline]
 
@@ -119,7 +124,7 @@ class ProductAdmin(ImportExportMixin, nested_admin.NestedModelAdmin):
     ]
     readonly_fields = ["id", "slug", "created_at", "updated_at"]
 
-    @admin.display(description=_("Inventory on Hand (Avail / Res)"))
+    @django_admin.display(description=_("Inventory on Hand (Avail / Res)"))
     def stock_status(self, obj):
         try:
             stock = obj.product_stock
@@ -144,7 +149,7 @@ class ProductAdmin(ImportExportMixin, nested_admin.NestedModelAdmin):
             )
 
 
-@admin.register(ProductStock)
+@django_admin.register(ProductStock)
 class ProductStockAdmin(admin.ModelAdmin):
     list_display = [
         "product",
@@ -158,12 +163,12 @@ class ProductStockAdmin(admin.ModelAdmin):
     search_fields = ["product__name", "product__sku"]
     readonly_fields = ["reserved_quantity"]
 
-    @admin.display(description=_("Available Quantity"))
+    @django_admin.display(description=_("Available Quantity"))
     def available_display(self, obj):
         return obj.available_quantity
 
 
-@admin.register(StockReservation)
+@django_admin.register(StockReservation)
 class StockReservationAdmin(admin.ModelAdmin):
     list_display = [
         "id_short",
@@ -179,11 +184,11 @@ class StockReservationAdmin(admin.ModelAdmin):
     readonly_fields = ["id", "created_at", "updated_at"]
     actions = ["manually_release_reservations"]
 
-    @admin.display(description=_("ID"))
+    @django_admin.display(description=_("ID"))
     def id_short(self, obj):
         return str(obj.id)[:8]
 
-    @admin.display(description=_("Order"))
+    @django_admin.display(description=_("Order"))
     def order_link(self, obj):
         return format_html(
             '<a href="/admin/inventory/order/{}/change/">Order #{}</a>',
@@ -191,7 +196,7 @@ class StockReservationAdmin(admin.ModelAdmin):
             str(obj.order.id)[:8],
         )
 
-    @admin.display(description=_("Status"))
+    @django_admin.display(description=_("Status"))
     def status_badge(self, obj):
         colors = {
             StockReservation.ReservationStatus.ACTIVE: "blue",
@@ -205,11 +210,13 @@ class StockReservationAdmin(admin.ModelAdmin):
             obj.get_status_display(),
         )
 
-    @admin.display(boolean=True, description=_("Expired?"))
+    @django_admin.display(boolean=True, description=_("Expired?"))
     def is_expired(self, obj):
         return timezone.now() > obj.expires_at
 
-    @admin.action(description=_("Manually release selected active holds"))
+    @django_admin.action(
+        description=_("Manually release selected active holds")
+    )
     def manually_release_reservations(self, request, queryset):
         active_holds = queryset.filter(
             status=StockReservation.ReservationStatus.ACTIVE
@@ -226,7 +233,7 @@ class StockReservationAdmin(admin.ModelAdmin):
         )
 
 
-@admin.register(StockTransactionLog)
+@django_admin.register(StockTransactionLog)
 class StockTransactionLogAdmin(admin.ModelAdmin):
     list_display = [
         "created_at",
@@ -255,7 +262,7 @@ class StockTransactionLogAdmin(admin.ModelAdmin):
     def has_delete_permission(self, request, obj=None):
         return False
 
-    @admin.display(description=_("Action"))
+    @django_admin.display(description=_("Action"))
     def action_badge(self, obj):
         colors = {
             StockTransactionLog.ActionChoices.RESTOCK: "green",

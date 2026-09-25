@@ -1,10 +1,7 @@
-from django.contrib import admin
+import nested_admin
+from unfold import admin
+from django.contrib import admin as django_admin
 from import_export.admin import ExportMixin
-from nested_admin import (
-    NestedModelAdmin,
-    NestedTabularInline,
-    NestedStackedInline,
-)
 
 from .models import (
     PaymentMethod,
@@ -26,13 +23,13 @@ from .resources import (
 )
 
 
-class ShoppingCartItemInline(NestedTabularInline):
+class ShoppingCartItemInline(nested_admin.NestedTabularInline):
     model = ShoppingCartItem
     extra = 0
     fields = ('product', 'quantity')
 
 
-@admin.register(PaymentMethod)
+@django_admin.register(PaymentMethod)
 class PaymentMethodAdmin(ExportMixin, admin.ModelAdmin):
     resource_class = PaymentMethodResource
     list_display = (
@@ -42,8 +39,8 @@ class PaymentMethodAdmin(ExportMixin, admin.ModelAdmin):
     ordering = ('name',)
 
 
-@admin.register(ShoppingCart)
-class ShoppingCartAdmin(ExportMixin, NestedModelAdmin):
+@django_admin.register(ShoppingCart)
+class ShoppingCartAdmin(ExportMixin, nested_admin.NestedModelAdmin):
     resource_class = ShoppingCartResource
     list_display = ('user', 'created_at', 'updated_at')
     search_fields = ('user__email',)
@@ -51,7 +48,7 @@ class ShoppingCartAdmin(ExportMixin, NestedModelAdmin):
     inlines = (ShoppingCartItemInline,)
 
 
-@admin.register(ShoppingCartItem)
+@django_admin.register(ShoppingCartItem)
 class ShoppingCartItemAdmin(ExportMixin, admin.ModelAdmin):
     resource_class = ShoppingCartItemResource
     list_display = (
@@ -62,7 +59,7 @@ class ShoppingCartItemAdmin(ExportMixin, admin.ModelAdmin):
     ordering = ('-created_at',)
 
 
-@admin.register(OrderPayment)
+@django_admin.register(OrderPayment)
 class PaymentAdmin(ExportMixin, admin.ModelAdmin):
     resource_class = PaymentResource
     list_display = (
@@ -73,7 +70,7 @@ class PaymentAdmin(ExportMixin, admin.ModelAdmin):
     ordering = ('-created_at',)
 
 
-class OrderPaymentInline(NestedStackedInline):
+class OrderPaymentInline(nested_admin.NestedStackedInline):
     model = OrderPayment
     extra = 0
     fields = (
@@ -91,7 +88,7 @@ class OrderPaymentInline(NestedStackedInline):
         'updated_at')
 
 
-class OrderItemInline(NestedStackedInline):
+class OrderItemInline(nested_admin.NestedStackedInline):
     model = OrderItem
     extra = 0
     fields = (
@@ -100,7 +97,7 @@ class OrderItemInline(NestedStackedInline):
     readonly_fields = ('total_price',)
 
 
-class OrderShipmentInline(NestedStackedInline):
+class OrderShipmentInline(nested_admin.NestedStackedInline):
     model = OrderShipment
     extra = 0
     fields = (
@@ -108,8 +105,8 @@ class OrderShipmentInline(NestedStackedInline):
         'delivered_at')
 
 
-@admin.register(Order)
-class OrderAdmin(ExportMixin, NestedModelAdmin):
+@django_admin.register(Order)
+class OrderAdmin(ExportMixin, nested_admin.NestedModelAdmin):
     resource_class = OrderResource
     list_display = (
         'id', 'user', 'status', 'total_price', 'is_active',
@@ -120,7 +117,7 @@ class OrderAdmin(ExportMixin, NestedModelAdmin):
     inlines = [OrderPaymentInline, OrderShipmentInline, OrderItemInline]
 
 
-@admin.register(OrderItem)
+@django_admin.register(OrderItem)
 class OrderItemAdmin(ExportMixin, admin.ModelAdmin):
     resource_class = OrderItemResource
     list_display = (
@@ -130,7 +127,7 @@ class OrderItemAdmin(ExportMixin, admin.ModelAdmin):
     search_fields = ('product__name', 'order__user__email')
 
 
-@admin.register(OrderShipment)
+@django_admin.register(OrderShipment)
 class OrderShipmentAdmin(ExportMixin, admin.ModelAdmin):
     resource_class = OrderShipmentResource
     list_display = (

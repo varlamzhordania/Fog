@@ -1,4 +1,5 @@
 from django.contrib import messages
+from django.conf import settings
 import re
 
 
@@ -58,3 +59,31 @@ def string_to_context(input_string):
         context[variable_name] = variable_value
 
     return context
+
+
+
+
+def environment_callback(request):
+    """
+    Displays an authoritative badge in the Unfold header showing the active environment.
+    """
+    if getattr(settings, "DEBUG", False):
+        return ["Development", "warning"]
+    return ["Production", "info"]
+
+
+def pending_orders_badge_callback(request):
+    """
+    Calculates the count of pending or unconfirmed checkout orders
+    to alert staff directly from the sidebar navigation.
+    """
+    try:
+        from checkout.models import Order
+        # Queries orders requiring staff review or pending on-chain payment
+        pending_count = Order.objects.filter(
+            status__in=[Order.StatusChoices.PENDING,Order.StatusChoices.PAYMENT]
+        ).count()
+        return str(pending_count) if pending_count > 0 else None
+    except Exception:
+        # Fallback to prevent admin rendering failures during migrations or DB unavailability
+        return None

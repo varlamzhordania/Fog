@@ -5,6 +5,7 @@ from django.utils.translation import gettext_lazy as _
 from pathlib import Path
 
 from core.ckeditor import BASE_CKEDITOR_5_CONFIGS
+from core.unfold import UNFOLD_SETTINGS
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -27,46 +28,54 @@ if not DEBUG:
 
 ALLOWED_HOSTS = env.list('DJANGO_ALLOWED_HOSTS', default=['*'])
 
-LOCAL_APPS = [
-    'account.apps.AccountConfig',
-    'inventory.apps.InventoryConfig',
-    'checkout.apps.CheckoutConfig',
+# Unfold apps
+UNFOLD_APPS = [
+    "unfold",
+    "unfold.contrib.filters",
+    "unfold.contrib.forms",
+    "unfold.contrib.inlines",
+    "unfold.contrib.import_export",
+    "unfold.contrib.constance",
+    # "unfold.contrib.guardian",
+]
+
+DJANGO_APPS = [
+    "django.contrib.admin",
+    "django.contrib.auth",
+    "django.contrib.contenttypes",
+    "django.contrib.sessions",
+    "django.contrib.messages",
+    "django.contrib.staticfiles",
+    "django.contrib.sitemaps",
 ]
 
 THIRD_PARTY_APPS = [
-    # 'ckeditor',
-    'django_ckeditor_5',
-    # 'mptt',
+    # Live runtime configuration (Must follow unfold.contrib.constance)
+    "constance",
+    "constance.backends.database",
+    # Rich text editor & trees
+    "django_ckeditor_5",
     "treebeard",
-    'nested_admin',
-    'rest_framework',
-    'corsheaders',
-    'drf_spectacular',
-    # "phonenumber_field",
-    # 'hijack',
-    # 'hijack.contrib.admin',
-    'oauth2_provider',
-    'social_django',
-    'drf_social_oauth2',
-
-    # 'rosetta', # translate panel
-    # 'parler',  # translate models content
-    'import_export',  # import and export via django panel
+    "nested_admin",
+    # REST Framework & API tooling
+    "rest_framework",
+    "corsheaders",
+    "drf_spectacular",
+    # Auth & OAuth
+    "oauth2_provider",
+    "social_django",
+    "drf_social_oauth2",
+    # Import / Export (Must follow unfold.contrib.import_export)
+    "import_export",
 ]
 
-INSTALLED_APPS = [
-    # "channels"
-    # "daphne"
-    'django.contrib.admin',
-    'django.contrib.auth',
-    'django.contrib.contenttypes',
-    'django.contrib.sessions',
-    'django.contrib.messages',
-    'django.contrib.staticfiles',
-    'django.contrib.sitemaps',
+LOCAL_APPS = [
+    "account.apps.AccountConfig",
+    "inventory.apps.InventoryConfig",
+    "checkout.apps.CheckoutConfig",
 ]
-INSTALLED_APPS += LOCAL_APPS
-INSTALLED_APPS += THIRD_PARTY_APPS
+
+INSTALLED_APPS = UNFOLD_APPS + DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -357,6 +366,199 @@ CELERY_BEAT_SCHEDULE = {
 
 CKEDITOR_5_CONFIGS = BASE_CKEDITOR_5_CONFIGS
 PHONENUMBER_DEFAULT_FORMAT = "INTERNATIONAL"
+
+# ==============================================================================
+# CONSTANCE RUNTIME CONFIGURATION
+# ==============================================================================
+
+CONSTANCE_BACKEND = "constance.backends.database.DatabaseBackend"
+if not DEBUG:
+    CONSTANCE_DATABASE_CACHE_BACKEND = "default"
+CONSTANCE_IGNORE_ADMIN_VERSION_CHECK = True
+
+CONSTANCE_CONFIG = {
+    # --------------------------------------------------------------------------
+    # 1. Website Branding & Identity
+    # --------------------------------------------------------------------------
+    "WEBSITE_TITLE": (
+        "FOG | Mycology Research & Supplies",
+        "Authoritative site name used in browser tabs and layout headers.",
+        str,
+    ),
+    "WEBSITE_TAGLINE": (
+        "Premium Spore Microscopy & Laboratory Supplies",
+        "Short brand subtitle or tagline displayed in header or hero section.",
+        str,
+    ),
+    "WEBSITE_FAVICON": (
+        "/static/imgs/favicon.ico",
+        "Path or URL to the browser favicon (.ico or .png).",
+        str,
+    ),
+    "WEBSITE_PRIMARY_ICON": (
+        "/static/imgs/logo-light.svg",
+        "Primary brand logo (used on default/light backgrounds).",
+        str,
+    ),
+    "WEBSITE_SECONDARY_ICON": (
+        "/static/imgs/logo-dark.svg",
+        "Secondary brand logo (used on dark mode or contrasting backgrounds).",
+        str,
+    ),
+
+    # --------------------------------------------------------------------------
+    # 2. SEO & Social Metadata (Open Graph)
+    # --------------------------------------------------------------------------
+    "WEBSITE_META_DESCRIPTION": (
+        "Source for premium mycology genetics, research spores, laboratory equipment, and cultivation media. Secure anonymous cryptocurrency checkout.",
+        "Default fallback description used for meta tags and search crawlers.",
+        str,
+    ),
+    "WEBSITE_META_KEYWORDS": (
+        "mycology, spore microscopy, research genetics, lab supplies, crypto checkout",
+        "Comma-separated default SEO keywords.",
+        str,
+    ),
+    "WEBSITE_OG_IMAGE": (
+        "/static/imgs/og-cover.jpg",
+        "Default 1200x630 Open Graph preview image for social sharing.",
+        str,
+    ),
+
+    # --------------------------------------------------------------------------
+    # 3. Header & Announcement Bar
+    # --------------------------------------------------------------------------
+    "ANNOUNCEMENT_BAR_ENABLED": (
+        True,
+        "Toggle display of the top notification banner across storefront pages.",
+        bool,
+    ),
+    "ANNOUNCEMENT_BAR_TEXT": (
+        "Notice: All spore materials are intended strictly for taxonomy and microscopy research.",
+        "Banner message text displayed at the top of the viewport.",
+        str,
+    ),
+    "ANNOUNCEMENT_BAR_LINK": (
+        "/pages/research-policy",
+        "Optional URL destination when users click the announcement banner.",
+        str,
+    ),
+
+    # --------------------------------------------------------------------------
+    # 4. Legal Compliance & Footer
+    # --------------------------------------------------------------------------
+    "LEGAL_RESEARCH_DISCLAIMER": (
+        "All psilocybe spore syringes and microscopy prints are sold exclusively for research, "
+        "taxonomy, and educational identification purposes under high-power microscopy. "
+        "Cultivation of regulated species is strictly prohibited. Sales are void where prohibited.",
+        "Mandatory legal disclaimer displayed on product detail pages and footer.",
+        str,
+    ),
+    "FOOTER_COPYRIGHT_TEXT": (
+        "© 2026 FOG Mycology Research Lab. All rights reserved.",
+        "Copyright line rendered at the base of the storefront layout.",
+        str,
+    ),
+
+    # --------------------------------------------------------------------------
+    # 5. Community & Support Links
+    # --------------------------------------------------------------------------
+    "COMMUNITY_TELEGRAM_URL": (
+        "https://t.me/fog_mycology",
+        "Official Telegram group or announcement channel URL.",
+        str,
+    ),
+    "COMMUNITY_DISCORD_URL": (
+        "",
+        "Official Discord community invite link (leave empty if inactive).",
+        str,
+    ),
+    "COMMUNITY_TWITTER_URL": (
+        "https://x.com/fog_mycology",
+        "Official X (Twitter) profile URL.",
+        str,
+    ),
+    "SUPPORT_EMAIL": (
+        "support@fog-mycology.example",
+        "Contact email displayed to users for payment discrepancies or expired orders.",
+        str,
+    ),
+
+    # --------------------------------------------------------------------------
+    # 6. Crypto Payment & Security Controls (Authoritative Server Settings)
+    # --------------------------------------------------------------------------
+    "CRYPTO_PAYMENT_WINDOW_MINUTES": (
+        60,
+        "Authoritative expiration window for pending crypto payments (in minutes).",
+        int,
+    ),
+    "CRYPTO_REQUIRED_CONFIRMATIONS": (
+        2,
+        "Number of on-chain confirmations required before marking order as CONFIRMED.",
+        int,
+    ),
+    "CRYPTO_EXCHANGE_BUFFER_PERCENT": (
+        2.0,
+        "Slippage/volatility buffer percentage added to crypto order estimates.",
+        float,
+    ),
+
+    # --------------------------------------------------------------------------
+    # 7. Store Operations
+    # --------------------------------------------------------------------------
+    "STORE_MAINTENANCE_MODE": (
+        False,
+        "Temporarily disable checkout and order creation for maintenance.",
+        bool,
+    ),
+    "MINIMUM_ORDER_AMOUNT_USD": (
+        15.0,
+        "Minimum cart value required to initiate anonymous crypto checkout.",
+        float,
+    ),
+}
+
+# Admin Fieldset Organization for Unfold
+CONSTANCE_CONFIG_FIELDSETS = {
+    "Website Branding & Identity": (
+        "WEBSITE_TITLE",
+        "WEBSITE_TAGLINE",
+        "WEBSITE_FAVICON",
+        "WEBSITE_PRIMARY_ICON",
+        "WEBSITE_SECONDARY_ICON",
+    ),
+    "SEO & Social Metadata": (
+        "WEBSITE_META_DESCRIPTION",
+        "WEBSITE_META_KEYWORDS",
+        "WEBSITE_OG_IMAGE",
+    ),
+    "Announcement Bar": (
+        "ANNOUNCEMENT_BAR_ENABLED",
+        "ANNOUNCEMENT_BAR_TEXT",
+        "ANNOUNCEMENT_BAR_LINK",
+    ),
+    "Legal Disclaimers & Compliance": (
+        "LEGAL_RESEARCH_DISCLAIMER",
+        "FOOTER_COPYRIGHT_TEXT",
+    ),
+    "Community & Customer Support": (
+        "SUPPORT_EMAIL",
+        "COMMUNITY_TELEGRAM_URL",
+        "COMMUNITY_DISCORD_URL",
+        "COMMUNITY_TWITTER_URL",
+    ),
+    "Crypto Payment & Security Controls": (
+        "CRYPTO_PAYMENT_WINDOW_MINUTES",
+        "CRYPTO_REQUIRED_CONFIRMATIONS",
+        "CRYPTO_EXCHANGE_BUFFER_PERCENT",
+    ),
+    "Store Operations": (
+        "STORE_MAINTENANCE_MODE",
+        "MINIMUM_ORDER_AMOUNT_USD",
+    ),
+}
+
+UNFOLD = UNFOLD_SETTINGS
 
 # Base log configuration
 LOG_LEVEL = env("LOG_LEVEL", default="INFO").upper()
