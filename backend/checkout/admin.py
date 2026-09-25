@@ -1,4 +1,3 @@
-from decimal import Decimal
 from django.contrib import admin as django_admin
 from django.urls import NoReverseMatch, reverse
 from django.utils import timezone
@@ -20,9 +19,6 @@ from .models import (
 from .resources import OrderResource
 
 
-# ==============================================================================
-# INLINE DEFINITIONS
-# ==============================================================================
 
 class ShoppingCartItemInline(admin.TabularInline):
     model = ShoppingCartItem
@@ -81,9 +77,6 @@ class OrderStockReservationInline(admin.TabularInline):
         return timezone.now() > obj.expires_at
 
 
-# ==============================================================================
-# MODEL ADMIN DEFINITIONS
-# ==============================================================================
 
 @django_admin.register(PaymentMethod)
 class PaymentMethodAdmin(admin.ModelAdmin):
