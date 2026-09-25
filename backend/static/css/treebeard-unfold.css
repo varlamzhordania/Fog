@@ -1,0 +1,149 @@
+/* Treebeard + Django Unfold Table Compatibility */
+
+/* Table container adjustments */
+#result_list {
+    width: 100%;
+    border-collapse: collapse;
+    text-align: left;
+    font-size: 0.875rem;
+    line-height: 1.25rem;
+}
+
+/* Header synchronization */
+#result_list thead th {
+    padding: 0.75rem 1rem;
+    font-weight: 600;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    border-bottom: 1px solid rgba(226, 232, 240, 1);
+    color: rgba(100, 116, 139, 1);
+    background-color: transparent;
+    vertical-align: middle;
+}
+
+:root[class~="dark"] #result_list thead th {
+    border-bottom-color: rgba(51, 65, 85, 1);
+    color: rgba(148, 163, 184, 1);
+}
+
+/* Body cell structure & borders */
+#result_list tbody tr {
+    transition: background-color 0.15s ease-in-out;
+    border-bottom: 1px solid rgba(241, 245, 249, 1);
+}
+
+:root[class~="dark"] #result_list tbody tr {
+    border-bottom-color: rgba(30, 41, 59, 1);
+}
+
+#result_list tbody tr:hover {
+    background-color: rgba(248, 250, 252, 1);
+}
+
+:root[class~="dark"] #result_list tbody tr:hover {
+    background-color: rgba(15, 23, 42, 0.5);
+}
+
+#result_list tbody td {
+    padding: 0.75rem 1rem;
+    vertical-align: middle;
+    color: rgba(30, 41, 59, 1);
+}
+
+:root[class~="dark"] #result_list tbody td {
+    color: rgba(241, 245, 249, 1);
+}
+
+/* Action checkbox column alignment */
+#result_list th.action-checkbox-column,
+#result_list td.action-checkbox {
+    width: 48px;
+    padding: 0.75rem 0.5rem 0.75rem 1rem !important;
+    text-align: center;
+    vertical-align: middle;
+}
+
+#result_list .action-select,
+#result_list #action-toggle {
+    border-radius: 0.25rem;
+    border: 1px solid rgba(203, 213, 225, 1);
+    cursor: pointer;
+}
+
+:root[class~="dark"] #result_list .action-select,
+:root[class~="dark"] #result_list #action-toggle {
+    background-color: rgba(30, 41, 59, 1);
+    border-color: rgba(71, 85, 105, 1);
+}
+
+/* Tree drag handle */
+#result_list .drag-handler {
+    cursor: grab;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: rgba(148, 163, 184, 1);
+    margin-right: 0.5rem;
+    padding: 0.125rem 0.25rem;
+    border-radius: 0.25rem;
+    user-select: none;
+    font-weight: bold;
+    text-decoration: none;
+}
+
+#result_list .drag-handler:hover {
+    color: rgba(71, 85, 105, 1);
+    background-color: rgba(241, 245, 249, 1);
+}
+
+:root[class~="dark"] #result_list .drag-handler:hover {
+    color: rgba(203, 213, 225, 1);
+    background-color: rgba(51, 65, 85, 1);
+}
+
+#result_list .drag-handler:active {
+    cursor: grabbing;
+}
+
+/* Collapse / Expand (+ / -) button */
+#result_list a.collapse {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.25rem;
+    height: 1.25rem;
+    margin-right: 0.375rem;
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: rgba(100, 116, 139, 1);
+    border: 1px solid rgba(203, 213, 225, 1);
+    border-radius: 0.25rem;
+    text-decoration: none;
+    line-height: 1;
+}
+
+:root[class~="dark"] #result_list a.collapse {
+    color: rgba(148, 163, 184, 1);
+    border-color: rgba(71, 85, 105, 1);
+}
+
+#result_list a.collapse:hover {
+    background-color: rgba(226, 232, 240, 1);
+    color: rgba(15, 23, 42, 1);
+}
+
+:root[class~="dark"] #result_list a.collapse:hover {
+    background-color: rgba(51, 65, 85, 1);
+    color: rgba(248, 250, 252, 1);
+}
+
+/* Reordering drag placeholder states */
+#result_list tr.tb-drag {
+    background-color: rgba(224, 242, 254, 0.5) !important;
+    opacity: 0.75;
+}
+
+#result_list tr.tb-drop-target {
+    border-top: 2px solid rgba(2, 132, 199, 1) !important;
+}

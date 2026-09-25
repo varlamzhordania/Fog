@@ -1,14 +1,25 @@
-from django.contrib.auth.forms import UserCreationForm, UserChangeForm
+from django import forms
+from django.utils.translation import gettext_lazy as _
+from unfold.forms import (
+    UserChangeForm as UnfoldUserChangeForm,
+    UserCreationForm as UnfoldUserCreationForm,
+)
 from .models import User
 
+class CustomUserCreationForm(UnfoldUserCreationForm):
+    email = forms.EmailField(
+        label=_("Email address"),
+        required=True,
+    )
 
-class CustomUserCreationForm(UserCreationForm):
     class Meta:
         model = User
         fields = "__all__"
 
 
-class CustomUserChangeForm(UserChangeForm):
+
+
+class CustomUserChangeForm(UnfoldUserChangeForm):
     class Meta:
         model = User
         fields = "__all__"

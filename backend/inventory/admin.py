@@ -1,16 +1,17 @@
 import nested_admin
-from unfold import admin
 from django.contrib import admin as django_admin
+from django.urls import NoReverseMatch, reverse
 from django.utils import timezone
 from django.utils.html import format_html
 from django.utils.translation import gettext_lazy as _
 from import_export.admin import ImportExportMixin
 from treebeard.admin import TreeAdmin
 from treebeard.forms import movenodeform_factory
+from unfold import admin
 
 from .models import (
-    Media,
     Category,
+    Media,
     Product,
     ProductMedia,
     ProductStock,
@@ -27,24 +28,52 @@ class ProductMediaInline(nested_admin.NestedTabularInline):
     classes = ["collapse"]
 
 
-class ProductStockInline(nested_admin.NestedStackedInline):
-    model = ProductStock
-    extra = 1
-    can_delete = False
-    fields = ["quantity",
-              "reserved_quantity",
-              "low_stock_threshold",
-              "is_available",
-              ]
-
-
-class StockReservationInline(nested_admin.NestedTabularInline):
+class StockReservationInline(admin.TabularInline):
     model = StockReservation
     extra = 0
-    readonly_fields = ["id", "product_stock", "quantity", "status",
-                       "expires_at"]
+    fields = ["id_short", "order_link", "quantity", "status", "expires_at",
+              "is_expired"]
+    readonly_fields = ["id_short", "order_link", "quantity", "status",
+                       "expires_at", "is_expired"]
     can_delete = False
-    classes = ["collapse"]
+    show_change_link = True
+
+    @django_admin.display(description=_("ID"))
+    def id_short(self, obj):
+        return str(obj.id)[:8]
+
+    @django_admin.display(description=_("Order"))
+    def order_link(self, obj):
+        if not getattr(obj, "order", None):
+            return "—"
+        try:
+            url = reverse(
+                "admin:checkout_order_change",
+                args=[obj.order.id]
+                )
+            return format_html(
+                '<a href="{}" class="font-semibold text-primary-600 underline">Order #{}</a>',
+                url,
+                str(obj.order.id)[:8]
+                )
+        except NoReverseMatch:
+            return f"Order #{str(obj.order.id)[:8]}"
+
+    @django_admin.display(boolean=True, description=_("Expired?"))
+    def is_expired(self, obj):
+        return timezone.now() > obj.expires_at
+
+
+class ProductStockInline(nested_admin.NestedStackedInline):
+    model = ProductStock
+    extra = 0
+    can_delete = False
+    fields = [
+        "quantity",
+        "reserved_quantity",
+        "low_stock_threshold",
+        "is_available",
+    ]
 
 
 @django_admin.register(Media)
@@ -58,25 +87,38 @@ class MediaAdmin(admin.ModelAdmin):
     def preview(self, obj):
         if obj.media_type == Media.TypeChoices.IMAGE and obj.file:
             return format_html(
-                '<img src="{}" style="width: 45px; height: 45px; object-fit: cover; border-radius: 4px;" />',
+                '<img src="{}" style="width: 42px; height: 42px; object-fit: cover; border-radius: 6px;" />',
                 obj.file.url,
             )
         return "—"
 
 
 @django_admin.register(Category)
-class CategoryAdmin(TreeAdmin, admin.ModelAdmin):
+class CategoryAdmin(ImportExportMixin, TreeAdmin, admin.ModelAdmin):
     form = movenodeform_factory(Category)
     list_display = ["name", "slug", "is_active", "created_at"]
     list_filter = ["is_active"]
     search_fields = ["name", "slug"]
 
+    class Media:
+        css = {
+            "all": [
+                "treebeard/treebeard-admin.css",
+                "css/treebeard-unfold.css",
+            ]
+        }
+        js = [
+            "admin/js/vendor/jquery/jquery.js",
+            "admin/js/jquery.init.js",
+            "treebeard/treebeard-admin.js",
+        ]
+
 
 @django_admin.register(Product)
 class ProductAdmin(
     ImportExportMixin,
-    admin.ModelAdmin,
-    nested_admin.NestedModelAdmin
+    nested_admin.NestedModelAdmin,
+    admin.ModelAdmin
 ):
     resource_classes = [ProductResource]
     inlines = [ProductStockInline, ProductMediaInline]
@@ -129,28 +171,30 @@ class ProductAdmin(
         try:
             stock = obj.product_stock
             if not stock.is_available or stock.available_quantity <= 0:
-                color = "red"
+                badge_class = "bg-red-50 text-red-700 dark:bg-red-950 dark:text-red-300"
             elif stock.is_below_threshold():
-                color = "orange"
+                badge_class = "bg-amber-50 text-amber-700 dark:bg-amber-950 dark:text-amber-300"
             else:
-                color = "green"
+                badge_class = "bg-emerald-50 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300"
 
             return format_html(
-                '<span style="color: {}; font-weight: bold;">{} avail</span> '
-                '<span style="color: #666;">({} res / {} tot)</span>',
-                color,
+                '<span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold {}">'
+                '{} avail <span class="ml-1 opacity-70">({} res / {} tot)</span>'
+                '</span>',
+                badge_class,
                 stock.available_quantity,
                 stock.reserved_quantity,
                 stock.quantity,
             )
         except ProductStock.DoesNotExist:
             return format_html(
-                '<span style="color: gray;">No stock record</span>'
-            )
+                '<span class="text-xs text-gray-400">No stock record</span>'
+                )
 
 
 @django_admin.register(ProductStock)
 class ProductStockAdmin(admin.ModelAdmin):
+    inlines = [StockReservationInline]
     list_display = [
         "product",
         "quantity",
@@ -190,23 +234,32 @@ class StockReservationAdmin(admin.ModelAdmin):
 
     @django_admin.display(description=_("Order"))
     def order_link(self, obj):
-        return format_html(
-            '<a href="/admin/inventory/order/{}/change/">Order #{}</a>',
-            obj.order.id,
-            str(obj.order.id)[:8],
-        )
+        if not getattr(obj, "order", None):
+            return "—"
+        try:
+            url = reverse(
+                "admin:checkout_order_change",
+                args=[obj.order.id]
+                )
+            return format_html(
+                '<a href="{}" class="font-semibold text-primary-600 underline">Order #{}</a>',
+                url,
+                str(obj.order.id)[:8],
+            )
+        except NoReverseMatch:
+            return f"Order #{str(obj.order.id)[:8]}"
 
     @django_admin.display(description=_("Status"))
     def status_badge(self, obj):
         colors = {
-            StockReservation.ReservationStatus.ACTIVE: "blue",
-            StockReservation.ReservationStatus.COMMITTED: "green",
-            StockReservation.ReservationStatus.RELEASED: "gray",
+            StockReservation.ReservationStatus.ACTIVE: "bg-blue-50 text-blue-700 dark:bg-blue-950 dark:text-blue-300",
+            StockReservation.ReservationStatus.COMMITTED: "bg-emerald-50 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300",
+            StockReservation.ReservationStatus.RELEASED: "bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300",
         }
-        color = colors.get(obj.status, "black")
+        css = colors.get(obj.status, "bg-gray-100 text-gray-800")
         return format_html(
-            '<span style="color: {}; font-weight: bold;">{}</span>',
-            color,
+            '<span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold {}">{}</span>',
+            css,
             obj.get_status_display(),
         )
 
@@ -216,21 +269,21 @@ class StockReservationAdmin(admin.ModelAdmin):
 
     @django_admin.action(
         description=_("Manually release selected active holds")
-    )
+        )
     def manually_release_reservations(self, request, queryset):
         active_holds = queryset.filter(
             status=StockReservation.ReservationStatus.ACTIVE
-        )
+            )
         count = 0
         for hold in active_holds:
             hold.release(
                 reason=f"Manually released via admin by {request.user.username}"
-            )
+                )
             count += 1
         self.message_user(
             request,
             f"Successfully released {count} stock reservation(s)."
-        )
+            )
 
 
 @django_admin.register(StockTransactionLog)
@@ -255,7 +308,6 @@ class StockTransactionLogAdmin(admin.ModelAdmin):
         "updated_at",
     ]
 
-    # Audit records are immutable
     def has_add_permission(self, request):
         return False
 
@@ -265,15 +317,15 @@ class StockTransactionLogAdmin(admin.ModelAdmin):
     @django_admin.display(description=_("Action"))
     def action_badge(self, obj):
         colors = {
-            StockTransactionLog.ActionChoices.RESTOCK: "green",
-            StockTransactionLog.ActionChoices.ORDER_DEDUCTION: "darkgreen",
-            StockTransactionLog.ActionChoices.RESERVE: "blue",
-            StockTransactionLog.ActionChoices.RELEASE_RESERVATION: "orange",
-            StockTransactionLog.ActionChoices.ADJUSTMENT: "purple",
+            StockTransactionLog.ActionChoices.RESTOCK: "bg-emerald-50 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300",
+            StockTransactionLog.ActionChoices.ORDER_DEDUCTION: "bg-cyan-50 text-cyan-700 dark:bg-cyan-950 dark:text-cyan-300",
+            StockTransactionLog.ActionChoices.RESERVE: "bg-blue-50 text-blue-700 dark:bg-blue-950 dark:text-blue-300",
+            StockTransactionLog.ActionChoices.RELEASE_RESERVATION: "bg-amber-50 text-amber-700 dark:bg-amber-950 dark:text-amber-300",
+            StockTransactionLog.ActionChoices.ADJUSTMENT: "bg-purple-50 text-purple-700 dark:bg-purple-950 dark:text-purple-300",
         }
-        color = colors.get(obj.action, "black")
+        css = colors.get(obj.action, "bg-gray-100 text-gray-800")
         return format_html(
-            '<span style="color: {}; font-weight: bold;">{}</span>',
-            color,
+            '<span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold {}">{}</span>',
+            css,
             obj.get_action_display(),
         )

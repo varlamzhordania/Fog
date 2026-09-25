@@ -33,7 +33,7 @@ class CustomUserManager(BaseUserManager):
 
 
 class User(AbstractUser):
-    username = None  # Remove username field
+    username = None
     email = models.EmailField(
         _("email address"),
         unique=True,
