@@ -63,3 +63,5 @@ export const API_ENDPOINTS = {
         config: `${API_BASE}/settings/`,
     },
 };
+
+export const notFoundImage = 'https://placehold.co/200.png?text=Not Found'
