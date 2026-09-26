@@ -1,11 +1,15 @@
 import uuid
+
 import environ
 
 from django.utils.translation import gettext_lazy as _
 from pathlib import Path
 
 from core.ckeditor import BASE_CKEDITOR_5_CONFIGS
-from core.unfold import UNFOLD_SETTINGS
+from core.unfold import (
+    UNFOLD_SETTINGS,
+    CUSTOM_UNFOLD_CONSTANCE_ADDITIONAL_FIELDS,
+)
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -376,6 +380,8 @@ if not DEBUG:
     CONSTANCE_DATABASE_CACHE_BACKEND = "default"
 CONSTANCE_IGNORE_ADMIN_VERSION_CHECK = True
 
+CONSTANCE_ADDITIONAL_FIELDS = CUSTOM_UNFOLD_CONSTANCE_ADDITIONAL_FIELDS
+
 CONSTANCE_CONFIG = {
     # --------------------------------------------------------------------------
     # 1. Website Branding & Identity
@@ -391,19 +397,19 @@ CONSTANCE_CONFIG = {
         str,
     ),
     "WEBSITE_FAVICON": (
-        "/static/imgs/favicon.ico",
+        "favicon.ico",
         "Path or URL to the browser favicon (.ico or .png).",
-        str,
+        "image_field",
     ),
     "WEBSITE_PRIMARY_ICON": (
-        "/static/imgs/logo-light.svg",
+        "logo-light.svg",
         "Primary brand logo (used on default/light backgrounds).",
-        str,
+        "image_field",
     ),
     "WEBSITE_SECONDARY_ICON": (
-        "/static/imgs/logo-dark.svg",
+        "logo-dark.svg",
         "Secondary brand logo (used on dark mode or contrasting backgrounds).",
-        str,
+        "image_field",
     ),
 
     # --------------------------------------------------------------------------
@@ -420,9 +426,9 @@ CONSTANCE_CONFIG = {
         str,
     ),
     "WEBSITE_OG_IMAGE": (
-        "/static/imgs/og-cover.jpg",
+        "og-cover.jpg",
         "Default 1200x630 Open Graph preview image for social sharing.",
-        str,
+        "image_field",
     ),
 
     # --------------------------------------------------------------------------
@@ -441,7 +447,7 @@ CONSTANCE_CONFIG = {
     "ANNOUNCEMENT_BAR_LINK": (
         "/pages/research-policy",
         "Optional URL destination when users click the announcement banner.",
-        str,
+        'link_field',
     ),
 
     # --------------------------------------------------------------------------
@@ -466,17 +472,17 @@ CONSTANCE_CONFIG = {
     "COMMUNITY_TELEGRAM_URL": (
         "https://t.me/fog_mycology",
         "Official Telegram group or announcement channel URL.",
-        str,
+        'link_field',
     ),
     "COMMUNITY_DISCORD_URL": (
         "",
         "Official Discord community invite link (leave empty if inactive).",
-        str,
+        'link_field',
     ),
     "COMMUNITY_TWITTER_URL": (
         "https://x.com/fog_mycology",
         "Official X (Twitter) profile URL.",
-        str,
+        'link_field',
     ),
     "SUPPORT_EMAIL": (
         "support@fog-mycology.example",
@@ -516,6 +522,34 @@ CONSTANCE_CONFIG = {
         "Minimum cart value required to initiate anonymous crypto checkout.",
         float,
     ),
+
+    # --------------------------------------------------------------------------
+    # 8. Store Pricing & Tax
+    # --------------------------------------------------------------------------
+    "TAX_ENABLED": (
+        True,
+        "Enable tax calculation during checkout.",
+        bool,
+    ),
+
+    "TAX_RATE": (
+        18.0,
+        "Tax rate applied to taxable orders, expressed as a percentage.",
+        float,
+    ),
+
+    "TAX_NAME": (
+        "VAT",
+        "Display name used for the configured tax.",
+        str,
+    ),
+
+    "PRICES_INCLUDE_TAX": (
+        False,
+        "Whether displayed product prices already include the configured tax.",
+        bool,
+    ),
+
 }
 
 # Admin Fieldset Organization for Unfold
@@ -556,6 +590,12 @@ CONSTANCE_CONFIG_FIELDSETS = {
         "STORE_MAINTENANCE_MODE",
         "MINIMUM_ORDER_AMOUNT_USD",
     ),
+    "Store Pricing & Tax": (
+        "TAX_ENABLED",
+        "TAX_RATE",
+        "TAX_NAME",
+        "PRICES_INCLUDE_TAX",
+    )
 }
 
 UNFOLD = UNFOLD_SETTINGS

@@ -1,10 +1,9 @@
 from django.templatetags.static import static
 from django.urls import reverse_lazy
 from django.utils.translation import gettext_lazy as _
+from unfold.contrib.constance.settings import UNFOLD_CONSTANCE_ADDITIONAL_FIELDS
 
-# ==============================================================================
-# DJANGO UNFOLD CONFIGURATION FOR FOG
-# ==============================================================================
+
 
 UNFOLD_SETTINGS = {
     # --------------------------------------------------------------------------
@@ -146,7 +145,7 @@ UNFOLD_SETTINGS = {
                         "badge": "core.utils.pending_orders_badge_callback",
                         "badge_variant": "warning",
                         "badge_style": "solid",
-                        "badge_class": "ml-auto text-xs font-semibold",
+                        "badge_class": "ml-auto text-xs font-semibold !rounded-full",
                     },
                 ],
             },
@@ -243,6 +242,16 @@ UNFOLD_SETTINGS = {
                     ),
                 },
             ],
+        },
+    ],
+}
+
+CUSTOM_UNFOLD_CONSTANCE_ADDITIONAL_FIELDS = {
+    **UNFOLD_CONSTANCE_ADDITIONAL_FIELDS,
+    "link_field": [
+        "django.forms.URLField",
+        {
+            "widget": "unfold.widgets.UnfoldAdminURLInputWidget",
         },
     ],
 }

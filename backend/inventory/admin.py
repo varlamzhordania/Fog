@@ -21,7 +21,10 @@ from .models import (
 from .resources import ProductResource
 
 
-class ProductMediaInline(nested_admin.NestedTabularInline):
+class ProductMediaInline(
+    admin.StackedInline,
+    nested_admin.NestedTabularInline
+):
     model = ProductMedia
     extra = 1
     fields = ["media", "is_featured", "display_order"]
@@ -50,12 +53,12 @@ class StockReservationInline(admin.TabularInline):
             url = reverse(
                 "admin:checkout_order_change",
                 args=[obj.order.id]
-                )
+            )
             return format_html(
                 '<a href="{}" class="font-semibold text-primary-600 underline">Order #{}</a>',
                 url,
                 str(obj.order.id)[:8]
-                )
+            )
         except NoReverseMatch:
             return f"Order #{str(obj.order.id)[:8]}"
 
@@ -64,7 +67,10 @@ class StockReservationInline(admin.TabularInline):
         return timezone.now() > obj.expires_at
 
 
-class ProductStockInline(nested_admin.NestedStackedInline):
+class ProductStockInline(
+    admin.StackedInline,
+    nested_admin.NestedStackedInline
+):
     model = ProductStock
     extra = 0
     can_delete = False
@@ -107,11 +113,6 @@ class CategoryAdmin(ImportExportMixin, TreeAdmin, admin.ModelAdmin):
                 "css/treebeard-unfold.css",
             ]
         }
-        js = [
-            "admin/js/vendor/jquery/jquery.js",
-            "admin/js/jquery.init.js",
-            "treebeard/treebeard-admin.js",
-        ]
 
 
 @django_admin.register(Product)
@@ -189,7 +190,7 @@ class ProductAdmin(
         except ProductStock.DoesNotExist:
             return format_html(
                 '<span class="text-xs text-gray-400">No stock record</span>'
-                )
+            )
 
 
 @django_admin.register(ProductStock)
@@ -240,7 +241,7 @@ class StockReservationAdmin(admin.ModelAdmin):
             url = reverse(
                 "admin:checkout_order_change",
                 args=[obj.order.id]
-                )
+            )
             return format_html(
                 '<a href="{}" class="font-semibold text-primary-600 underline">Order #{}</a>',
                 url,
@@ -269,21 +270,21 @@ class StockReservationAdmin(admin.ModelAdmin):
 
     @django_admin.action(
         description=_("Manually release selected active holds")
-        )
+    )
     def manually_release_reservations(self, request, queryset):
         active_holds = queryset.filter(
             status=StockReservation.ReservationStatus.ACTIVE
-            )
+        )
         count = 0
         for hold in active_holds:
             hold.release(
                 reason=f"Manually released via admin by {request.user.username}"
-                )
+            )
             count += 1
         self.message_user(
             request,
             f"Successfully released {count} stock reservation(s)."
-            )
+        )
 
 
 @django_admin.register(StockTransactionLog)
