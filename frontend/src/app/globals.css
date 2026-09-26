@@ -68,10 +68,10 @@
 
     /* Typography */
     --font-sans: var(--font-poppins), -apple-system, BlinkMacSystemFont,
-        "Segoe UI", Roboto, sans-serif;
+    "Segoe UI", Roboto, sans-serif;
 
     --font-body: var(--font-roboto), -apple-system, BlinkMacSystemFont,
-        "Segoe UI", sans-serif;
+    "Segoe UI", sans-serif;
 
     --font-heading: var(--font-atomic-age), cursive;
 }
@@ -148,14 +148,13 @@
 @theme inline {
 
     --font-sans: var(--font-poppins), -apple-system, BlinkMacSystemFont,
-        "Segoe UI", Roboto, sans-serif;
+    "Segoe UI", Roboto, sans-serif;
 
     --font-body: var(--font-roboto), -apple-system, BlinkMacSystemFont,
-        "Segoe UI", sans-serif;
+    "Segoe UI", sans-serif;
 
     --font-heading: var(--font-atomic-age), cursive;
     --font-atomic: var(--font-atomic-age);
-
 
 
     --color-brand: #0C6E99;
@@ -166,7 +165,6 @@
     --color-fog-muted: #71808C;
     --color-fog-white: #FFFFFF;
     --color-fog-black: #0B1014;
-
 
 
     --color-accent: var(--accent);
@@ -194,4 +192,15 @@
         color: var(--foreground);
         font-family: var(--font-sans);
     }
+}
+
+@layer components {
+    .container {
+        @apply mx-auto w-full max-w-[1280px] px-4 sm:px-6 lg:px-8 2xl:max-w-[1400px] 2xl:px-2;
+    }
+
+    .nav-link{
+        @apply capitalize font-semibold
+    }
+
 }

@@ -1,7 +1,9 @@
 import {Atomic_Age, Roboto, Poppins} from "next/font/google";
 import "./globals.css";
-import AppInitializer from "@/components/layout/AppInitializer";
-import RootProvider from "@/components/providers/RootProvider";
+import AppInitializer from "@/layouts/AppInitializer";
+import RootProvider from "@/providers/RootProvider";
+import Navbar from "@/components/Navbar/Navbar";
+import {useConfigStore} from "@/stores/config";
 
 const atomicAge = Atomic_Age({
     weight: "400",
@@ -30,6 +32,7 @@ export const metadata = {
 };
 
 export default function RootLayout({children}) {
+
     return (
         <html
             lang="en"
@@ -40,6 +43,7 @@ export default function RootLayout({children}) {
         <body className="min-h-screen font-sans antialiased" suppressHydrationWarning>
         <RootProvider>
             <AppInitializer>
+                <Navbar/>
                 {children}
             </AppInitializer>
         </RootProvider>
