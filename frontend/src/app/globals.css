@@ -1,98 +1,197 @@
 @import "tailwindcss";
 @import "@heroui/styles";
 
-
-body {
-  min-height: 100vh;
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
-}
-
 :root,
 .light,
-.default,
-[data-theme="light"],
-[data-theme="default"] {
-  /* Theme Colors (Light Mode) */
-  --accent: oklch(50.88% 0.1050 235.33);
-  --accent-foreground: oklch(99.11% 0 0);
-  --background: oklch(97.02% 0.0015 235.33);
-  --border: oklch(90.00% 0.0015 235.33);
-  --danger: oklch(65.32% 0.2335 23.52);
-  --danger-foreground: oklch(99.11% 0 0);
-  --default: oklch(94.00% 0.0015 235.33);
-  --default-foreground: oklch(21.03% 0.0059 235.33);
-  --field-background: oklch(100.00% 0.0008 235.33);
-  --field-border: transparent;
-  --field-foreground: oklch(21.03% 0.0015 235.33);
-  --field-placeholder: oklch(55.17% 0.0030 235.33);
-  --focus: oklch(50.88% 0.1050 235.33);
-  --foreground: oklch(21.03% 0.0015 235.33);
-  --muted: oklch(55.17% 0.0030 235.33);
-  --overlay: oklch(100.00% 0.0004 235.33);
-  --overlay-foreground: oklch(21.03% 0.0015 235.33);
-  --scrollbar: oklch(87.10% 0.0015 235.33);
-  --segment: oklch(100.00% 0.0015 235.33);
-  --segment-foreground: oklch(21.03% 0.0015 235.33);
-  --separator: oklch(92.00% 0.0015 235.33);
-  --success: oklch(73.29% 0.1941 148.59);
-  --success-foreground: oklch(21.03% 0.0059 148.59);
-  --surface: oklch(100.00% 0.0008 235.33);
-  --surface-foreground: oklch(21.03% 0.0015 235.33);
-  --surface-secondary: oklch(95.24% 0.0012 235.33);
-  --surface-secondary-foreground: oklch(21.03% 0.0015 235.33);
-  --surface-tertiary: oklch(93.73% 0.0012 235.33);
-  --surface-tertiary-foreground: oklch(21.03% 0.0015 235.33);
-  --warning: oklch(78.19% 0.1590 70.11);
-  --warning-foreground: oklch(21.03% 0.0059 70.11);
+[data-theme="light"] {
+    color-scheme: light;
 
-  /* Border Radius */
-  --radius: 0.75rem;
-  --field-radius: 0.25rem;
 
-  /* Font Family */
-  /* Make sure to load Atomic Age font in your app */
-  --font-sans: "Atomic Age", sans-serif;
+    /* Brand */
+    --accent: #0C6E99;
+    --accent-foreground: #FFFFFF;
+
+    /* Base */
+    --background: #F8FAFC;
+    --foreground: #17212B;
+
+    /* Borders / Separators */
+    --border: #D9E0E5;
+    --separator: #E8EDF1;
+
+    /* Default / Neutral */
+    --default: #EEF2F5;
+    --default-foreground: #26323D;
+
+    /* Surfaces */
+    --surface: #FFFFFF;
+    --surface-foreground: #17212B;
+
+    --surface-secondary: #F3F6F8;
+    --surface-secondary-foreground: #26323D;
+
+    --surface-tertiary: #E9EEF2;
+    --surface-tertiary-foreground: #34424E;
+
+    /* Overlay */
+    --overlay: #FFFFFF;
+    --overlay-foreground: #17212B;
+
+    /* Fields */
+    --field-background: #FFFFFF;
+    --field-border: #CBD5DC;
+    --field-foreground: #17212B;
+    --field-placeholder: #8795A1;
+
+    /* Utility */
+    --muted: #71808C;
+    --focus: #0C6E99;
+    --scrollbar: #B8C3CA;
+
+    /* Segments */
+    --segment: #E9EEF2;
+    --segment-foreground: #26323D;
+
+    /* States */
+    --danger: #DC3F45;
+    --danger-foreground: #FFFFFF;
+
+    --success: #159A68;
+    --success-foreground: #FFFFFF;
+
+    --warning: #D88900;
+    --warning-foreground: #FFFFFF;
+
+    /* Radius */
+    --radius: 0.625rem;
+    --field-radius: 0.5rem;
+
+    /* Typography */
+    --font-sans: var(--font-poppins), -apple-system, BlinkMacSystemFont,
+        "Segoe UI", Roboto, sans-serif;
+
+    --font-body: var(--font-roboto), -apple-system, BlinkMacSystemFont,
+        "Segoe UI", sans-serif;
+
+    --font-heading: var(--font-atomic-age), cursive;
 }
+
 
 .dark,
+[data-theme="default"],
+.default,
 [data-theme="dark"] {
-  color-scheme: dark;
-  /* Theme Colors (Dark Mode) */
-  --accent: oklch(50.88% 0.1050 235.33);
-  --accent-foreground: oklch(99.11% 0 0);
-  --background: oklch(12.00% 0.0015 235.33);
-  --border: oklch(28.00% 0.0015 235.33);
-  --danger: oklch(59.40% 0.1973 22.41);
-  --danger-foreground: oklch(99.11% 0 0);
-  --default: oklch(27.40% 0.0015 235.33);
-  --default-foreground: oklch(99.11% 0 0);
-  --field-background: oklch(21.03% 0.0030 235.33);
-  --field-border: transparent;
-  --field-foreground: oklch(99.11% 0.0015 235.33);
-  --field-placeholder: oklch(70.50% 0.0030 235.33);
-  --focus: oklch(50.88% 0.1050 235.33);
-  --foreground: oklch(99.11% 0.0015 235.33);
-  --muted: oklch(70.50% 0.0030 235.33);
-  --overlay: oklch(21.03% 0.0030 235.33);
-  --overlay-foreground: oklch(99.11% 0.0015 235.33);
-  --scrollbar: oklch(70.50% 0.0015 235.33);
-  --segment: oklch(39.64% 0.0015 235.33);
-  --segment-foreground: oklch(99.11% 0.0015 235.33);
-  --separator: oklch(25.00% 0.0015 235.33);
-  --success: oklch(73.29% 0.1941 148.59);
-  --success-foreground: oklch(21.03% 0.0059 148.59);
-  --surface: oklch(21.03% 0.0030 235.33);
-  --surface-foreground: oklch(99.11% 0.0015 235.33);
-  --surface-secondary: oklch(25.70% 0.0023 235.33);
-  --surface-secondary-foreground: oklch(99.11% 0.0015 235.33);
-  --surface-tertiary: oklch(27.21% 0.0023 235.33);
-  --surface-tertiary-foreground: oklch(99.11% 0.0015 235.33);
-  --warning: oklch(82.03% 0.1392 74.12);
-  --warning-foreground: oklch(21.03% 0.0059 74.12);
+    color-scheme: dark;
+
+
+    /* Brand */
+    --accent: #1687B8;
+    --accent-foreground: #FFFFFF;
+
+    /* Base */
+    --background: #0B1014;
+    --foreground: #E8EEF2;
+
+    /* Borders / Separators */
+    --border: #27323A;
+    --separator: #1B242B;
+
+    /* Default / Neutral */
+    --default: #1B242B;
+    --default-foreground: #DCE4E9;
+
+    /* Surfaces */
+    --surface: #11171C;
+    --surface-foreground: #E8EEF2;
+
+    --surface-secondary: #171F26;
+    --surface-secondary-foreground: #DCE4E9;
+
+    --surface-tertiary: #1E2830;
+    --surface-tertiary-foreground: #C8D2D9;
+
+    /* Overlay */
+    --overlay: #141B21;
+    --overlay-foreground: #E8EEF2;
+
+    /* Fields */
+    --field-background: #12191F;
+    --field-border: #2A363F;
+    --field-foreground: #E8EEF2;
+    --field-placeholder: #71808C;
+
+    /* Utility */
+    --muted: #81909B;
+    --focus: #1687B8;
+    --scrollbar: #33414A;
+
+    /* Segments */
+    --segment: #1B242B;
+    --segment-foreground: #E0E7EB;
+
+    /* States */
+    --danger: #EF5B61;
+    --danger-foreground: #FFFFFF;
+
+    --success: #27B77D;
+    --success-foreground: #061A12;
+
+    --warning: #F0B429;
+    --warning-foreground: #211700;
+
+    /* Radius */
+    --radius: 0.625rem;
+    --field-radius: 0.5rem;
 }
+
 
 @theme inline {
 
+    --font-sans: var(--font-poppins), -apple-system, BlinkMacSystemFont,
+        "Segoe UI", Roboto, sans-serif;
+
+    --font-body: var(--font-roboto), -apple-system, BlinkMacSystemFont,
+        "Segoe UI", sans-serif;
+
+    --font-heading: var(--font-atomic-age), cursive;
+    --font-atomic: var(--font-atomic-age);
+
+
+
+    --color-brand: #0C6E99;
+    --color-brand-light: #1687B8;
+    --color-brand-dark: #095778;
+
+    --color-fog-light: #EEF2F5;
+    --color-fog-muted: #71808C;
+    --color-fog-white: #FFFFFF;
+    --color-fog-black: #0B1014;
+
+
+
+    --color-accent: var(--accent);
+    --color-accent-foreground: var(--accent-foreground);
+
+    --color-background: var(--background);
+    --color-foreground: var(--foreground);
+
+    --color-border: var(--border);
+
+    --color-default: var(--default);
+    --color-default-foreground: var(--default-foreground);
+
+    --color-muted: var(--muted);
+
+    --color-surface: var(--surface);
+    --color-surface-foreground: var(--surface-foreground);
+}
+
+
+@layer base {
+    body {
+        min-height: 100vh;
+        background-color: var(--background);
+        color: var(--foreground);
+        font-family: var(--font-sans);
+    }
 }

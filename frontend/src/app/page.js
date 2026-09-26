@@ -1,9 +1,10 @@
+import {Typography} from "@heroui/react";
 
 
 export default function Home() {
   return (
   <div>
-    <h1>Hello</h1>
+    <Typography type={"h1"}>Fog Test</Typography>
   </div>
   );
 }

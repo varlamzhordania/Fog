@@ -1,20 +1,44 @@
-import './globals.css';
-import AppInitializer from '@/components/layout/AppInitializer';
-import {Atomic_Age, Roboto, Poppins} from "next/dist/compiled/@next/font/dist/google";
+import { Atomic_Age, Roboto, Poppins } from "next/font/google";
+import "./globals.css";
+import AppInitializer from "@/components/layout/AppInitializer";
 
+const atomicAge = Atomic_Age({
+  weight: "400",
+  subsets: ["latin"],
+  variable: "--font-atomic-age",
+  display: "swap",
+});
+
+const roboto = Roboto({
+  weight: ["300", "400", "500", "700"],
+  subsets: ["latin"],
+  variable: "--font-roboto",
+  display: "swap",
+});
+
+const poppins = Poppins({
+  weight: ["300", "400", "500", "600", "700"],
+  subsets: ["latin"],
+  variable: "--font-poppins",
+  display: "swap",
+});
 
 export const metadata = {
-    title: 'FOG | Storefront & Mycology Research',
-    description: 'Premium mycology research, spores, and supplies with anonymous checkout.',
+  title: "FOG — Mycology & Secure Research Store",
+  description: "Anonymous crypto checkout and mycology supplies.",
 };
 
-export default function RootLayout({children}) {
-    return (
-        <html lang="en">
-        <body
-            className="min-h-screen bg-[#000000] text-[#FFFFFF] antialiased selection:bg-[#0C6E99] selection:text-[#FFFFFF]">
+export default function RootLayout({ children }) {
+  return (
+    <html
+      lang="en"
+      className={`dark ${roboto.variable} ${poppins.variable} ${atomicAge.variable}`}
+      data-theme="dark"
+      suppressHydrationWarning
+    >
+      <body className="min-h-screen font-sans antialiased ">
         <AppInitializer>{children}</AppInitializer>
-        </body>
-        </html>
-    );
+      </body>
+    </html>
+  );
 }
