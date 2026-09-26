@@ -24,6 +24,8 @@ export async function serverFetch(
         token = null,
         headers = {},
         parseJson = true,
+        revalidate=300
+
     } = {}
 ) {
     const finalHeaders = {
@@ -48,6 +50,7 @@ export async function serverFetch(
                 ? JSON.stringify(body)
                 : undefined,
         cache: 'no-store',
+        next: {revalidate: revalidate,}
     });
 
     const data = parseJson

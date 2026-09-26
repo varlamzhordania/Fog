@@ -200,7 +200,7 @@
     }
 
     .nav-link{
-        @apply capitalize font-semibold
+        @apply capitalize font-semibold text-lg text-foreground
     }
 
 }
