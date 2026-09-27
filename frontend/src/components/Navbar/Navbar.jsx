@@ -2,7 +2,7 @@
 
 import {Button, Drawer, Typography} from "@heroui/react";
 import Link from "next/link";
-import {Menu, Moon, Search, ShoppingCart, Sun, UserRound} from "lucide-react";
+import {Menu, Moon, Search, ShoppingCart, Sun, UserRound,MoveRight} from "lucide-react";
 import {useConfigStore} from "@/stores/config";
 import {useEffect, useState} from "react";
 import Icon from "@/components/Icon/Icon";
@@ -50,9 +50,9 @@ const Navbar = () => {
 
                 <Link href="/" replace={true} className={"flex flex-row gap-2 justify-start items-center"}>
                     <img src={logo} width={64} height={64} alt={"FOG LOGO"}
-                         className={"object-cover hidden sm:block"}/>
-                    <Typography type={"span"} className={"font-atomic text-2xl font-bold"}>
-                        FOG
+                         className={"object-cover"}/>
+                    <Typography type={"span"} className={"hidden sm:block font-atomic text-2xl font-bold uppercase"}>
+                        fog direct
                     </Typography>
                 </Link>
             </div>
@@ -94,15 +94,15 @@ const Navbar = () => {
         <Drawer.Backdrop isOpen={isOpen} onOpenChange={setIsOpen}>
             <Drawer.Content placement="left">
                 <Drawer.Dialog>
-                    <Drawer.Header className={"border-b-2"}>
-                        <Drawer.Heading className={"font-atomic text-center font-bold text-2xl pb-2"}>
-                            FOG
+                    <Drawer.Header className={"border-b-2 border-foreground"}>
+                        <Drawer.Heading className={"font-atomic text-center font-bold text-2xl uppercase pb-2"}>
+                            fog direct
                         </Drawer.Heading>
                     </Drawer.Header>
                     <Drawer.Body>
                         <ul className={"list-none flex flex-col gap-2"}>
                             {navigation.map((i, x) => (
-                                <li key={x} className={"w-full p-2 px-4 bg-background rounded-full"}>
+                                <li key={x} className={"w-full flex justify-between items-center p-2 px-4 border-b"}>
                                     <Link href={i.href} className={"nav-link"}>
                                         {i.title}
                                     </Link>
