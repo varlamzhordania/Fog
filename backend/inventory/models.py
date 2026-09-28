@@ -16,6 +16,7 @@ from core.models import BaseModel, UploadPath, FileSizeValidator
 
 User = get_user_model()
 
+
 class Media(BaseModel):
     class TypeChoices(models.TextChoices):
         IMAGE = "IMAGE", _("Image")
@@ -27,7 +28,7 @@ class Media(BaseModel):
         primary_key=True,
         default=uuid.uuid4,
         editable=False
-        )
+    )
     file = models.FileField(
         upload_to=UploadPath("upload", "file"),
         validators=[FileSizeValidator(max_size_mb=15)],
@@ -87,6 +88,21 @@ class Category(MP_Node, BaseModel):
         null=True,
         verbose_name=_("Description"),
     )
+    img = models.ForeignKey(
+        Media,
+        related_name="categories",
+        blank=True,
+        null=True,
+        verbose_name=_("Category Image"),
+        on_delete=models.SET_NULL,
+    )
+    is_featured = models.BooleanField(
+        default=False,
+        verbose_name=_("Is Featured"),
+        help_text=_(
+            "Activating will shown this category on the featured list on the storefront."
+        )
+    )
     is_active = models.BooleanField(
         default=True,
         verbose_name=_("Active"),
@@ -112,9 +128,10 @@ class Category(MP_Node, BaseModel):
         """Returns the full hierarchical category chain (e.g. Cultivation > Substrates > Grains)."""
         ancestors = list(
             self.get_ancestors().values_list("name", flat=True)
-            )
+        )
         ancestors.append(self.name)
         return " > ".join(ancestors)
+
 
 class Tag(BaseModel):
     name = models.CharField(
@@ -144,6 +161,7 @@ class Tag(BaseModel):
 
     def __str__(self):
         return self.name
+
 
 class Product(BaseModel):
     class ProductType(models.TextChoices):
@@ -280,7 +298,7 @@ class ProductMedia(BaseModel):
         verbose_name=_("Display Order"),
         help_text=_(
             "Determines gallery sorting (lower numbers display first)."
-            ),
+        ),
     )
 
     class Meta:
@@ -315,7 +333,7 @@ class ProductStock(BaseModel):
         verbose_name=_("Reserved Stock"),
         help_text=_(
             "Locked stock during active 60-minute payment windows."
-            ),
+        ),
     )
     is_available = models.BooleanField(
         default=True,
@@ -449,11 +467,11 @@ class StockTransactionLog(BaseModel):
         RESTOCK = "restock", _("Restocked (Inbound)")
         ORDER_DEDUCTION = "order_deduction", _(
             "Order Confirmed (Deducted)"
-            )
+        )
         RESERVE = "reserve", _("Reserved (Pending Payment)")
         RELEASE_RESERVATION = "release_reservation", _(
             "Released Reservation"
-            )
+        )
         ADJUSTMENT = "adjustment", _("Manual Stock Adjustment")
 
     product_stock = models.ForeignKey(
@@ -480,7 +498,7 @@ class StockTransactionLog(BaseModel):
         verbose_name=_("Performed By"),
         help_text=_(
             "Null for automated crypto reservation and expiration events."
-            ),
+        ),
     )
     note = models.TextField(blank=True, null=True, verbose_name=_("Notes"))
 
@@ -496,5 +514,3 @@ class StockTransactionLog(BaseModel):
 
     def __str__(self):
         return f"{self.get_action_display()} ({self.quantity}) - {self.product_stock.product.name}"
-
-

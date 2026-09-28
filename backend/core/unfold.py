@@ -1,9 +1,8 @@
 from django.templatetags.static import static
 from django.urls import reverse_lazy
 from django.utils.translation import gettext_lazy as _
-from unfold.contrib.constance.settings import UNFOLD_CONSTANCE_ADDITIONAL_FIELDS
-
-
+from unfold.contrib.constance.settings import \
+    UNFOLD_CONSTANCE_ADDITIONAL_FIELDS
 
 UNFOLD_SETTINGS = {
     # --------------------------------------------------------------------------
@@ -210,6 +209,23 @@ UNFOLD_SETTINGS = {
                         "icon": "key",
                         "link": reverse_lazy(
                             "admin:oauth2_provider_application_changelist"
+                        ),
+                        "permission": lambda
+                            request: request.user.is_superuser,
+                    },
+                ],
+            },
+            {
+                "title": _("Uploads"),
+                "separator": True,
+                "collapsible": True,
+                "icon": "picture",
+                "items": [
+                    {
+                        "title": _("General Media"),
+                        "icon": "image",
+                        "link": reverse_lazy(
+                            "admin:inventory_media_changelist"
                         ),
                         "permission": lambda
                             request: request.user.is_superuser,

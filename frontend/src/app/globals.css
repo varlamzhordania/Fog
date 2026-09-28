@@ -199,7 +199,11 @@
         @apply mx-auto w-full max-w-[1280px] px-4 sm:px-6 lg:px-8 2xl:max-w-[1400px] 2xl:px-2;
     }
 
-    .nav-link{
+    .container-space {
+        @apply py-16 md:py-24;
+    }
+
+    .nav-link {
         @apply capitalize font-semibold text-lg text-foreground
     }
 

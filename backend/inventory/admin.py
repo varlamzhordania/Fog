@@ -31,6 +31,12 @@ class ProductMediaInline(
     classes = ["collapse"]
 
 
+class MediaInline(admin.StackedInline):
+    model = Media
+    extra = 1
+    fields = ["file", "media_type", "title", "alt_text"]
+
+
 class StockReservationInline(admin.TabularInline):
     model = StockReservation
     extra = 0
@@ -102,8 +108,9 @@ class MediaAdmin(admin.ModelAdmin):
 @django_admin.register(Category)
 class CategoryAdmin(ImportExportMixin, TreeAdmin, admin.ModelAdmin):
     form = movenodeform_factory(Category)
-    list_display = ["name", "slug", "is_active", "created_at"]
-    list_filter = ["is_active"]
+    list_display = ["name", "slug", "is_featured", "is_active",
+                    "created_at"]
+    list_filter = ["is_active", "is_featured"]
     search_fields = ["name", "slug"]
 
     class Media:
