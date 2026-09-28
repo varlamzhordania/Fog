@@ -16,7 +16,7 @@ export const API_ENDPOINTS = {
     auth: {
         authorize: `${API_BASE_URL}/api/auth/authorize/`,
         token: `${API_BASE_URL}/api/auth/token/`,
-        refresh: `${API_BASE_URL}/api/auth/token/`,
+        refresh: `/api/auth/refresh-token`,
         convertToken: `${API_BASE_URL}/api/auth/convert-token/`,
         revokeToken: `${API_BASE_URL}/api/auth/revoke-token/`,
         invalidateSessions:
@@ -40,6 +40,7 @@ export const API_ENDPOINTS = {
 
     account: {
         me: `${API_BASE}/account/`,
+        register: `${API_BASE}/account/register/`,
         address: `${API_BASE}/account/address/`,
         addressDetail: (id) =>
             `${API_BASE}/account/address/${id}/`,

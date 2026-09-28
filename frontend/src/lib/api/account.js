@@ -1,75 +1,69 @@
-import {fetchWithAuth} from "$lib/api/index.svelte.js";
-import {API_ENDPOINTS} from "$lib/config.js";
+import apiClient from "@/lib/api/client";
+import {API_ENDPOINTS} from "@/lib/config";
 
-// Fetch all addresses
-export async function fetchAddresses({page = 1, page_size = 25, pagination = true}) {
-    const params = new URLSearchParams()
-    params.append("page", page)
-    params.append("page_size", page_size)
-    if (!pagination) params.append('pagination', 'false');
+// ─── Addresses ───────────────────────────────────────────────────────────────
 
-    return fetchWithAuth(`${API_ENDPOINTS.account.address}?${params.toString()}`, {
-        method: "GET"
-    });
+export async function fetchAddresses({page = 1, page_size = 25, pagination = true} = {}) {
+    const params = new URLSearchParams();
+    params.set("page", page);
+    params.set("page_size", page_size);
+    if (!pagination) params.set("pagination", "false");
+
+    const response = await apiClient.get(
+        `${API_ENDPOINTS.account.address}?${params}`
+    );
+    return response.data;
 }
 
-// Fetch a single address by ID
 export async function fetchAddress(id) {
-    return fetchWithAuth(API_ENDPOINTS.account.addressDetail(id), {
-        method: "GET"
-    });
+    const response = await apiClient.get(
+        API_ENDPOINTS.account.addressDetail(id)
+    );
+    return response.data;
 }
 
-// Create a new address
 export async function createAddress(data) {
-    return fetchWithAuth(API_ENDPOINTS.account.address(0, 0, false), {
-        method: "POST",
-        body: data,
-    });
+    const response = await apiClient.post(
+        API_ENDPOINTS.account.address,
+        data
+    );
+    return response.data;
 }
 
-// Update an existing address
 export async function updateAddress(id, data) {
-    return fetchWithAuth(API_ENDPOINTS.account.addressDetail(id), {
-        method: "PUT",
-        body: data,
-    });
+    const response = await apiClient.put(
+        API_ENDPOINTS.account.addressDetail(id),
+        data
+    );
+    return response.data;
 }
 
-// Partially update an existing address (PATCH)
 export async function patchAddress(id, data) {
-    return fetchWithAuth(API_ENDPOINTS.account.addressDetail(id), {
-        method: "PATCH",
-        body: data,
-    });
+    const response = await apiClient.patch(
+        API_ENDPOINTS.account.addressDetail(id),
+        data
+    );
+    return response.data;
 }
 
-// Delete an address
 export async function deleteAddress(id) {
-    return fetchWithAuth(API_ENDPOINTS.account.addressDetail(id), {
-        method: "DELETE"
-    });
+    const response = await apiClient.delete(
+        API_ENDPOINTS.account.addressDetail(id)
+    );
+    return response.data;
+}
+
+// ─── Account ─────────────────────────────────────────────────────────────────
+
+export async function fetchAccount() {
+    const response = await apiClient.get(API_ENDPOINTS.account.me);
+    return response.data;
 }
 
 export async function updateAccount(data) {
-    return fetchWithAuth(API_ENDPOINTS.account.me, {
-        method: "PATCH",
-        body: data
-    })
-}
-
-export async function requestPasswordReset(data) {
-    return fetchWithAuth(API_ENDPOINTS.account.passwordReset, {
-        method: 'POST',
-        body: data,
-        useToken: false,
-    });
-}
-
-export async function confirmPasswordReset(data) {
-    return fetchWithAuth(API_ENDPOINTS.account.passwordResetConfirm, {
-        method: 'POST',
-        body: data,
-        useToken: false,
-    });
+    const response = await apiClient.patch(
+        API_ENDPOINTS.account.me,
+        data
+    );
+    return response.data;
 }

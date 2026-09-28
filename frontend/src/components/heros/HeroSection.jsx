@@ -43,9 +43,9 @@ const HeroSection = () => {
 
     return (
         <BackgroundImage darkImage={bgDark} lightImage={bgLight}>
-            <section className="container relative my-2 px-4 sm:px-6 lg:px-0">
+            <section className="container relative my-2 ">
                 <div
-                    className="relative z-10 flex flex-col items-start justify-center gap-5 py-16 sm:gap-6 sm:py-20 lg:min-h-[750px] lg:py-0"
+                    className="relative z-10 flex flex-col items-start justify-center gap-5 py-16 sm:gap-6 sm:py-20 lg:min-h-[750px] lg:py-0 xl:min-h-[700px] 2xl:min-h-[650px]"
                 >
                     <Typography
                         type="h2"
@@ -84,7 +84,7 @@ const HeroSection = () => {
                 </div>
 
                 <div
-                    className="pointer-events-none absolute inset-y-0 right-0 z-0 hidden w-[48%] md:block lg:w-[46%] xl:w-[45%]"
+                    className="container pointer-events-none absolute inset-y-0 right-0 z-0 hidden w-[48%] md:block lg:w-[46%] xl:w-[45%]"
                 >
                     <div
                         className="relative grid h-full grid-cols-12 grid-rows-12 gap-3">

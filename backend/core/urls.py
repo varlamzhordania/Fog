@@ -22,7 +22,7 @@ urlpatterns = [
 urlpatterns += [
     path("setlang/", set_language, name="set_language"),
     path('api-auth/', include('rest_framework.urls')),
-    path('auth/', include('drf_social_oauth2.urls', namespace='drf')),
+    path('api/auth/', include('drf_social_oauth2.urls', namespace='drf')),
     path('api/schema/', SpectacularAPIView.as_view(), name='schema'),
     path(
         'api/schema/docs/',

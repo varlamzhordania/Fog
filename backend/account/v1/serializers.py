@@ -10,28 +10,15 @@ from account.models import User, Address
 
 
 class UserSerializer(serializers.ModelSerializer):
-    partner_staff = serializers.SerializerMethodField()
 
     class Meta:
         model = User
         fields = (
             'id', 'email', 'first_name', 'last_name',
             'date_joined', 'is_staff', 'is_superuser',
-            'groups', 'partner_staff',
+            'groups',
         )
 
-    def get_partner_staff(self, obj):
-        staff_roles = obj.partner_roles.filter(is_active=True)
-        if not staff_roles.exists():
-            return None
-        return [
-            {
-                "partner_id": staff.partner_id,
-                "partner_name": staff.partner.name,
-                "role": staff.role,
-            }
-            for staff in staff_roles
-        ]
 
 
 class UserSettingsSerializer(serializers.ModelSerializer):
