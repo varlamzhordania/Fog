@@ -1,0 +1,130 @@
+[
+  {
+    "model": "inventory.category",
+    "pk": 1,
+    "fields": {
+      "path": "0001",
+      "depth": 1,
+      "numchild": 2,
+      "name": "Dried Mushrooms",
+      "slug": "dried-mushrooms",
+      "description": "Selected dried whole medicinal and functional mushrooms, verified for quality and bio-active preservation.",
+      "img": null,
+      "is_active": true,
+      "created_at": "2026-01-01T00:00:00Z",
+      "updated_at": "2026-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "inventory.category",
+    "pk": 2,
+    "fields": {
+      "path": "00010001",
+      "depth": 2,
+      "numchild": 0,
+      "name": "Whole Fruit Bodies",
+      "slug": "whole-fruit-bodies",
+      "description": "Whole intact fruiting bodies of Lion's Mane, Reishi, Cordyceps, and Chaga.",
+      "img": null,
+      "is_active": true,
+      "created_at": "2026-01-01T00:00:00Z",
+      "updated_at": "2026-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "inventory.category",
+    "pk": 3,
+    "fields": {
+      "path": "00010002",
+      "depth": 2,
+      "numchild": 0,
+      "name": "Sliced & Cut",
+      "slug": "sliced-cut",
+      "description": "Dehydrated slices prepared for teas, infusions, and decoctions.",
+      "img": null,
+      "is_active": true,
+      "created_at": "2026-01-01T00:00:00Z",
+      "updated_at": "2026-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "inventory.category",
+    "pk": 4,
+    "fields": {
+      "path": "0002",
+      "depth": 1,
+      "numchild": 2,
+      "name": "Extracts & Tinctures",
+      "slug": "extracts-tinctures",
+      "description": "Dual-extracted and bioavailable fungal formulations for targeted research and daily application.",
+      "img": null,
+      "is_active": true,
+      "created_at": "2026-01-01T00:00:00Z",
+      "updated_at": "2026-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "inventory.category",
+    "pk": 5,
+    "fields": {
+      "path": "00020001",
+      "depth": 2,
+      "numchild": 0,
+      "name": "Dual Extracts",
+      "slug": "dual-extracts",
+      "description": "Hot water and alcohol dual-extract liquids concentrating beta-glucans and triterpenes.",
+      "img": null,
+      "is_active": true,
+      "created_at": "2026-01-01T00:00:00Z",
+      "updated_at": "2026-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "inventory.category",
+    "pk": 6,
+    "fields": {
+      "path": "00020002",
+      "depth": 2,
+      "numchild": 0,
+      "name": "Fine Powders",
+      "slug": "fine-powders",
+      "description": "Micronized water-soluble extract powders.",
+      "img": null,
+      "is_active": true,
+      "created_at": "2026-01-01T00:00:00Z",
+      "updated_at": "2026-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "inventory.category",
+    "pk": 7,
+    "fields": {
+      "path": "0003",
+      "depth": 1,
+      "numchild": 0,
+      "name": "Spores & Genetics",
+      "slug": "spores-genetics",
+      "description": "Sterile spore syringes, spore prints, and isolated liquid cultures for microscopy and documentation.",
+      "img": null,
+      "is_active": true,
+      "created_at": "2026-01-01T00:00:00Z",
+      "updated_at": "2026-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "inventory.category",
+    "pk": 8,
+    "fields": {
+      "path": "0004",
+      "depth": 1,
+      "numchild": 0,
+      "name": "Lab & Cultivation Supplies",
+      "slug": "lab-cultivation-supplies",
+      "description": "Microscopy tools, agar formulations, sterile culture media, and specialized mycological substrate additives.",
+      "img": null,
+      "is_active": true,
+      "created_at": "2026-01-01T00:00:00Z",
+      "updated_at": "2026-01-01T00:00:00Z"
+    }
+  }
+]

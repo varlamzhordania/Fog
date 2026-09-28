@@ -2,9 +2,10 @@ import {Atomic_Age, Roboto, Poppins} from "next/font/google";
 import "./globals.css";
 import AppInitializer from "@/layouts/AppInitializer";
 import RootProvider from "@/providers/RootProvider";
-import Navbar from "@/components/Navbar/Navbar";
+import Navbar from "@/components/Navbar";
 import {serverFetch} from "@/lib/api/server";
 import {API_ENDPOINTS} from "@/lib/config";
+import Footer from "@/components/Footer";
 
 const atomicAge = Atomic_Age({
     weight: "400",
@@ -35,7 +36,7 @@ export async function generateMetadata() {
     let ogImage = null;
 
     try {
-        const res = await serverFetch(API_ENDPOINTS.website.config,{revalidate:0});
+        const res = await serverFetch(API_ENDPOINTS.website.config, {revalidate: 0});
 
         const config = res?.data || res;
 
@@ -96,6 +97,7 @@ export default function RootLayout({children}) {
                 <main>
                     {children}
                 </main>
+                <Footer/>
             </AppInitializer>
         </RootProvider>
         </body>

@@ -1,7 +1,8 @@
 "use client"
 
 import Image from "next/image";
-import {useConfigStore} from "@/stores/config";
+import {useThemeStore} from "@/stores/theme";
+import {cn} from "tailwind-variants";
 
 const objectPositionClasses = {
     left: "object-left",
@@ -25,7 +26,7 @@ export default function BackgroundImage({
                                             objectPosition = "left",
                                             opacity = 35,
                                         }) {
-    const theme = useConfigStore(state => state.theme);
+    const theme = useThemeStore(state => state.theme);
 
     const bgImage = theme === "dark" ? darkImage : lightImage;
 
@@ -42,11 +43,7 @@ export default function BackgroundImage({
                     priority
                     sizes="100vw"
                     alt=""
-                    className={`
-                    object-cover
-                    ${objectPositionClasses[objectPosition]}
-                    ${opacityClasses[opacity]}
-                `}
+                    className={cn('object-cover',objectPositionClasses[objectPosition], opacityClasses[opacity])}
                 />
 
                 <div

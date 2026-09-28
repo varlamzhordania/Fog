@@ -242,17 +242,17 @@ REST_FRAMEWORK = {
         'rest_framework.permissions.AllowAny',
     ],
 
-    'DEFAULT_THROTTLE_CLASSES': [
-        'rest_framework.throttling.AnonRateThrottle',
-        # Rate limiting for anonymous users
-        'rest_framework.throttling.UserRateThrottle',
-        # Rate limiting for authenticated users
-    ],
-    'DEFAULT_THROTTLE_RATES': {
-        'anon': '100/day',  # Limit anonymous users to 100 requests per day
-        'user': '1000/day',
-        # Limit authenticated users to 1000 requests per day
-    },
+    # 'DEFAULT_THROTTLE_CLASSES': [
+    #     'rest_framework.throttling.AnonRateThrottle',
+    #     # Rate limiting for anonymous users
+    #     'rest_framework.throttling.UserRateThrottle',
+    #     # Rate limiting for authenticated users
+    # ],
+    # 'DEFAULT_THROTTLE_RATES': {
+    #     'anon': '100/day',  # Limit anonymous users to 100 requests per day
+    #     'user': '1000/day',
+    #     # Limit authenticated users to 1000 requests per day
+    # },
 
     'DEFAULT_PAGINATION_CLASS': 'core.pagination.CustomPageNumberPagination',
     'PAGE_SIZE': 25,

@@ -9,7 +9,7 @@ import "swiper/css";
 import "swiper/css/scrollbar";
 
 import {Link, Button, Card, Typography} from "@heroui/react";
-import {ChevronRight, ChevronLeft, ShoppingCart, MoveRight} from "lucide-react";
+import {ChevronRight, ChevronLeft, MoveRight,ShoppingCartPlus} from "lucide-react";
 import Icon from "@/components/Icon/Icon";
 import {notFoundImage} from "@/lib/config";
 
@@ -174,7 +174,7 @@ const ProductCard = ({
                     </Link> :
                     <Button fullWidth className="capitalize gap-2">
                         Add to cart
-                        <Icon icon={ShoppingCart}/>
+                        <Icon icon={ShoppingCartPlus}/>
                     </Button>}
 
             </Card.Footer>
