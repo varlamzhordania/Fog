@@ -18,10 +18,12 @@ import {LogIn} from "lucide-react";
 import Icon from "@/components/Icon/Icon";
 import {useLogin} from "@/queries/auth";
 import {validateEmail, validatePassword} from "@/lib/utils";
+import {useAuthStore} from "@/stores/auth";
 
 export default function LoginPage() {
+    const {logged_in} = useAuthStore(state => state)
     const router = useRouter();
-    const {mutate: login, isPending, error} = useLogin();
+    const {mutate: login, isPending} = useLogin();
 
     const [form, setForm] = useState({email: "", password: ""});
     const [showPassword, setShowPassword] = useState(false);
@@ -32,13 +34,23 @@ export default function LoginPage() {
     const handleSubmit = (e) => {
         e.preventDefault();
         login(form, {
-            onSuccess: () => router.push("/"),
+            onSuccess: () => toast.success("Successfully logged in."),
+            onError: () => {
+                const id = toast.danger("Login Failed", {
+                    actionProps: {
+                        children: "Dismiss",
+                        onPress: () => toast.close(id),
+                        variant: "tertiary",
+                    },
+                    description: "Email or password is incorrect.",
+                })
+            }
         });
     };
 
     useEffect(() => {
-        if (error) toast.danger(error.message)
-    }, [error])
+        if (logged_in) router.push("/")
+    }, [logged_in]);
 
     return (
         <div className="w-full max-w-md">
@@ -61,6 +73,7 @@ export default function LoginPage() {
                     <Form onSubmit={handleSubmit} className="flex flex-col gap-5">
                         <TextField
                             isRequired
+                            variant={"secondary"}
                             name="email"
                             type="email"
                             validate={(value) => {
@@ -76,6 +89,7 @@ export default function LoginPage() {
 
                         <TextField
                             isRequired
+                            variant={"secondary"}
                             // minLength={8}
                             name="password"
                             type="password"

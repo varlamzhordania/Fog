@@ -9,7 +9,7 @@ const AUTH_CLIENT_SECRET = process.env.AUTH_CLIENT_SECRET;
 export async function POST(request) {
     try {
         const body = await request.json();
-        const {email, password1, password2, username} = body;
+        const {email, first_name, last_name, password1, password2} = body;
 
         if (!email || !password1 || !password2) {
             return NextResponse.json(
@@ -25,13 +25,11 @@ export async function POST(request) {
             );
         }
 
-        // Create the account on Django
         await serverFetch(API_ENDPOINTS.account.register, {
             method: "POST",
-            body: {email, username, password1, password2},
+            body: {email, first_name, last_name, password: password1, password_confirm: password2},
         });
 
-        // Auto-login after successful registration
         const {
             access_token,
             refresh_token,
@@ -70,20 +68,26 @@ export async function POST(request) {
 
         return response;
     } catch (e) {
-        const status = e?.status || 400;
+     const status = e?.status || 400;
+        const errors = e?.data || {};
 
-        // Django may return field-level validation errors
-        const fieldErrors = e?.data;
         const message =
-            e?.data?.email?.[0] ||
-            e?.data?.username?.[0] ||
-            e?.data?.password1?.[0] ||
-            e?.data?.non_field_errors?.[0] ||
-            e?.data?.detail ||
-            e?.data?.error ||
-            e?.message ||
+            errors?.email?.[0] ||
+            errors?.first_name?.[0] ||
+            errors?.last_name?.[0] ||
+            errors?.password?.[0] ||
+            errors?.password_confirm?.[0] ||
+            errors?.non_field_errors?.[0] ||
+            errors?.detail ||
+            errors?.error ||
             "Registration failed. Please try again.";
 
-        return NextResponse.json({error: message, errors: fieldErrors}, {status});
+        return NextResponse.json(
+            {
+                error: message,
+                errors,
+            },
+            {status}
+        );
     }
 }

@@ -26,17 +26,15 @@ async function refreshAccessToken() {
         )
         .then((response) => {
             const {
-                access_token,
                 expires_in,
             } = response.data;
 
             useAuthStore.setState({
-                access_token,
-                expire_in: expires_in,
+                expires_in,
                 logged_in: true,
             });
 
-            return access_token;
+            return true;
         })
         .finally(() => {
             refreshPromise = null;

@@ -17,7 +17,7 @@ from .serializers import (
     UserSettingsSerializer,
     ListAddressSerializer,
     PasswordResetRequestSerializer,
-    PasswordResetConfirmSerializer,
+    PasswordResetConfirmSerializer, UserRegisterSerializer,
 )
 from .tasks import send_password_reset_email_task
 
@@ -41,6 +41,40 @@ class UserView(RetrieveUpdateAPIView):
         else:
             return UserSerializer
 
+@extend_schema(
+    tags=["Account"],
+    request=UserRegisterSerializer,
+    responses={
+        201: UserSerializer,
+        400: OpenApiResponse(
+            description="Invalid registration data."
+        ),
+    },
+    summary="Register a new user",
+    description="Create a new user account using an email address and password.",
+)
+class UserRegisterView(APIView):
+    permission_classes = [AllowAny]
+    serializer_class = UserRegisterSerializer
+
+    @transaction.atomic
+    def post(self, request, *args, **kwargs):
+        serializer = self.serializer_class(
+            data=request.data,
+            context={"request": request},
+        )
+
+        serializer.is_valid(raise_exception=True)
+
+        user = serializer.save()
+
+        return Response(
+            UserSerializer(
+                user,
+                context={"request": request},
+            ).data,
+            status=status.HTTP_201_CREATED,
+        )
 
 @extend_schema(tags=["Account"])
 class AddressViewSet(OptionalPaginationMixin, ModelViewSet):

@@ -10,7 +10,6 @@ from account.models import User, Address
 
 
 class UserSerializer(serializers.ModelSerializer):
-
     class Meta:
         model = User
         fields = (
@@ -20,9 +19,68 @@ class UserSerializer(serializers.ModelSerializer):
         )
 
 
+class UserRegisterSerializer(serializers.ModelSerializer):
+    email = serializers.EmailField(
+        write_only=True,
+        required=True,
+        validators=[],
+        style={'input_type': 'email'},
+    )
+    password = serializers.CharField(
+        write_only=True,
+        required=True,
+        validators=[validate_password],
+        style={"input_type": "password"},
+    )
+
+    password_confirm = serializers.CharField(
+        write_only=True,
+        required=True,
+        style={"input_type": "password"},
+    )
+
+    class Meta:
+        model = User
+        fields = (
+            "email",
+            "first_name",
+            "last_name",
+            "password",
+            "password_confirm",
+        )
+
+    def validate_email(self, value):
+        value = value.strip().lower()
+
+        if User.objects.filter(email__iexact=value).exists():
+            raise serializers.ValidationError(
+                "A user with this email already exists."
+            )
+
+        return value
+
+    def validate(self, attrs):
+        if attrs["password"] != attrs["password_confirm"]:
+            raise serializers.ValidationError(
+                {
+                    "password_confirm": "Passwords do not match."
+                }
+            )
+
+        return attrs
+
+    def create(self, validated_data):
+        validated_data.pop("password_confirm")
+
+        password = validated_data.pop("password")
+
+        return User.objects.create_user(
+            password=password,
+            **validated_data,
+        )
+
 
 class UserSettingsSerializer(serializers.ModelSerializer):
-
     class Meta:
         model = User
         fields = [
@@ -34,7 +92,6 @@ class UserSettingsSerializer(serializers.ModelSerializer):
 
 
 class AddressSerializer(serializers.ModelSerializer):
-
     class Meta:
         model = Address
         fields = "__all__"

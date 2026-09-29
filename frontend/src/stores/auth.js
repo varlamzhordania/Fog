@@ -7,19 +7,16 @@ export const useAuthStore = create(
       access_token: null,
       refresh_token: null,
       logged_in: false,
-      expire_in: null,
       user: null,
 
       setAuth: ({
         access_token,
         refresh_token = null,
-        expire_in = null,
         user = null,
       }) =>
         set({
           access_token,
           refresh_token,
-          expire_in,
           logged_in: true,
           user,
         }),
@@ -28,13 +25,12 @@ export const useAuthStore = create(
         set({
           access_token: null,
           refresh_token: null,
-          expire_in: null,
           logged_in: false,
           user: null,
         }),
     }),
     {
-      name: 'auth',
+      name: 'fog_auth',
     }
   )
 );

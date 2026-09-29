@@ -5,7 +5,7 @@ from .views import (
     UserView,
     AddressViewSet,
     PasswordResetRequestView,
-    PasswordResetConfirmView,
+    PasswordResetConfirmView, UserRegisterView,
 )
 
 app_name = 'account-v1'
@@ -16,6 +16,11 @@ router.register('address', AddressViewSet, basename='address')
 
 urlpatterns = [
     path('', UserView.as_view(), name='user'),
+    path(
+        "register/",
+        UserRegisterView.as_view(),
+        name="register",
+    ),
     path(
         'password-reset/',
         PasswordResetRequestView.as_view(),

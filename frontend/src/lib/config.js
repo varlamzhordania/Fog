@@ -14,7 +14,7 @@ export const API_ENDPOINTS = {
     },
 
     auth: {
-        authorize: `${API_BASE_URL}/api/auth/authorize/`,
+        authorize: `/api/auth/authorize/`,
         token: `${API_BASE_URL}/api/auth/token/`,
         refresh: `/api/auth/refresh-token`,
         convertToken: `${API_BASE_URL}/api/auth/convert-token/`,

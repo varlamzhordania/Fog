@@ -1,7 +1,8 @@
 "use client";
 
-import {useMutation} from "@tanstack/react-query";
+import {useMutation, useQuery} from "@tanstack/react-query";
 import {useAuthStore} from "@/stores/auth";
+import {authorize} from "@/lib/api/auth";
 
 /**
  * Thin fetch wrapper for Next.js auth API routes.
@@ -9,11 +10,13 @@ import {useAuthStore} from "@/stores/auth";
  * Does NOT go through apiClient to avoid token-refresh interceptors
  * triggering recursively during auth flows.
  */
-async function authFetch(path, body, method = "POST") {
+export async function authFetch(path, body, method = "POST") {
     const options = {
         method,
         credentials: "include",
-        headers: {"Content-Type": "application/json"},
+        headers: {
+            "Content-Type": "application/json",
+        },
     };
 
     if (body !== undefined) {
@@ -24,15 +27,29 @@ async function authFetch(path, body, method = "POST") {
     const data = await res.json().catch(() => ({}));
 
     if (!res.ok) {
-        const err = new Error(
-            data.error || data.detail || "Request failed."
-        );
-        err.status = res.status;
-        err.data = data;
-        throw err;
+        const errorMessage =
+            data?.error ||
+            data?.detail ||
+            "Request failed.";
+
+        const error = new Error(errorMessage);
+
+        error.status = res.status;
+        error.data = data;
+        error.errors = data?.errors || {};
+
+        throw error;
     }
 
     return data;
+}
+
+export function useCurrentUser() {
+    return useQuery({
+        queryKey: ["account", "me"],
+        queryFn: () => authorize(),
+        retry: false,
+    });
 }
 
 export function useLogin() {
@@ -42,13 +59,12 @@ export function useLogin() {
         mutationFn: ({email, password}) =>
             authFetch("/api/auth/login", {email, password}),
 
-        onSuccess: ({access_token, expires_in, user}) => {
-            setAuth({access_token, expire_in: expires_in, user});
+        onSuccess: ({access_token, user}) => {
+            setAuth({access_token, user});
         },
     });
 }
 
-// ─── Register ────────────────────────────────────────────────────────────────
 
 export function useRegister() {
     const setAuth = useAuthStore((s) => s.setAuth);
@@ -59,7 +75,7 @@ export function useRegister() {
 
         onSuccess: ({access_token, expires_in, user}) => {
             if (access_token) {
-                setAuth({access_token, expire_in: expires_in, user});
+                setAuth({access_token, expires_in, user});
             }
         },
     });
