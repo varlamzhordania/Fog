@@ -45,7 +45,6 @@ const ShowCase = ({title = "product discovery"}) => {
                     ];
 
                     return (
-
                         <article
                             key={category.id ?? category.slug ?? index}
                             className={`
@@ -54,30 +53,27 @@ const ShowCase = ({title = "product discovery"}) => {
                                 ${layouts[index]}
                             `}
                         >
-                            <Link href={`/products/?category=${category.slug}`}>
-                                <Image
-                                    src={category.img || notFoundImage}
-                                    alt={category.name}
-                                    fill
-                                    unoptimized={true}
-                                    sizes="(max-width: 640px) 100vw,
+                            <Image
+                                src={category.img || notFoundImage}
+                                alt={category.name}
+                                fill
+                                unoptimized={true}
+                                sizes="(max-width: 640px) 100vw,
                                            (max-width: 1024px) 50vw,
                                            50vw"
-                                    className="object-cover transition-transform duration-700 group-hover:scale-105"
-                                />
+                                className="object-cover transition-transform duration-700 group-hover:scale-105"
+                            />
+                            <div
+                                className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent"/>
 
-                                <div
-                                    className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent"/>
-
-                                <div className="absolute inset-x-0 bottom-0 p-5 lg:p-6">
-                                    <Typography
-                                        type="h4"
-                                        className="text-xl font-bold capitalize tracking-tight text-white lg:text-2xl"
-                                    >
-                                        {category.name}
-                                    </Typography>
-                                </div>
-                            </Link>
+                            <div className="absolute inset-x-0 bottom-0 p-5 lg:p-6">
+                                <Typography
+                                    type="h4"
+                                    className="text-xl font-bold capitalize tracking-tight text-white lg:text-2xl"
+                                >
+                                    {category.name}
+                                </Typography>
+                            </div>
                         </article>
                     );
                 })}
