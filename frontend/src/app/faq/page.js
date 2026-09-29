@@ -33,7 +33,7 @@ const FAQ_GROUPS = [
                 a: "We accept cryptocurrency only — Bitcoin (BTC), Monero (XMR), and other digital assets listed at checkout. We do not accept credit cards, PayPal, or any fiat payment method. This keeps transactions private and irreversible.",
             },
             {
-                q: "How does anonymous checkout work?",
+                q: "How does checkout work?",
                 a: "You do not need to create an account to place an order. Sessions are ephemeral — we do not tie your cart or purchase history to a persistent identity. Simply browse, add to cart, choose your shipping option, and pay with crypto. Only a shipping address is required for physical delivery.",
             },
             {

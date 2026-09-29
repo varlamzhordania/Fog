@@ -1,0 +1,146 @@
+[
+  {
+    "model": "inventory.tag",
+    "pk": 1,
+    "fields": {
+      "is_active": true,
+      "name": "Fruiting Body",
+      "slug": "fruiting-body",
+      "is_filterable": true,
+      "created_at": "2026-01-01T00:00:00Z",
+      "updated_at": "2026-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "inventory.tag",
+    "pk": 2,
+    "fields": {
+      "is_active": true,
+      "name": "Dual Extract",
+      "slug": "dual-extract",
+      "is_filterable": true,
+      "created_at": "2026-01-01T00:00:00Z",
+      "updated_at": "2026-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "inventory.tag",
+    "pk": 3,
+    "fields": {
+      "is_active": true,
+      "name": "Cognitive Support",
+      "slug": "cognitive-support",
+      "is_filterable": true,
+      "created_at": "2026-01-01T00:00:00Z",
+      "updated_at": "2026-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "inventory.tag",
+    "pk": 4,
+    "fields": {
+      "is_active": true,
+      "name": "Immune Modulation",
+      "slug": "immune-modulation",
+      "is_filterable": true,
+      "created_at": "2026-01-01T00:00:00Z",
+      "updated_at": "2026-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "inventory.tag",
+    "pk": 5,
+    "fields": {
+      "is_active": true,
+      "name": "Adaptogen",
+      "slug": "adaptogen",
+      "is_filterable": true,
+      "created_at": "2026-01-01T00:00:00Z",
+      "updated_at": "2026-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "inventory.tag",
+    "pk": 6,
+    "fields": {
+      "is_active": true,
+      "name": "Wild Foraged",
+      "slug": "wild-foraged",
+      "is_filterable": true,
+      "created_at": "2026-01-01T00:00:00Z",
+      "updated_at": "2026-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "inventory.tag",
+    "pk": 7,
+    "fields": {
+      "is_active": true,
+      "name": "Wood Grown",
+      "slug": "wood-grown",
+      "is_filterable": true,
+      "created_at": "2026-01-01T00:00:00Z",
+      "updated_at": "2026-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "inventory.tag",
+    "pk": 8,
+    "fields": {
+      "is_active": true,
+      "name": "Microscopy Grade",
+      "slug": "microscopy-grade",
+      "is_filterable": true,
+      "created_at": "2026-01-01T00:00:00Z",
+      "updated_at": "2026-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "inventory.tag",
+    "pk": 9,
+    "fields": {
+      "is_active": true,
+      "name": "Liquid Culture",
+      "slug": "liquid-culture",
+      "is_filterable": true,
+      "created_at": "2026-01-01T00:00:00Z",
+      "updated_at": "2026-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "inventory.tag",
+    "pk": 10,
+    "fields": {
+      "is_active": true,
+      "name": "Spore Suspension",
+      "slug": "spore-suspension",
+      "is_filterable": false,
+      "created_at": "2026-01-01T00:00:00Z",
+      "updated_at": "2026-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "inventory.tag",
+    "pk": 11,
+    "fields": {
+      "is_active": true,
+      "name": "Mycelium Biomass",
+      "slug": "mycelium-biomass",
+      "is_filterable": false,
+      "created_at": "2026-01-01T00:00:00Z",
+      "updated_at": "2026-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "inventory.tag",
+    "pk": 12,
+    "fields": {
+      "is_active": true,
+      "name": "Standardized Beta-Glucans",
+      "slug": "standardized-beta-glucans",
+      "is_filterable": false,
+      "created_at": "2026-01-01T00:00:00Z",
+      "updated_at": "2026-01-01T00:00:00Z"
+    }
+  }
+]

@@ -10,6 +10,8 @@
       "slug": "dried-mushrooms",
       "description": "Selected dried whole medicinal and functional mushrooms, verified for quality and bio-active preservation.",
       "img": null,
+      "is_featured": false,
+      "is_filterable": false,
       "is_active": true,
       "created_at": "2026-01-01T00:00:00Z",
       "updated_at": "2026-01-01T00:00:00Z"
@@ -26,6 +28,8 @@
       "slug": "whole-fruit-bodies",
       "description": "Whole intact fruiting bodies of Lion's Mane, Reishi, Cordyceps, and Chaga.",
       "img": null,
+      "is_featured": false,
+      "is_filterable": true,
       "is_active": true,
       "created_at": "2026-01-01T00:00:00Z",
       "updated_at": "2026-01-01T00:00:00Z"
@@ -42,6 +46,8 @@
       "slug": "sliced-cut",
       "description": "Dehydrated slices prepared for teas, infusions, and decoctions.",
       "img": null,
+      "is_featured": false,
+      "is_filterable": true,
       "is_active": true,
       "created_at": "2026-01-01T00:00:00Z",
       "updated_at": "2026-01-01T00:00:00Z"
@@ -58,6 +64,8 @@
       "slug": "extracts-tinctures",
       "description": "Dual-extracted and bioavailable fungal formulations for targeted research and daily application.",
       "img": null,
+      "is_featured": false,
+      "is_filterable": false,
       "is_active": true,
       "created_at": "2026-01-01T00:00:00Z",
       "updated_at": "2026-01-01T00:00:00Z"
@@ -74,6 +82,8 @@
       "slug": "dual-extracts",
       "description": "Hot water and alcohol dual-extract liquids concentrating beta-glucans and triterpenes.",
       "img": null,
+      "is_featured": false,
+      "is_filterable": true,
       "is_active": true,
       "created_at": "2026-01-01T00:00:00Z",
       "updated_at": "2026-01-01T00:00:00Z"
@@ -90,6 +100,8 @@
       "slug": "fine-powders",
       "description": "Micronized water-soluble extract powders.",
       "img": null,
+      "is_featured": false,
+      "is_filterable": true,
       "is_active": true,
       "created_at": "2026-01-01T00:00:00Z",
       "updated_at": "2026-01-01T00:00:00Z"
@@ -106,6 +118,8 @@
       "slug": "spores-genetics",
       "description": "Sterile spore syringes, spore prints, and isolated liquid cultures for microscopy and documentation.",
       "img": null,
+      "is_featured": false,
+      "is_filterable": true,
       "is_active": true,
       "created_at": "2026-01-01T00:00:00Z",
       "updated_at": "2026-01-01T00:00:00Z"
@@ -122,6 +136,8 @@
       "slug": "lab-cultivation-supplies",
       "description": "Microscopy tools, agar formulations, sterile culture media, and specialized mycological substrate additives.",
       "img": null,
+      "is_featured": false,
+      "is_filterable": true,
       "is_active": true,
       "created_at": "2026-01-01T00:00:00Z",
       "updated_at": "2026-01-01T00:00:00Z"

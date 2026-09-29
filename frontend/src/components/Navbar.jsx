@@ -143,6 +143,7 @@ const Navbar = () => {
                         </Typography>
                     </div>
                 </Button>
+
                 <Button isIconOnly variant={"ghost"} onPress={() => toggleTheme()}>
                     {theme === 'dark' ? <Icon icon={Sun}/> : <Icon icon={Moon}/>}
 

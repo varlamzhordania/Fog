@@ -100,8 +100,15 @@ class Category(MP_Node, BaseModel):
         default=False,
         verbose_name=_("Is Featured"),
         help_text=_(
-            "Activating will shown this category on the featured list on the storefront."
-        )
+            "Activating will show this category in the featured list on the storefront."
+        ),
+    )
+    is_filterable = models.BooleanField(
+        default=False,
+        verbose_name=_("Filterable"),
+        help_text=_(
+            "When enabled, this category can be used as a product filter on the storefront."
+        ),
     )
     is_active = models.BooleanField(
         default=True,
@@ -119,6 +126,7 @@ class Category(MP_Node, BaseModel):
         indexes = [
             models.Index(fields=["slug"]),
             models.Index(fields=["is_active"]),
+            models.Index(fields=["is_filterable"]),
         ]
 
     def __str__(self):
@@ -131,7 +139,6 @@ class Category(MP_Node, BaseModel):
         )
         ancestors.append(self.name)
         return " > ".join(ancestors)
-
 
 class Tag(BaseModel):
     name = models.CharField(
@@ -149,6 +156,13 @@ class Tag(BaseModel):
         always_update=False,
         verbose_name=_("Slug"),
     )
+    is_filterable = models.BooleanField(
+        default=False,
+        verbose_name=_("Filterable"),
+        help_text=_(
+            "When enabled, this tag can be used as a product filter on the storefront."
+        ),
+    )
 
     class Meta:
         verbose_name = _("Tag")
@@ -157,6 +171,7 @@ class Tag(BaseModel):
         indexes = [
             models.Index(fields=["slug"]),
             models.Index(fields=["is_active"]),
+            models.Index(fields=["is_filterable"]),
         ]
 
     def __str__(self):

@@ -167,6 +167,13 @@ UNFOLD_SETTINGS = {
                             "admin:inventory_category_changelist"
                         ),
                     },
+                    {
+                        "title": _("Tags"),
+                        "icon": "tag",
+                        "link": reverse_lazy(
+                            "admin:inventory_tag_changelist"
+                        ),
+                    },
                 ],
             },
             {
@@ -243,6 +250,7 @@ UNFOLD_SETTINGS = {
             "models": [
                 "inventory.product",
                 "inventory.category",
+                "inventory.tag",
             ],
             "items": [
                 {
@@ -255,6 +263,12 @@ UNFOLD_SETTINGS = {
                     "title": _("Categories"),
                     "link": reverse_lazy(
                         "admin:inventory_category_changelist"
+                    ),
+                },
+                {
+                    "title": _("Tags"),
+                    "link": reverse_lazy(
+                        "admin:inventory_tag_changelist"
                     ),
                 },
             ],

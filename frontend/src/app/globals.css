@@ -38,10 +38,10 @@
     --overlay-foreground: #17212B;
 
     /* Fields */
-    --field-background: #FFFFFF;
-    --field-border: #CBD5DC;
+    --field-background: #F6F9FB;
+    --field-border: #C7D2DA;
     --field-foreground: #17212B;
-    --field-placeholder: #8795A1;
+    --field-placeholder: #7F8E99;
 
     /* Utility */
     --muted: #71808C;
@@ -115,10 +115,10 @@
     --overlay-foreground: #E8EEF2;
 
     /* Fields */
-    --field-background: #12191F;
-    --field-border: #2A363F;
+    --field-background: #151D23;
+    --field-border: #2C3942;
     --field-foreground: #E8EEF2;
-    --field-placeholder: #71808C;
+    --field-placeholder: #7C8B96;
 
     /* Utility */
     --muted: #81909B;
@@ -205,6 +205,9 @@
 
     .nav-link {
         @apply capitalize font-semibold text-lg text-foreground
+    }
+    .checkbox__control{
+        --radius: 0.425rem;
     }
 
 }

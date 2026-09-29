@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from inventory.models import Media, Category
+from inventory.models import Media, Category, Tag
 
 
 class MediaSerializer(serializers.ModelSerializer):
@@ -22,11 +22,15 @@ class CategorySerializer(serializers.ModelSerializer):
             'description',
             'img',
             'is_featured',
+            'is_filterable',
             'children',
         ]
 
     def get_img(self, obj):
-        if hasattr(obj, 'img') and obj.img and hasattr(obj.img, 'file') and obj.img.file:
+        if hasattr(obj, 'img') and obj.img and hasattr(
+                obj.img,
+                'file'
+        ) and obj.img.file:
             request = self.context.get('request')
             if request:
                 return request.build_absolute_uri(obj.img.file.url)
@@ -35,4 +39,14 @@ class CategorySerializer(serializers.ModelSerializer):
 
     def get_children(self, obj):
         children = obj.get_children().filter(is_active=True)
-        return CategorySerializer(children, many=True, context=self.context).data
+        return CategorySerializer(
+            children,
+            many=True,
+            context=self.context
+        ).data
+
+
+class TagSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Tag
+        fields = ['id', 'name','slug','is_filterable']

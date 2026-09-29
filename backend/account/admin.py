@@ -9,6 +9,7 @@ from django.utils.translation import gettext_lazy as _
 from unfold import admin
 from unfold.forms import AdminPasswordChangeForm
 
+from core.admin import UnfoldImportExportAdmin
 from .models import Address
 from .forms import CustomUserChangeForm, CustomUserCreationForm
 
@@ -27,7 +28,7 @@ class AddressInline(admin.StackedInline):
 
 
 @django_admin.register(User)
-class UserAdmin(BaseUserAdmin, admin.ModelAdmin):
+class UserAdmin(UnfoldImportExportAdmin, BaseUserAdmin):
     form = CustomUserChangeForm
     add_form = CustomUserCreationForm
     change_password_form = AdminPasswordChangeForm
@@ -40,13 +41,12 @@ class UserAdmin(BaseUserAdmin, admin.ModelAdmin):
         "is_staff",
         "is_active",
         "orders_count",
-        "last_ip",
         "date_joined",
     ]
     list_filter = ["is_staff", "is_superuser", "is_active", "groups"]
-    search_fields = ["email", "first_name", "last_name", "last_ip"]
+    search_fields = ["email", "first_name", "last_name"]
     ordering = ["-date_joined"]
-    readonly_fields = ["email", "last_ip", "last_login", "date_joined"]
+    readonly_fields = ["email", "last_login", "date_joined"]
 
     fieldsets = (
         (
@@ -63,12 +63,12 @@ class UserAdmin(BaseUserAdmin, admin.ModelAdmin):
                 ),
             },
         ),
-        (
-            _("Network & Security"),
-            {
-                "fields": ("last_ip",),
-            },
-        ),
+        # (
+        #     _("Network & Security"),
+        #     {
+        #         "fields": ("last_ip",),
+        #     },
+        # ),
         (
             _("Permissions & Access"),
             {
@@ -113,7 +113,8 @@ class UserAdmin(BaseUserAdmin, admin.ModelAdmin):
         count = obj.orders.count()
         if count == 0:
             return format_html(
-                '<span class="text-xs text-gray-400 text-center">{}</span>', 0
+                '<span class="text-xs text-gray-400 text-center">{}</span>',
+                0
             )
         try:
             url = reverse(

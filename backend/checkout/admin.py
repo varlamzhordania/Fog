@@ -3,10 +3,10 @@ from django.urls import NoReverseMatch, reverse
 from django.utils import timezone
 from django.utils.html import format_html
 from django.utils.translation import gettext_lazy as _
-from import_export.admin import ImportExportMixin
 from unfold import admin
 
 from inventory.models import StockReservation
+from core.admin import UnfoldImportExportAdmin
 from .models import (
     Order,
     OrderItem,
@@ -147,7 +147,7 @@ class ShoppingCartAdmin(admin.ModelAdmin):
 
 
 @django_admin.register(Order)
-class OrderAdmin(ImportExportMixin, admin.ModelAdmin):
+class OrderAdmin(UnfoldImportExportAdmin):
     resource_classes = [OrderResource]
     inlines = [
         OrderItemInline,

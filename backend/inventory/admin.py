@@ -4,13 +4,14 @@ from django.urls import NoReverseMatch, reverse
 from django.utils import timezone
 from django.utils.html import format_html
 from django.utils.translation import gettext_lazy as _
-from import_export.admin import ImportExportMixin
 from treebeard.admin import TreeAdmin
 from treebeard.forms import movenodeform_factory
 from unfold import admin
 
+from core.admin import UnfoldImportExportAdmin
 from .models import (
     Category,
+    Tag,
     Media,
     Product,
     ProductMedia,
@@ -90,27 +91,86 @@ class ProductStockInline(
 
 @django_admin.register(Media)
 class MediaAdmin(admin.ModelAdmin):
-    list_display = ["preview", "title", "media_type", "file", "created_at"]
-    list_filter = ["media_type", "created_at"]
+    list_display = [
+        "preview",
+        "title",
+        "media_type",
+        "file",
+        "is_active",
+        "created_at",
+    ]
+    list_filter = ["media_type", "is_active", "created_at"]
     search_fields = ["title", "alt_text", "file"]
-    readonly_fields = ["id", "created_at", "updated_at"]
+
+    readonly_fields = [
+        "id",
+        "created_at",
+        "updated_at",
+        "preview",
+    ]
+
+    fieldsets = (
+        (
+            _("Media"),
+            {
+                "fields": (
+                    "file",
+                    "media_type",
+                    "preview",
+                ),
+            },
+        ),
+        (
+            _("Metadata"),
+            {
+                "fields": (
+                    "title",
+                    "alt_text",
+                ),
+            },
+        ),
+        (
+            _("Status"),
+            {
+                "fields": (
+                    "is_active",
+                ),
+            },
+        ),
+        (
+            _("System Information"),
+            {
+                "classes": ("collapse",),
+                "fields": (
+                    "id",
+                    "created_at",
+                    "updated_at",
+                ),
+            },
+        ),
+    )
 
     @django_admin.display(description=_("Preview"))
     def preview(self, obj):
-        if obj.media_type == Media.TypeChoices.IMAGE and obj.file:
+        if (
+                obj
+                and obj.media_type == Media.TypeChoices.IMAGE
+                and obj.file
+        ):
             return format_html(
-                '<img src="{}" style="width: 42px; height: 42px; object-fit: cover; border-radius: 6px;" />',
+                '<img src="{}" class="w-24 h-24 aspect-auto object-cover rounded-lg" />',
                 obj.file.url,
             )
+
         return "—"
 
 
 @django_admin.register(Category)
-class CategoryAdmin(ImportExportMixin, TreeAdmin, admin.ModelAdmin):
+class CategoryAdmin(UnfoldImportExportAdmin, TreeAdmin):
     form = movenodeform_factory(Category)
-    list_display = ["name", "slug", "is_featured", "is_active",
-                    "created_at"]
-    list_filter = ["is_active", "is_featured"]
+    list_display = ["name", "slug", "is_featured", "is_filterable",
+                    "is_active", "created_at"]
+    list_filter = ["is_active", "is_filterable", "is_featured"]
     search_fields = ["name", "slug"]
 
     class Media:
@@ -122,9 +182,17 @@ class CategoryAdmin(ImportExportMixin, TreeAdmin, admin.ModelAdmin):
         }
 
 
+@django_admin.register(Tag)
+class TagAdmin(UnfoldImportExportAdmin):
+    list_display = ["name", "slug", "is_filterable",
+                    "is_active", "created_at"]
+    list_filter = ["is_active", "is_filterable", ]
+    search_fields = ["name", "slug"]
+
+
 @django_admin.register(Product)
 class ProductAdmin(
-    ImportExportMixin,
+    UnfoldImportExportAdmin,
     nested_admin.NestedModelAdmin,
     admin.ModelAdmin
 ):
@@ -154,6 +222,7 @@ class ProductAdmin(
                     "slug",
                     "sku",
                     "category",
+                    "tags",
                     "product_type",
                     "base_price",
                 )

@@ -13,3 +13,28 @@ export const validatePassword = (value) => {
     // }
     return null;
 }
+
+export const getClientIp = (headers) => {
+    // Cloudflare
+    const cfIp = headers.get("cf-connecting-ip");
+
+    if (cfIp) {
+        return cfIp;
+    }
+
+    // Standard reverse proxy header
+    const forwardedFor = headers.get("x-forwarded-for");
+
+    if (forwardedFor) {
+        return forwardedFor.split(",")[0].trim();
+    }
+
+    // Alternative proxy header
+    const realIp = headers.get("x-real-ip");
+
+    if (realIp) {
+        return realIp;
+    }
+
+    return null;
+}

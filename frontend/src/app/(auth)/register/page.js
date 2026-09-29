@@ -1,6 +1,6 @@
 "use client";
 
-import {useState} from "react";
+import {useEffect, useState} from "react";
 import {useRouter} from "next/navigation";
 import Link from "next/link";
 import {
@@ -13,16 +13,18 @@ import {
     Label, Separator,
     TextField,
     Typography,
-    toast,
+    toast, InputGroup,
 } from "@heroui/react";
 import {AlertCircle, Eye, EyeOff, LogIn, UserPlus} from "lucide-react";
 import Icon from "@/components/Icon/Icon";
 import {useRegister} from "@/queries/auth";
 import {validateEmail, validatePassword} from "@/lib/utils";
+import {useAuthStore} from "@/stores/auth";
 
 export default function RegisterPage() {
     const router = useRouter();
     const {mutate: register, isPending, error} = useRegister();
+    const {logged_in} = useAuthStore(state => state)
 
     const [form, setForm] = useState({
         email: "",
@@ -49,7 +51,7 @@ export default function RegisterPage() {
         }
 
         register(form, {
-            onSuccess: () => router.push("/"),
+            onSuccess: () => toast.success("Your account created successfully."),
             onError: (error) => {
                 const id = toast.danger("Register Failed", {
                     actionProps: {
@@ -62,6 +64,10 @@ export default function RegisterPage() {
             }
         });
     };
+
+    useEffect(() => {
+        if (logged_in) router.push("/")
+    }, [logged_in]);
 
 
     return (
@@ -123,9 +129,9 @@ export default function RegisterPage() {
                         <TextField
                             isRequired
                             variant={"secondary"}
-                            // minLength={8}
+                            minLength={8}
                             name="password1"
-                            type="password"
+                            type={showPassword ? 'text' : 'password'}
                             validate={(value) => validatePassword(value)}
                             value={form.password1}
                             onChange={(value) => handleChange(value, "password1")}
@@ -133,7 +139,15 @@ export default function RegisterPage() {
                             <div className={"flex justify-between items-center"}>
                                 <Label>Password</Label>
                             </div>
-                            <Input placeholder="Enter your password"/>
+                            <InputGroup variant="secondary">
+                                <InputGroup.Input placeholder="Enter your password"/>
+                                <InputGroup.Suffix className={"pe-0"}>
+                                    <Button isIconOnly variant={"ghost"}
+                                            onPress={() => setShowPassword(prevState => !prevState)}>
+                                        <Icon icon={showPassword ? Eye : EyeOff}/>
+                                    </Button>
+                                </InputGroup.Suffix>
+                            </InputGroup>
                             <Description>
                                 Must be at least 8 characters with 1 uppercase and 1 number
                             </Description>
@@ -143,9 +157,9 @@ export default function RegisterPage() {
                         <TextField
                             isRequired
                             variant={"secondary"}
-                            // minLength={8}
+                            minLength={8}
                             name="password2"
-                            type="password"
+                            type={showPassword ? 'text' : 'password'}
                             validate={(value) => validatePassword(value)}
                             value={form.password2}
                             onChange={(value) => handleChange(value, "password2")}
@@ -153,7 +167,15 @@ export default function RegisterPage() {
                             <div className={"flex justify-between items-center"}>
                                 <Label>Confirm Password</Label>
                             </div>
-                            <Input placeholder="Re-enter your password"/>
+                            <InputGroup variant="secondary">
+                                <InputGroup.Input placeholder="Enter your password"/>
+                                <InputGroup.Suffix className={"pe-0"}>
+                                    <Button isIconOnly variant={"ghost"}
+                                            onPress={() => setShowPassword(prevState => !prevState)}>
+                                        <Icon icon={showPassword ? Eye : EyeOff}/>
+                                    </Button>
+                                </InputGroup.Suffix>
+                            </InputGroup>
                             <FieldError/>
                         </TextField>
 

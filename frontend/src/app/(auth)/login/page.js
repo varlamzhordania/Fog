@@ -12,9 +12,9 @@ import {
     Input,
     Label, Separator,
     TextField, toast,
-    Typography
+    Typography, InputGroup
 } from "@heroui/react";
-import {LogIn} from "lucide-react";
+import {Eye, EyeOff, LogIn} from "lucide-react";
 import Icon from "@/components/Icon/Icon";
 import {useLogin} from "@/queries/auth";
 import {validateEmail, validatePassword} from "@/lib/utils";
@@ -90,9 +90,9 @@ export default function LoginPage() {
                         <TextField
                             isRequired
                             variant={"secondary"}
-                            // minLength={8}
+                            minLength={4}
                             name="password"
-                            type="password"
+                            type={showPassword ? 'text' : 'password'}
                             validate={(value) => validatePassword(value)}
                             value={form.password}
                             onChange={(value) => handleChange(value, "password")}
@@ -106,7 +106,15 @@ export default function LoginPage() {
                                     Forgot password?
                                 </Link>
                             </div>
-                            <Input placeholder="Enter your password"/>
+                            <InputGroup variant="secondary">
+                                <InputGroup.Input placeholder="Enter your password"/>
+                                <InputGroup.Suffix className={"pe-0"}>
+                                    <Button isIconOnly variant={"ghost"}
+                                            onPress={() => setShowPassword(prevState => !prevState)}>
+                                        <Icon icon={showPassword ? Eye : EyeOff}/>
+                                    </Button>
+                                </InputGroup.Suffix>
+                            </InputGroup>
                             <Description>
                                 Must be at least 8 characters with 1 uppercase and 1 number
                             </Description>
