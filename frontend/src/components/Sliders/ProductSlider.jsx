@@ -1,17 +1,16 @@
 "use client";
 
 import {useState} from "react";
-import Image from "next/image";
 import {A11y} from "swiper/modules";
 import {Swiper, SwiperSlide} from "swiper/react";
 
 import "swiper/css";
 import "swiper/css/scrollbar";
 
-import {Link, Button, Card, Typography} from "@heroui/react";
-import {ChevronRight, ChevronLeft, MoveRight,ShoppingCartPlus} from "lucide-react";
+import { Button, Typography} from "@heroui/react";
+import {ChevronRight, ChevronLeft} from "lucide-react";
 import Icon from "@/components/Icon/Icon";
-import {notFoundImage} from "@/lib/config";
+import ProductCard from "@/components/inventory/ProductCard";
 
 const ProductSlider = ({
                            productData = [],
@@ -109,75 +108,3 @@ const ProductSlider = ({
 
 export default ProductSlider;
 
-const ProductCard = ({
-                         data = {
-                             name: "Product Name",
-                             slug: "/products/",
-                             short_description: "Short description here",
-                             img: notFoundImage,
-                             price: 45.99,
-                         },
-                         depth = false,
-                         featured = false,
-                     }) => {
-    const formattedPrice = typeof data.price === "number" ? data.price.toFixed(2) : data.price;
-
-    return (
-        <Card className={`h-full w-full ${depth && "bg-transparent shadow-none border-0"}`}>
-            <Card.Header
-                className={`p-0 overflow-hidden relative ${featured ? 'aspect-video' : 'aspect-square'}  w-full rounded-xl`}>
-                <Image
-                    src={data.img || notFoundImage}
-                    alt={data.name || "Product image"}
-                    fill
-                    sizes="(max-width: 640px) 80vw, (max-width: 1024px) 33vw, 20vw"
-                    className="object-cover rounded-xl transition-transform duration-300 hover:scale-105"
-                />
-                {
-                    featured &&
-                    <div className={"absolute left-4 bottom-4 z-20"}>
-                        <Typography type="span" className="text-foreground text-lg font-bold ">
-                            ${formattedPrice}
-                        </Typography>
-                    </div>
-                }
-                {
-                    <div
-                        className={"absolute inset-0 bg-gradient-to-t from-background/40 via-background/10 to-transparent z-10"}></div>
-                }
-
-            </Card.Header>
-
-            <Card.Content>
-                <Typography type={"h4"} title={data.name} className={"text-lg"}>
-                    {data.name}
-                </Typography>
-                <Typography type={"body-sm"} color={"muted"} className={"line-clamp-2"}>
-                    {data.short_description}
-                </Typography>
-                {
-                    !featured &&
-                    <Typography type="span" className="text-foreground text-lg font-bold">
-                        ${formattedPrice}
-                    </Typography>
-                }
-
-            </Card.Content>
-
-            <Card.Footer>
-                {featured ?
-                    <Link href={data.slug || "/products/"}
-                          className={"group flex gap-2 items-center text-accent font-semibold no-underline "}>
-                        Show Now
-                        <Icon icon={MoveRight}
-                              className={"group-hover:translate-x-0.5 transition"}/>
-                    </Link> :
-                    <Button fullWidth className="capitalize gap-2">
-                        Add to cart
-                        <Icon icon={ShoppingCartPlus}/>
-                    </Button>}
-
-            </Card.Footer>
-        </Card>
-    );
-};

@@ -1,0 +1,534 @@
+[
+  {
+    "model": "inventory.productstock",
+    "pk": 1,
+    "fields": {
+      "product": 1,
+      "quantity": 98,
+      "reserved_quantity": 1,
+      "is_available": true,
+      "low_stock_threshold": 10,
+      "is_active": true,
+      "created_at": "2026-08-12T10:00:00Z",
+      "updated_at": "2026-09-30T21:05:00Z"
+    }
+  },
+  {
+    "model": "inventory.productstock",
+    "pk": 2,
+    "fields": {
+      "product": 2,
+      "quantity": 44,
+      "reserved_quantity": 0,
+      "is_available": true,
+      "low_stock_threshold": 8,
+      "is_active": true,
+      "created_at": "2026-08-12T10:00:00Z",
+      "updated_at": "2026-09-13T13:20:00Z"
+    }
+  },
+  {
+    "model": "inventory.productstock",
+    "pk": 3,
+    "fields": {
+      "product": 3,
+      "quantity": 0,
+      "reserved_quantity": 0,
+      "is_available": false,
+      "low_stock_threshold": 5,
+      "is_active": true,
+      "created_at": "2026-08-12T10:00:00Z",
+      "updated_at": "2026-09-30T08:00:00Z"
+    }
+  },
+  {
+    "model": "inventory.productstock",
+    "pk": 4,
+    "fields": {
+      "product": 4,
+      "quantity": 3,
+      "reserved_quantity": 0,
+      "is_available": true,
+      "low_stock_threshold": 5,
+      "is_active": true,
+      "created_at": "2026-08-12T10:00:00Z",
+      "updated_at": "2026-09-28T16:20:00Z"
+    }
+  },
+  {
+    "model": "inventory.productstock",
+    "pk": 5,
+    "fields": {
+      "product": 5,
+      "quantity": 49,
+      "reserved_quantity": 0,
+      "is_available": true,
+      "low_stock_threshold": 8,
+      "is_active": true,
+      "created_at": "2026-08-12T10:00:00Z",
+      "updated_at": "2026-09-29T17:47:00Z"
+    }
+  },
+  {
+    "model": "inventory.productstock",
+    "pk": 6,
+    "fields": {
+      "product": 6,
+      "quantity": 54,
+      "reserved_quantity": 0,
+      "is_available": true,
+      "low_stock_threshold": 8,
+      "is_active": true,
+      "created_at": "2026-08-12T10:00:00Z",
+      "updated_at": "2026-09-06T11:21:00Z"
+    }
+  },
+  {
+    "model": "inventory.productstock",
+    "pk": 7,
+    "fields": {
+      "product": 7,
+      "quantity": 68,
+      "reserved_quantity": 0,
+      "is_available": true,
+      "low_stock_threshold": 10,
+      "is_active": true,
+      "created_at": "2026-08-12T10:00:00Z",
+      "updated_at": "2026-09-03T09:39:00Z"
+    }
+  },
+  {
+    "model": "inventory.productstock",
+    "pk": 8,
+    "fields": {
+      "product": 8,
+      "quantity": 77,
+      "reserved_quantity": 0,
+      "is_available": true,
+      "low_stock_threshold": 12,
+      "is_active": true,
+      "created_at": "2026-08-12T10:00:00Z",
+      "updated_at": "2026-09-13T13:20:00Z"
+    }
+  },
+  {
+    "model": "inventory.productstock",
+    "pk": 9,
+    "fields": {
+      "product": 9,
+      "quantity": 48,
+      "reserved_quantity": 0,
+      "is_available": true,
+      "low_stock_threshold": 8,
+      "is_active": true,
+      "created_at": "2026-08-12T10:00:00Z",
+      "updated_at": "2026-09-24T07:58:00Z"
+    }
+  },
+  {
+    "model": "inventory.productstock",
+    "pk": 10,
+    "fields": {
+      "product": 10,
+      "quantity": 39,
+      "reserved_quantity": 1,
+      "is_available": true,
+      "low_stock_threshold": 8,
+      "is_active": true,
+      "created_at": "2026-08-12T10:00:00Z",
+      "updated_at": "2026-09-30T21:15:00Z"
+    }
+  },
+  {
+    "model": "inventory.productstock",
+    "pk": 11,
+    "fields": {
+      "product": 11,
+      "quantity": 34,
+      "reserved_quantity": 0,
+      "is_available": true,
+      "low_stock_threshold": 6,
+      "is_active": true,
+      "created_at": "2026-08-12T10:00:00Z",
+      "updated_at": "2026-09-15T11:00:00Z"
+    }
+  },
+  {
+    "model": "inventory.productstock",
+    "pk": 12,
+    "fields": {
+      "product": 12,
+      "quantity": 44,
+      "reserved_quantity": 0,
+      "is_available": true,
+      "low_stock_threshold": 8,
+      "is_active": true,
+      "created_at": "2026-08-12T10:00:00Z",
+      "updated_at": "2026-09-20T10:41:00Z"
+    }
+  },
+  {
+    "model": "inventory.productstock",
+    "pk": 13,
+    "fields": {
+      "product": 13,
+      "quantity": 5,
+      "reserved_quantity": 0,
+      "is_available": true,
+      "low_stock_threshold": 5,
+      "is_active": true,
+      "created_at": "2026-08-12T10:00:00Z",
+      "updated_at": "2026-09-27T12:34:00Z"
+    }
+  },
+  {
+    "model": "inventory.productstock",
+    "pk": 14,
+    "fields": {
+      "product": 14,
+      "quantity": 39,
+      "reserved_quantity": 0,
+      "is_available": true,
+      "low_stock_threshold": 8,
+      "is_active": true,
+      "created_at": "2026-08-12T10:00:00Z",
+      "updated_at": "2026-09-03T09:39:00Z"
+    }
+  },
+  {
+    "model": "inventory.productstock",
+    "pk": 15,
+    "fields": {
+      "product": 15,
+      "quantity": 45,
+      "reserved_quantity": 0,
+      "is_available": true,
+      "low_stock_threshold": 8,
+      "is_active": true,
+      "created_at": "2026-08-12T10:00:00Z",
+      "updated_at": "2026-08-12T10:15:00Z"
+    }
+  },
+  {
+    "model": "inventory.productstock",
+    "pk": 16,
+    "fields": {
+      "product": 16,
+      "quantity": 40,
+      "reserved_quantity": 0,
+      "is_available": true,
+      "low_stock_threshold": 8,
+      "is_active": true,
+      "created_at": "2026-08-12T10:00:00Z",
+      "updated_at": "2026-08-12T10:16:00Z"
+    }
+  },
+  {
+    "model": "inventory.productstock",
+    "pk": 17,
+    "fields": {
+      "product": 17,
+      "quantity": 29,
+      "reserved_quantity": 0,
+      "is_available": true,
+      "low_stock_threshold": 6,
+      "is_active": true,
+      "created_at": "2026-08-12T10:00:00Z",
+      "updated_at": "2026-09-24T07:58:00Z"
+    }
+  },
+  {
+    "model": "inventory.productstock",
+    "pk": 18,
+    "fields": {
+      "product": 18,
+      "quantity": 32,
+      "reserved_quantity": 0,
+      "is_available": true,
+      "low_stock_threshold": 6,
+      "is_active": true,
+      "created_at": "2026-08-12T10:00:00Z",
+      "updated_at": "2026-09-27T12:34:00Z"
+    }
+  },
+  {
+    "model": "inventory.productstock",
+    "pk": 19,
+    "fields": {
+      "product": 19,
+      "quantity": 88,
+      "reserved_quantity": 0,
+      "is_available": true,
+      "low_stock_threshold": 15,
+      "is_active": true,
+      "created_at": "2026-08-12T10:00:00Z",
+      "updated_at": "2026-09-05T18:55:00Z"
+    }
+  },
+  {
+    "model": "inventory.productstock",
+    "pk": 20,
+    "fields": {
+      "product": 20,
+      "quantity": 70,
+      "reserved_quantity": 1,
+      "is_available": true,
+      "low_stock_threshold": 12,
+      "is_active": true,
+      "created_at": "2026-08-12T10:00:00Z",
+      "updated_at": "2026-09-30T21:05:00Z"
+    }
+  },
+  {
+    "model": "inventory.productstock",
+    "pk": 21,
+    "fields": {
+      "product": 21,
+      "quantity": 64,
+      "reserved_quantity": 0,
+      "is_available": true,
+      "low_stock_threshold": 12,
+      "is_active": true,
+      "created_at": "2026-08-12T10:00:00Z",
+      "updated_at": "2026-09-10T16:33:00Z"
+    }
+  },
+  {
+    "model": "inventory.productstock",
+    "pk": 22,
+    "fields": {
+      "product": 22,
+      "quantity": 60,
+      "reserved_quantity": 0,
+      "is_available": true,
+      "low_stock_threshold": 10,
+      "is_active": true,
+      "created_at": "2026-08-12T10:00:00Z",
+      "updated_at": "2026-08-12T10:22:00Z"
+    }
+  },
+  {
+    "model": "inventory.productstock",
+    "pk": 23,
+    "fields": {
+      "product": 23,
+      "quantity": 49,
+      "reserved_quantity": 0,
+      "is_available": true,
+      "low_stock_threshold": 8,
+      "is_active": true,
+      "created_at": "2026-08-12T10:00:00Z",
+      "updated_at": "2026-09-20T10:41:00Z"
+    }
+  },
+  {
+    "model": "inventory.productstock",
+    "pk": 24,
+    "fields": {
+      "product": 24,
+      "quantity": 45,
+      "reserved_quantity": 0,
+      "is_available": true,
+      "low_stock_threshold": 8,
+      "is_active": true,
+      "created_at": "2026-08-12T10:00:00Z",
+      "updated_at": "2026-09-18T15:02:00Z"
+    }
+  },
+  {
+    "model": "inventory.productstock",
+    "pk": 25,
+    "fields": {
+      "product": 25,
+      "quantity": 78,
+      "reserved_quantity": 0,
+      "is_available": true,
+      "low_stock_threshold": 12,
+      "is_active": true,
+      "created_at": "2026-08-12T10:00:00Z",
+      "updated_at": "2026-09-08T20:47:00Z"
+    }
+  },
+  {
+    "model": "inventory.productstock",
+    "pk": 26,
+    "fields": {
+      "product": 26,
+      "quantity": 38,
+      "reserved_quantity": 0,
+      "is_available": true,
+      "low_stock_threshold": 8,
+      "is_active": true,
+      "created_at": "2026-08-12T10:00:00Z",
+      "updated_at": "2026-09-22T20:07:00Z"
+    }
+  },
+  {
+    "model": "inventory.productstock",
+    "pk": 27,
+    "fields": {
+      "product": 27,
+      "quantity": 34,
+      "reserved_quantity": 0,
+      "is_available": true,
+      "low_stock_threshold": 6,
+      "is_active": true,
+      "created_at": "2026-08-12T10:00:00Z",
+      "updated_at": "2026-09-22T20:07:00Z"
+    }
+  },
+  {
+    "model": "inventory.productstock",
+    "pk": 28,
+    "fields": {
+      "product": 28,
+      "quantity": 29,
+      "reserved_quantity": 0,
+      "is_available": true,
+      "low_stock_threshold": 6,
+      "is_active": true,
+      "created_at": "2026-08-12T10:00:00Z",
+      "updated_at": "2026-09-29T09:56:00Z"
+    }
+  },
+  {
+    "model": "inventory.productstock",
+    "pk": 29,
+    "fields": {
+      "product": 29,
+      "quantity": 57,
+      "reserved_quantity": 0,
+      "is_available": true,
+      "low_stock_threshold": 10,
+      "is_active": true,
+      "created_at": "2026-08-12T10:00:00Z",
+      "updated_at": "2026-09-18T15:02:00Z"
+    }
+  },
+  {
+    "model": "inventory.productstock",
+    "pk": 30,
+    "fields": {
+      "product": 30,
+      "quantity": 50,
+      "reserved_quantity": 2,
+      "is_available": true,
+      "low_stock_threshold": 10,
+      "is_active": true,
+      "created_at": "2026-08-12T10:00:00Z",
+      "updated_at": "2026-09-30T21:15:00Z"
+    }
+  },
+  {
+    "model": "inventory.productstock",
+    "pk": 31,
+    "fields": {
+      "product": 31,
+      "quantity": 56,
+      "reserved_quantity": 0,
+      "is_available": true,
+      "low_stock_threshold": 10,
+      "is_active": true,
+      "created_at": "2026-08-12T10:00:00Z",
+      "updated_at": "2026-09-08T20:47:00Z"
+    }
+  },
+  {
+    "model": "inventory.productstock",
+    "pk": 32,
+    "fields": {
+      "product": 32,
+      "quantity": 51,
+      "reserved_quantity": 0,
+      "is_available": true,
+      "low_stock_threshold": 10,
+      "is_active": true,
+      "created_at": "2026-08-12T10:00:00Z",
+      "updated_at": "2026-09-29T09:56:00Z"
+    }
+  },
+  {
+    "model": "inventory.productstock",
+    "pk": 33,
+    "fields": {
+      "product": 33,
+      "quantity": 39,
+      "reserved_quantity": 0,
+      "is_available": true,
+      "low_stock_threshold": 8,
+      "is_active": true,
+      "created_at": "2026-08-12T10:00:00Z",
+      "updated_at": "2026-09-10T16:33:00Z"
+    }
+  },
+  {
+    "model": "inventory.productstock",
+    "pk": 34,
+    "fields": {
+      "product": 34,
+      "quantity": 69,
+      "reserved_quantity": 0,
+      "is_available": true,
+      "low_stock_threshold": 12,
+      "is_active": true,
+      "created_at": "2026-08-12T10:00:00Z",
+      "updated_at": "2026-09-10T16:33:00Z"
+    }
+  },
+  {
+    "model": "inventory.productstock",
+    "pk": 35,
+    "fields": {
+      "product": 35,
+      "quantity": 99998,
+      "reserved_quantity": 0,
+      "is_available": true,
+      "low_stock_threshold": 0,
+      "is_active": true,
+      "created_at": "2026-08-12T10:00:00Z",
+      "updated_at": "2026-09-11T09:09:00Z"
+    }
+  },
+  {
+    "model": "inventory.productstock",
+    "pk": 36,
+    "fields": {
+      "product": 36,
+      "quantity": 99998,
+      "reserved_quantity": 0,
+      "is_available": true,
+      "low_stock_threshold": 0,
+      "is_active": true,
+      "created_at": "2026-08-12T10:00:00Z",
+      "updated_at": "2026-09-11T09:09:00Z"
+    }
+  },
+  {
+    "model": "inventory.productstock",
+    "pk": 37,
+    "fields": {
+      "product": 37,
+      "quantity": 99998,
+      "reserved_quantity": 0,
+      "is_available": true,
+      "low_stock_threshold": 0,
+      "is_active": true,
+      "created_at": "2026-08-12T10:00:00Z",
+      "updated_at": "2026-09-11T09:09:00Z"
+    }
+  },
+  {
+    "model": "inventory.productstock",
+    "pk": 38,
+    "fields": {
+      "product": 38,
+      "quantity": 0,
+      "reserved_quantity": 0,
+      "is_available": false,
+      "low_stock_threshold": 3,
+      "is_active": true,
+      "created_at": "2026-08-12T10:00:00Z",
+      "updated_at": "2026-08-30T16:00:00Z"
+    }
+  }
+]

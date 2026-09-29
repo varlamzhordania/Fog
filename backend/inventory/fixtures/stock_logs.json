@@ -1,0 +1,1710 @@
+[
+  {
+    "model": "inventory.stocktransactionlog",
+    "pk": 1,
+    "fields": {
+      "product_stock": 1,
+      "action": "restock",
+      "quantity": 60,
+      "performed_by": 102,
+      "note": "Opening stock received into the warehouse.",
+      "is_active": true,
+      "created_at": "2026-08-12T10:01:00Z",
+      "updated_at": "2026-08-12T10:01:00Z"
+    }
+  },
+  {
+    "model": "inventory.stocktransactionlog",
+    "pk": 2,
+    "fields": {
+      "product_stock": 1,
+      "action": "reserve",
+      "quantity": 2,
+      "performed_by": null,
+      "note": "Reservation ce1ec932-6f19-5958-94b1-88dcc16ece83 created for Order #1",
+      "is_active": true,
+      "created_at": "2026-09-02T14:10:00Z",
+      "updated_at": "2026-09-02T14:10:00Z"
+    }
+  },
+  {
+    "model": "inventory.stocktransactionlog",
+    "pk": 3,
+    "fields": {
+      "product_stock": 1,
+      "action": "order_deduction",
+      "quantity": 2,
+      "performed_by": null,
+      "note": "Reservation ce1ec932-6f19-5958-94b1-88dcc16ece83 committed for Order #1",
+      "is_active": true,
+      "created_at": "2026-09-02T14:23:00Z",
+      "updated_at": "2026-09-02T14:23:00Z"
+    }
+  },
+  {
+    "model": "inventory.stocktransactionlog",
+    "pk": 4,
+    "fields": {
+      "product_stock": 1,
+      "action": "restock",
+      "quantity": 40,
+      "performed_by": 102,
+      "note": "Second harvest lot received and QC approved.",
+      "is_active": true,
+      "created_at": "2026-09-15T11:30:00Z",
+      "updated_at": "2026-09-15T11:30:00Z"
+    }
+  },
+  {
+    "model": "inventory.stocktransactionlog",
+    "pk": 5,
+    "fields": {
+      "product_stock": 1,
+      "action": "reserve",
+      "quantity": 1,
+      "performed_by": null,
+      "note": "Reservation 2393977a-8876-55e5-a8ba-681ab023f8d7 created for Order #16",
+      "is_active": true,
+      "created_at": "2026-09-30T21:05:00Z",
+      "updated_at": "2026-09-30T21:05:00Z"
+    }
+  },
+  {
+    "model": "inventory.stocktransactionlog",
+    "pk": 6,
+    "fields": {
+      "product_stock": 2,
+      "action": "restock",
+      "quantity": 45,
+      "performed_by": 102,
+      "note": "Opening stock received into the warehouse.",
+      "is_active": true,
+      "created_at": "2026-08-12T10:02:00Z",
+      "updated_at": "2026-08-12T10:02:00Z"
+    }
+  },
+  {
+    "model": "inventory.stocktransactionlog",
+    "pk": 7,
+    "fields": {
+      "product_stock": 2,
+      "action": "reserve",
+      "quantity": 1,
+      "performed_by": null,
+      "note": "Reservation 38b51ef5-6750-5e78-8d9b-87eccb478f6f created for Order #8",
+      "is_active": true,
+      "created_at": "2026-09-13T13:00:00Z",
+      "updated_at": "2026-09-13T13:00:00Z"
+    }
+  },
+  {
+    "model": "inventory.stocktransactionlog",
+    "pk": 8,
+    "fields": {
+      "product_stock": 2,
+      "action": "order_deduction",
+      "quantity": 1,
+      "performed_by": null,
+      "note": "Reservation 38b51ef5-6750-5e78-8d9b-87eccb478f6f committed for Order #8",
+      "is_active": true,
+      "created_at": "2026-09-13T13:20:00Z",
+      "updated_at": "2026-09-13T13:20:00Z"
+    }
+  },
+  {
+    "model": "inventory.stocktransactionlog",
+    "pk": 9,
+    "fields": {
+      "product_stock": 3,
+      "action": "restock",
+      "quantity": 7,
+      "performed_by": 102,
+      "note": "Opening stock received into the warehouse.",
+      "is_active": true,
+      "created_at": "2026-08-12T10:03:00Z",
+      "updated_at": "2026-08-12T10:03:00Z"
+    }
+  },
+  {
+    "model": "inventory.stocktransactionlog",
+    "pk": 10,
+    "fields": {
+      "product_stock": 3,
+      "action": "reserve",
+      "quantity": 2,
+      "performed_by": null,
+      "note": "Reservation 6701f955-737d-57d9-8a8d-df1edfb85b4d created for Order #15",
+      "is_active": true,
+      "created_at": "2026-09-29T17:20:00Z",
+      "updated_at": "2026-09-29T17:20:00Z"
+    }
+  },
+  {
+    "model": "inventory.stocktransactionlog",
+    "pk": 11,
+    "fields": {
+      "product_stock": 3,
+      "action": "order_deduction",
+      "quantity": 2,
+      "performed_by": null,
+      "note": "Reservation 6701f955-737d-57d9-8a8d-df1edfb85b4d committed for Order #15",
+      "is_active": true,
+      "created_at": "2026-09-29T17:47:00Z",
+      "updated_at": "2026-09-29T17:47:00Z"
+    }
+  },
+  {
+    "model": "inventory.stocktransactionlog",
+    "pk": 12,
+    "fields": {
+      "product_stock": 3,
+      "action": "adjustment",
+      "quantity": 5,
+      "performed_by": 102,
+      "note": "Remaining lot transferred to a partner laboratory; awaiting next wild harvest.",
+      "is_active": true,
+      "created_at": "2026-09-30T08:00:00Z",
+      "updated_at": "2026-09-30T08:00:00Z"
+    }
+  },
+  {
+    "model": "inventory.stocktransactionlog",
+    "pk": 13,
+    "fields": {
+      "product_stock": 4,
+      "action": "restock",
+      "quantity": 4,
+      "performed_by": 102,
+      "note": "Opening stock received into the warehouse.",
+      "is_active": true,
+      "created_at": "2026-08-12T10:04:00Z",
+      "updated_at": "2026-08-12T10:04:00Z"
+    }
+  },
+  {
+    "model": "inventory.stocktransactionlog",
+    "pk": 14,
+    "fields": {
+      "product_stock": 4,
+      "action": "reserve",
+      "quantity": 1,
+      "performed_by": null,
+      "note": "Reservation e0a556cc-cc9b-5d82-b1ce-c1ecbcaefd8d created for Order #13",
+      "is_active": true,
+      "created_at": "2026-09-28T15:55:00Z",
+      "updated_at": "2026-09-28T15:55:00Z"
+    }
+  },
+  {
+    "model": "inventory.stocktransactionlog",
+    "pk": 15,
+    "fields": {
+      "product_stock": 4,
+      "action": "order_deduction",
+      "quantity": 1,
+      "performed_by": null,
+      "note": "Reservation e0a556cc-cc9b-5d82-b1ce-c1ecbcaefd8d committed for Order #13",
+      "is_active": true,
+      "created_at": "2026-09-28T16:20:00Z",
+      "updated_at": "2026-09-28T16:20:00Z"
+    }
+  },
+  {
+    "model": "inventory.stocktransactionlog",
+    "pk": 16,
+    "fields": {
+      "product_stock": 5,
+      "action": "restock",
+      "quantity": 50,
+      "performed_by": 102,
+      "note": "Opening stock received into the warehouse.",
+      "is_active": true,
+      "created_at": "2026-08-12T10:05:00Z",
+      "updated_at": "2026-08-12T10:05:00Z"
+    }
+  },
+  {
+    "model": "inventory.stocktransactionlog",
+    "pk": 17,
+    "fields": {
+      "product_stock": 5,
+      "action": "reserve",
+      "quantity": 1,
+      "performed_by": null,
+      "note": "Reservation 292034eb-16e6-5869-9e8b-790da7d13508 created for Order #15",
+      "is_active": true,
+      "created_at": "2026-09-29T17:20:00Z",
+      "updated_at": "2026-09-29T17:20:00Z"
+    }
+  },
+  {
+    "model": "inventory.stocktransactionlog",
+    "pk": 18,
+    "fields": {
+      "product_stock": 5,
+      "action": "order_deduction",
+      "quantity": 1,
+      "performed_by": null,
+      "note": "Reservation 292034eb-16e6-5869-9e8b-790da7d13508 committed for Order #15",
+      "is_active": true,
+      "created_at": "2026-09-29T17:47:00Z",
+      "updated_at": "2026-09-29T17:47:00Z"
+    }
+  },
+  {
+    "model": "inventory.stocktransactionlog",
+    "pk": 19,
+    "fields": {
+      "product_stock": 6,
+      "action": "restock",
+      "quantity": 55,
+      "performed_by": 102,
+      "note": "Opening stock received into the warehouse.",
+      "is_active": true,
+      "created_at": "2026-08-12T10:06:00Z",
+      "updated_at": "2026-08-12T10:06:00Z"
+    }
+  },
+  {
+    "model": "inventory.stocktransactionlog",
+    "pk": 20,
+    "fields": {
+      "product_stock": 6,
+      "action": "reserve",
+      "quantity": 1,
+      "performed_by": null,
+      "note": "Reservation dfd29d04-e45c-5580-8707-13d526147c9e created for Order #4",
+      "is_active": true,
+      "created_at": "2026-09-06T11:05:00Z",
+      "updated_at": "2026-09-06T11:05:00Z"
+    }
+  },
+  {
+    "model": "inventory.stocktransactionlog",
+    "pk": 21,
+    "fields": {
+      "product_stock": 6,
+      "action": "order_deduction",
+      "quantity": 1,
+      "performed_by": null,
+      "note": "Reservation dfd29d04-e45c-5580-8707-13d526147c9e committed for Order #4",
+      "is_active": true,
+      "created_at": "2026-09-06T11:21:00Z",
+      "updated_at": "2026-09-06T11:21:00Z"
+    }
+  },
+  {
+    "model": "inventory.stocktransactionlog",
+    "pk": 22,
+    "fields": {
+      "product_stock": 7,
+      "action": "restock",
+      "quantity": 70,
+      "performed_by": 102,
+      "note": "Opening stock received into the warehouse.",
+      "is_active": true,
+      "created_at": "2026-08-12T10:07:00Z",
+      "updated_at": "2026-08-12T10:07:00Z"
+    }
+  },
+  {
+    "model": "inventory.stocktransactionlog",
+    "pk": 23,
+    "fields": {
+      "product_stock": 7,
+      "action": "reserve",
+      "quantity": 2,
+      "performed_by": null,
+      "note": "Reservation 7c10a94d-ada8-5e27-9e11-8fde290c1ce4 created for Order #2",
+      "is_active": true,
+      "created_at": "2026-09-03T09:25:00Z",
+      "updated_at": "2026-09-03T09:25:00Z"
+    }
+  },
+  {
+    "model": "inventory.stocktransactionlog",
+    "pk": 24,
+    "fields": {
+      "product_stock": 7,
+      "action": "order_deduction",
+      "quantity": 2,
+      "performed_by": null,
+      "note": "Reservation 7c10a94d-ada8-5e27-9e11-8fde290c1ce4 committed for Order #2",
+      "is_active": true,
+      "created_at": "2026-09-03T09:39:00Z",
+      "updated_at": "2026-09-03T09:39:00Z"
+    }
+  },
+  {
+    "model": "inventory.stocktransactionlog",
+    "pk": 25,
+    "fields": {
+      "product_stock": 8,
+      "action": "restock",
+      "quantity": 80,
+      "performed_by": 102,
+      "note": "Opening stock received into the warehouse.",
+      "is_active": true,
+      "created_at": "2026-08-12T10:08:00Z",
+      "updated_at": "2026-08-12T10:08:00Z"
+    }
+  },
+  {
+    "model": "inventory.stocktransactionlog",
+    "pk": 26,
+    "fields": {
+      "product_stock": 8,
+      "action": "reserve",
+      "quantity": 3,
+      "performed_by": null,
+      "note": "Reservation 132997d0-919c-593a-9747-6c629bb90854 created for Order #8",
+      "is_active": true,
+      "created_at": "2026-09-13T13:00:00Z",
+      "updated_at": "2026-09-13T13:00:00Z"
+    }
+  },
+  {
+    "model": "inventory.stocktransactionlog",
+    "pk": 27,
+    "fields": {
+      "product_stock": 8,
+      "action": "order_deduction",
+      "quantity": 3,
+      "performed_by": null,
+      "note": "Reservation 132997d0-919c-593a-9747-6c629bb90854 committed for Order #8",
+      "is_active": true,
+      "created_at": "2026-09-13T13:20:00Z",
+      "updated_at": "2026-09-13T13:20:00Z"
+    }
+  },
+  {
+    "model": "inventory.stocktransactionlog",
+    "pk": 28,
+    "fields": {
+      "product_stock": 9,
+      "action": "restock",
+      "quantity": 50,
+      "performed_by": 102,
+      "note": "Opening stock received into the warehouse.",
+      "is_active": true,
+      "created_at": "2026-08-12T10:09:00Z",
+      "updated_at": "2026-08-12T10:09:00Z"
+    }
+  },
+  {
+    "model": "inventory.stocktransactionlog",
+    "pk": 29,
+    "fields": {
+      "product_stock": 9,
+      "action": "reserve",
+      "quantity": 2,
+      "performed_by": null,
+      "note": "Reservation f18af3dc-a6d9-5fae-8a52-db2a3cef4ce1 created for Order #11",
+      "is_active": true,
+      "created_at": "2026-09-24T07:35:00Z",
+      "updated_at": "2026-09-24T07:35:00Z"
+    }
+  },
+  {
+    "model": "inventory.stocktransactionlog",
+    "pk": 30,
+    "fields": {
+      "product_stock": 9,
+      "action": "order_deduction",
+      "quantity": 2,
+      "performed_by": null,
+      "note": "Reservation f18af3dc-a6d9-5fae-8a52-db2a3cef4ce1 committed for Order #11",
+      "is_active": true,
+      "created_at": "2026-09-24T07:58:00Z",
+      "updated_at": "2026-09-24T07:58:00Z"
+    }
+  },
+  {
+    "model": "inventory.stocktransactionlog",
+    "pk": 31,
+    "fields": {
+      "product_stock": 10,
+      "action": "restock",
+      "quantity": 40,
+      "performed_by": 102,
+      "note": "Opening stock received into the warehouse.",
+      "is_active": true,
+      "created_at": "2026-08-12T10:10:00Z",
+      "updated_at": "2026-08-12T10:10:00Z"
+    }
+  },
+  {
+    "model": "inventory.stocktransactionlog",
+    "pk": 32,
+    "fields": {
+      "product_stock": 10,
+      "action": "reserve",
+      "quantity": 1,
+      "performed_by": null,
+      "note": "Reservation e634b1c2-a2a7-539c-b303-db3eb539a467 created for Order #1",
+      "is_active": true,
+      "created_at": "2026-09-02T14:10:00Z",
+      "updated_at": "2026-09-02T14:10:00Z"
+    }
+  },
+  {
+    "model": "inventory.stocktransactionlog",
+    "pk": 33,
+    "fields": {
+      "product_stock": 10,
+      "action": "order_deduction",
+      "quantity": 1,
+      "performed_by": null,
+      "note": "Reservation e634b1c2-a2a7-539c-b303-db3eb539a467 committed for Order #1",
+      "is_active": true,
+      "created_at": "2026-09-02T14:23:00Z",
+      "updated_at": "2026-09-02T14:23:00Z"
+    }
+  },
+  {
+    "model": "inventory.stocktransactionlog",
+    "pk": 34,
+    "fields": {
+      "product_stock": 10,
+      "action": "reserve",
+      "quantity": 1,
+      "performed_by": null,
+      "note": "Reservation 7ab5711b-4d6a-5a38-8485-2d2f419c44f8 created for Order #17",
+      "is_active": true,
+      "created_at": "2026-09-30T21:15:00Z",
+      "updated_at": "2026-09-30T21:15:00Z"
+    }
+  },
+  {
+    "model": "inventory.stocktransactionlog",
+    "pk": 35,
+    "fields": {
+      "product_stock": 11,
+      "action": "restock",
+      "quantity": 35,
+      "performed_by": 102,
+      "note": "Opening stock received into the warehouse.",
+      "is_active": true,
+      "created_at": "2026-08-12T10:11:00Z",
+      "updated_at": "2026-08-12T10:11:00Z"
+    }
+  },
+  {
+    "model": "inventory.stocktransactionlog",
+    "pk": 36,
+    "fields": {
+      "product_stock": 11,
+      "action": "reserve",
+      "quantity": 1,
+      "performed_by": null,
+      "note": "Reservation ba496316-cec5-5908-958a-7d11bfe1ad70 created for Order #4",
+      "is_active": true,
+      "created_at": "2026-09-06T11:05:00Z",
+      "updated_at": "2026-09-06T11:05:00Z"
+    }
+  },
+  {
+    "model": "inventory.stocktransactionlog",
+    "pk": 37,
+    "fields": {
+      "product_stock": 11,
+      "action": "order_deduction",
+      "quantity": 1,
+      "performed_by": null,
+      "note": "Reservation ba496316-cec5-5908-958a-7d11bfe1ad70 committed for Order #4",
+      "is_active": true,
+      "created_at": "2026-09-06T11:21:00Z",
+      "updated_at": "2026-09-06T11:21:00Z"
+    }
+  },
+  {
+    "model": "inventory.stocktransactionlog",
+    "pk": 38,
+    "fields": {
+      "product_stock": 11,
+      "action": "reserve",
+      "quantity": 2,
+      "performed_by": null,
+      "note": "Reservation 71265657-3847-56b8-832c-57c4608bdb08 created for Order #18",
+      "is_active": true,
+      "created_at": "2026-09-15T10:00:00Z",
+      "updated_at": "2026-09-15T10:00:00Z"
+    }
+  },
+  {
+    "model": "inventory.stocktransactionlog",
+    "pk": 39,
+    "fields": {
+      "product_stock": 11,
+      "action": "release_reservation",
+      "quantity": 2,
+      "performed_by": null,
+      "note": "Reservation 71265657-3847-56b8-832c-57c4608bdb08 released: Crypto payment window expired",
+      "is_active": true,
+      "created_at": "2026-09-15T11:00:00Z",
+      "updated_at": "2026-09-15T11:00:00Z"
+    }
+  },
+  {
+    "model": "inventory.stocktransactionlog",
+    "pk": 40,
+    "fields": {
+      "product_stock": 12,
+      "action": "restock",
+      "quantity": 45,
+      "performed_by": 102,
+      "note": "Opening stock received into the warehouse.",
+      "is_active": true,
+      "created_at": "2026-08-12T10:12:00Z",
+      "updated_at": "2026-08-12T10:12:00Z"
+    }
+  },
+  {
+    "model": "inventory.stocktransactionlog",
+    "pk": 41,
+    "fields": {
+      "product_stock": 12,
+      "action": "reserve",
+      "quantity": 1,
+      "performed_by": null,
+      "note": "Reservation b069ba47-fb9a-56a7-af4b-61dab6a7f7ce created for Order #9",
+      "is_active": true,
+      "created_at": "2026-09-20T10:20:00Z",
+      "updated_at": "2026-09-20T10:20:00Z"
+    }
+  },
+  {
+    "model": "inventory.stocktransactionlog",
+    "pk": 42,
+    "fields": {
+      "product_stock": 12,
+      "action": "order_deduction",
+      "quantity": 1,
+      "performed_by": null,
+      "note": "Reservation b069ba47-fb9a-56a7-af4b-61dab6a7f7ce committed for Order #9",
+      "is_active": true,
+      "created_at": "2026-09-20T10:41:00Z",
+      "updated_at": "2026-09-20T10:41:00Z"
+    }
+  },
+  {
+    "model": "inventory.stocktransactionlog",
+    "pk": 43,
+    "fields": {
+      "product_stock": 13,
+      "action": "restock",
+      "quantity": 6,
+      "performed_by": 102,
+      "note": "Opening stock received into the warehouse.",
+      "is_active": true,
+      "created_at": "2026-08-12T10:13:00Z",
+      "updated_at": "2026-08-12T10:13:00Z"
+    }
+  },
+  {
+    "model": "inventory.stocktransactionlog",
+    "pk": 44,
+    "fields": {
+      "product_stock": 13,
+      "action": "reserve",
+      "quantity": 1,
+      "performed_by": null,
+      "note": "Reservation 8d812c23-e3a5-52ba-ad6f-0e23a9bdd8be created for Order #12",
+      "is_active": true,
+      "created_at": "2026-09-27T12:10:00Z",
+      "updated_at": "2026-09-27T12:10:00Z"
+    }
+  },
+  {
+    "model": "inventory.stocktransactionlog",
+    "pk": 45,
+    "fields": {
+      "product_stock": 13,
+      "action": "order_deduction",
+      "quantity": 1,
+      "performed_by": null,
+      "note": "Reservation 8d812c23-e3a5-52ba-ad6f-0e23a9bdd8be committed for Order #12",
+      "is_active": true,
+      "created_at": "2026-09-27T12:34:00Z",
+      "updated_at": "2026-09-27T12:34:00Z"
+    }
+  },
+  {
+    "model": "inventory.stocktransactionlog",
+    "pk": 46,
+    "fields": {
+      "product_stock": 14,
+      "action": "restock",
+      "quantity": 40,
+      "performed_by": 102,
+      "note": "Opening stock received into the warehouse.",
+      "is_active": true,
+      "created_at": "2026-08-12T10:14:00Z",
+      "updated_at": "2026-08-12T10:14:00Z"
+    }
+  },
+  {
+    "model": "inventory.stocktransactionlog",
+    "pk": 47,
+    "fields": {
+      "product_stock": 14,
+      "action": "reserve",
+      "quantity": 1,
+      "performed_by": null,
+      "note": "Reservation e7943c2a-abd5-5816-a19e-9a57184212ab created for Order #2",
+      "is_active": true,
+      "created_at": "2026-09-03T09:25:00Z",
+      "updated_at": "2026-09-03T09:25:00Z"
+    }
+  },
+  {
+    "model": "inventory.stocktransactionlog",
+    "pk": 48,
+    "fields": {
+      "product_stock": 14,
+      "action": "order_deduction",
+      "quantity": 1,
+      "performed_by": null,
+      "note": "Reservation e7943c2a-abd5-5816-a19e-9a57184212ab committed for Order #2",
+      "is_active": true,
+      "created_at": "2026-09-03T09:39:00Z",
+      "updated_at": "2026-09-03T09:39:00Z"
+    }
+  },
+  {
+    "model": "inventory.stocktransactionlog",
+    "pk": 49,
+    "fields": {
+      "product_stock": 15,
+      "action": "restock",
+      "quantity": 45,
+      "performed_by": 102,
+      "note": "Opening stock received into the warehouse.",
+      "is_active": true,
+      "created_at": "2026-08-12T10:15:00Z",
+      "updated_at": "2026-08-12T10:15:00Z"
+    }
+  },
+  {
+    "model": "inventory.stocktransactionlog",
+    "pk": 50,
+    "fields": {
+      "product_stock": 16,
+      "action": "restock",
+      "quantity": 40,
+      "performed_by": 102,
+      "note": "Opening stock received into the warehouse.",
+      "is_active": true,
+      "created_at": "2026-08-12T10:16:00Z",
+      "updated_at": "2026-08-12T10:16:00Z"
+    }
+  },
+  {
+    "model": "inventory.stocktransactionlog",
+    "pk": 51,
+    "fields": {
+      "product_stock": 17,
+      "action": "restock",
+      "quantity": 30,
+      "performed_by": 102,
+      "note": "Opening stock received into the warehouse.",
+      "is_active": true,
+      "created_at": "2026-08-12T10:17:00Z",
+      "updated_at": "2026-08-12T10:17:00Z"
+    }
+  },
+  {
+    "model": "inventory.stocktransactionlog",
+    "pk": 52,
+    "fields": {
+      "product_stock": 17,
+      "action": "reserve",
+      "quantity": 1,
+      "performed_by": null,
+      "note": "Reservation 537b5863-4414-5194-b268-0e16600734cc created for Order #11",
+      "is_active": true,
+      "created_at": "2026-09-24T07:35:00Z",
+      "updated_at": "2026-09-24T07:35:00Z"
+    }
+  },
+  {
+    "model": "inventory.stocktransactionlog",
+    "pk": 53,
+    "fields": {
+      "product_stock": 17,
+      "action": "order_deduction",
+      "quantity": 1,
+      "performed_by": null,
+      "note": "Reservation 537b5863-4414-5194-b268-0e16600734cc committed for Order #11",
+      "is_active": true,
+      "created_at": "2026-09-24T07:58:00Z",
+      "updated_at": "2026-09-24T07:58:00Z"
+    }
+  },
+  {
+    "model": "inventory.stocktransactionlog",
+    "pk": 54,
+    "fields": {
+      "product_stock": 18,
+      "action": "restock",
+      "quantity": 35,
+      "performed_by": 102,
+      "note": "Opening stock received into the warehouse.",
+      "is_active": true,
+      "created_at": "2026-08-12T10:18:00Z",
+      "updated_at": "2026-08-12T10:18:00Z"
+    }
+  },
+  {
+    "model": "inventory.stocktransactionlog",
+    "pk": 55,
+    "fields": {
+      "product_stock": 18,
+      "action": "adjustment",
+      "quantity": 2,
+      "performed_by": 102,
+      "note": "Manual correction after cycle count (2 damaged pouches removed).",
+      "is_active": true,
+      "created_at": "2026-09-05T09:00:00Z",
+      "updated_at": "2026-09-05T09:00:00Z"
+    }
+  },
+  {
+    "model": "inventory.stocktransactionlog",
+    "pk": 56,
+    "fields": {
+      "product_stock": 18,
+      "action": "reserve",
+      "quantity": 1,
+      "performed_by": null,
+      "note": "Reservation 50105936-a5ba-5b4e-84a5-cce9352de51e created for Order #12",
+      "is_active": true,
+      "created_at": "2026-09-27T12:10:00Z",
+      "updated_at": "2026-09-27T12:10:00Z"
+    }
+  },
+  {
+    "model": "inventory.stocktransactionlog",
+    "pk": 57,
+    "fields": {
+      "product_stock": 18,
+      "action": "order_deduction",
+      "quantity": 1,
+      "performed_by": null,
+      "note": "Reservation 50105936-a5ba-5b4e-84a5-cce9352de51e committed for Order #12",
+      "is_active": true,
+      "created_at": "2026-09-27T12:34:00Z",
+      "updated_at": "2026-09-27T12:34:00Z"
+    }
+  },
+  {
+    "model": "inventory.stocktransactionlog",
+    "pk": 58,
+    "fields": {
+      "product_stock": 19,
+      "action": "restock",
+      "quantity": 90,
+      "performed_by": 102,
+      "note": "Opening stock received into the warehouse.",
+      "is_active": true,
+      "created_at": "2026-08-12T10:19:00Z",
+      "updated_at": "2026-08-12T10:19:00Z"
+    }
+  },
+  {
+    "model": "inventory.stocktransactionlog",
+    "pk": 59,
+    "fields": {
+      "product_stock": 19,
+      "action": "reserve",
+      "quantity": 2,
+      "performed_by": null,
+      "note": "Reservation 1faf656e-605a-5564-8f98-c31a9be931f8 created for Order #3",
+      "is_active": true,
+      "created_at": "2026-09-05T18:40:00Z",
+      "updated_at": "2026-09-05T18:40:00Z"
+    }
+  },
+  {
+    "model": "inventory.stocktransactionlog",
+    "pk": 60,
+    "fields": {
+      "product_stock": 19,
+      "action": "order_deduction",
+      "quantity": 2,
+      "performed_by": null,
+      "note": "Reservation 1faf656e-605a-5564-8f98-c31a9be931f8 committed for Order #3",
+      "is_active": true,
+      "created_at": "2026-09-05T18:55:00Z",
+      "updated_at": "2026-09-05T18:55:00Z"
+    }
+  },
+  {
+    "model": "inventory.stocktransactionlog",
+    "pk": 61,
+    "fields": {
+      "product_stock": 20,
+      "action": "restock",
+      "quantity": 70,
+      "performed_by": 102,
+      "note": "Opening stock received into the warehouse.",
+      "is_active": true,
+      "created_at": "2026-08-12T10:20:00Z",
+      "updated_at": "2026-08-12T10:20:00Z"
+    }
+  },
+  {
+    "model": "inventory.stocktransactionlog",
+    "pk": 62,
+    "fields": {
+      "product_stock": 20,
+      "action": "reserve",
+      "quantity": 1,
+      "performed_by": null,
+      "note": "Reservation 5b385fd5-3418-5156-98d5-821ef98f2b94 created for Order #16",
+      "is_active": true,
+      "created_at": "2026-09-30T21:05:00Z",
+      "updated_at": "2026-09-30T21:05:00Z"
+    }
+  },
+  {
+    "model": "inventory.stocktransactionlog",
+    "pk": 63,
+    "fields": {
+      "product_stock": 21,
+      "action": "restock",
+      "quantity": 65,
+      "performed_by": 102,
+      "note": "Opening stock received into the warehouse.",
+      "is_active": true,
+      "created_at": "2026-08-12T10:21:00Z",
+      "updated_at": "2026-08-12T10:21:00Z"
+    }
+  },
+  {
+    "model": "inventory.stocktransactionlog",
+    "pk": 64,
+    "fields": {
+      "product_stock": 21,
+      "action": "reserve",
+      "quantity": 1,
+      "performed_by": null,
+      "note": "Reservation a3e06c06-6487-5310-9f17-3a71be4eeec7 created for Order #6",
+      "is_active": true,
+      "created_at": "2026-09-10T16:15:00Z",
+      "updated_at": "2026-09-10T16:15:00Z"
+    }
+  },
+  {
+    "model": "inventory.stocktransactionlog",
+    "pk": 65,
+    "fields": {
+      "product_stock": 21,
+      "action": "order_deduction",
+      "quantity": 1,
+      "performed_by": null,
+      "note": "Reservation a3e06c06-6487-5310-9f17-3a71be4eeec7 committed for Order #6",
+      "is_active": true,
+      "created_at": "2026-09-10T16:33:00Z",
+      "updated_at": "2026-09-10T16:33:00Z"
+    }
+  },
+  {
+    "model": "inventory.stocktransactionlog",
+    "pk": 66,
+    "fields": {
+      "product_stock": 22,
+      "action": "restock",
+      "quantity": 60,
+      "performed_by": 102,
+      "note": "Opening stock received into the warehouse.",
+      "is_active": true,
+      "created_at": "2026-08-12T10:22:00Z",
+      "updated_at": "2026-08-12T10:22:00Z"
+    }
+  },
+  {
+    "model": "inventory.stocktransactionlog",
+    "pk": 67,
+    "fields": {
+      "product_stock": 23,
+      "action": "restock",
+      "quantity": 50,
+      "performed_by": 102,
+      "note": "Opening stock received into the warehouse.",
+      "is_active": true,
+      "created_at": "2026-08-12T10:23:00Z",
+      "updated_at": "2026-08-12T10:23:00Z"
+    }
+  },
+  {
+    "model": "inventory.stocktransactionlog",
+    "pk": 68,
+    "fields": {
+      "product_stock": 23,
+      "action": "reserve",
+      "quantity": 1,
+      "performed_by": null,
+      "note": "Reservation 5c52810f-2f63-5e3a-b8cf-07b846020a55 created for Order #9",
+      "is_active": true,
+      "created_at": "2026-09-20T10:20:00Z",
+      "updated_at": "2026-09-20T10:20:00Z"
+    }
+  },
+  {
+    "model": "inventory.stocktransactionlog",
+    "pk": 69,
+    "fields": {
+      "product_stock": 23,
+      "action": "order_deduction",
+      "quantity": 1,
+      "performed_by": null,
+      "note": "Reservation 5c52810f-2f63-5e3a-b8cf-07b846020a55 committed for Order #9",
+      "is_active": true,
+      "created_at": "2026-09-20T10:41:00Z",
+      "updated_at": "2026-09-20T10:41:00Z"
+    }
+  },
+  {
+    "model": "inventory.stocktransactionlog",
+    "pk": 70,
+    "fields": {
+      "product_stock": 24,
+      "action": "restock",
+      "quantity": 45,
+      "performed_by": 102,
+      "note": "Opening stock received into the warehouse.",
+      "is_active": true,
+      "created_at": "2026-08-12T10:24:00Z",
+      "updated_at": "2026-08-12T10:24:00Z"
+    }
+  },
+  {
+    "model": "inventory.stocktransactionlog",
+    "pk": 71,
+    "fields": {
+      "product_stock": 24,
+      "action": "reserve",
+      "quantity": 2,
+      "performed_by": null,
+      "note": "Reservation ef74209b-5f93-5f35-acbb-fc1746e95892 created for Order #20",
+      "is_active": true,
+      "created_at": "2026-09-16T14:30:00Z",
+      "updated_at": "2026-09-16T14:30:00Z"
+    }
+  },
+  {
+    "model": "inventory.stocktransactionlog",
+    "pk": 72,
+    "fields": {
+      "product_stock": 24,
+      "action": "order_deduction",
+      "quantity": 2,
+      "performed_by": null,
+      "note": "Reservation ef74209b-5f93-5f35-acbb-fc1746e95892 committed for Order #20",
+      "is_active": true,
+      "created_at": "2026-09-16T15:02:00Z",
+      "updated_at": "2026-09-16T15:02:00Z"
+    }
+  },
+  {
+    "model": "inventory.stocktransactionlog",
+    "pk": 73,
+    "fields": {
+      "product_stock": 24,
+      "action": "restock",
+      "quantity": 2,
+      "performed_by": 101,
+      "note": "Order #20 refunded before dispatch: units returned to stock.",
+      "is_active": true,
+      "created_at": "2026-09-18T15:02:00Z",
+      "updated_at": "2026-09-18T15:02:00Z"
+    }
+  },
+  {
+    "model": "inventory.stocktransactionlog",
+    "pk": 74,
+    "fields": {
+      "product_stock": 25,
+      "action": "restock",
+      "quantity": 80,
+      "performed_by": 102,
+      "note": "Opening stock received into the warehouse.",
+      "is_active": true,
+      "created_at": "2026-08-12T10:25:00Z",
+      "updated_at": "2026-08-12T10:25:00Z"
+    }
+  },
+  {
+    "model": "inventory.stocktransactionlog",
+    "pk": 75,
+    "fields": {
+      "product_stock": 25,
+      "action": "reserve",
+      "quantity": 2,
+      "performed_by": null,
+      "note": "Reservation 0e335ffd-7acf-5107-942a-b68a4b4a49a2 created for Order #5",
+      "is_active": true,
+      "created_at": "2026-09-08T20:30:00Z",
+      "updated_at": "2026-09-08T20:30:00Z"
+    }
+  },
+  {
+    "model": "inventory.stocktransactionlog",
+    "pk": 76,
+    "fields": {
+      "product_stock": 25,
+      "action": "order_deduction",
+      "quantity": 2,
+      "performed_by": null,
+      "note": "Reservation 0e335ffd-7acf-5107-942a-b68a4b4a49a2 committed for Order #5",
+      "is_active": true,
+      "created_at": "2026-09-08T20:47:00Z",
+      "updated_at": "2026-09-08T20:47:00Z"
+    }
+  },
+  {
+    "model": "inventory.stocktransactionlog",
+    "pk": 77,
+    "fields": {
+      "product_stock": 26,
+      "action": "restock",
+      "quantity": 40,
+      "performed_by": 102,
+      "note": "Opening stock received into the warehouse.",
+      "is_active": true,
+      "created_at": "2026-08-12T10:26:00Z",
+      "updated_at": "2026-08-12T10:26:00Z"
+    }
+  },
+  {
+    "model": "inventory.stocktransactionlog",
+    "pk": 78,
+    "fields": {
+      "product_stock": 26,
+      "action": "reserve",
+      "quantity": 1,
+      "performed_by": null,
+      "note": "Reservation 3df122c8-49d0-5dbd-9781-2530f4d767d8 created for Order #3",
+      "is_active": true,
+      "created_at": "2026-09-05T18:40:00Z",
+      "updated_at": "2026-09-05T18:40:00Z"
+    }
+  },
+  {
+    "model": "inventory.stocktransactionlog",
+    "pk": 79,
+    "fields": {
+      "product_stock": 26,
+      "action": "order_deduction",
+      "quantity": 1,
+      "performed_by": null,
+      "note": "Reservation 3df122c8-49d0-5dbd-9781-2530f4d767d8 committed for Order #3",
+      "is_active": true,
+      "created_at": "2026-09-05T18:55:00Z",
+      "updated_at": "2026-09-05T18:55:00Z"
+    }
+  },
+  {
+    "model": "inventory.stocktransactionlog",
+    "pk": 80,
+    "fields": {
+      "product_stock": 26,
+      "action": "reserve",
+      "quantity": 2,
+      "performed_by": null,
+      "note": "Reservation 84098b58-bc97-5113-883f-8773755aebad created for Order #19",
+      "is_active": true,
+      "created_at": "2026-09-18T22:10:00Z",
+      "updated_at": "2026-09-18T22:10:00Z"
+    }
+  },
+  {
+    "model": "inventory.stocktransactionlog",
+    "pk": 81,
+    "fields": {
+      "product_stock": 26,
+      "action": "release_reservation",
+      "quantity": 2,
+      "performed_by": null,
+      "note": "Reservation 84098b58-bc97-5113-883f-8773755aebad released: Crypto payment window expired",
+      "is_active": true,
+      "created_at": "2026-09-18T23:10:00Z",
+      "updated_at": "2026-09-18T23:10:00Z"
+    }
+  },
+  {
+    "model": "inventory.stocktransactionlog",
+    "pk": 82,
+    "fields": {
+      "product_stock": 26,
+      "action": "reserve",
+      "quantity": 1,
+      "performed_by": null,
+      "note": "Reservation 5a9d65c6-2356-5389-b937-d5e69d6e6102 created for Order #10",
+      "is_active": true,
+      "created_at": "2026-09-22T19:45:00Z",
+      "updated_at": "2026-09-22T19:45:00Z"
+    }
+  },
+  {
+    "model": "inventory.stocktransactionlog",
+    "pk": 83,
+    "fields": {
+      "product_stock": 26,
+      "action": "order_deduction",
+      "quantity": 1,
+      "performed_by": null,
+      "note": "Reservation 5a9d65c6-2356-5389-b937-d5e69d6e6102 committed for Order #10",
+      "is_active": true,
+      "created_at": "2026-09-22T20:07:00Z",
+      "updated_at": "2026-09-22T20:07:00Z"
+    }
+  },
+  {
+    "model": "inventory.stocktransactionlog",
+    "pk": 84,
+    "fields": {
+      "product_stock": 27,
+      "action": "restock",
+      "quantity": 35,
+      "performed_by": 102,
+      "note": "Opening stock received into the warehouse.",
+      "is_active": true,
+      "created_at": "2026-08-12T10:27:00Z",
+      "updated_at": "2026-08-12T10:27:00Z"
+    }
+  },
+  {
+    "model": "inventory.stocktransactionlog",
+    "pk": 85,
+    "fields": {
+      "product_stock": 27,
+      "action": "reserve",
+      "quantity": 1,
+      "performed_by": null,
+      "note": "Reservation 537d807d-5b01-56ab-8279-22fb25eb191b created for Order #10",
+      "is_active": true,
+      "created_at": "2026-09-22T19:45:00Z",
+      "updated_at": "2026-09-22T19:45:00Z"
+    }
+  },
+  {
+    "model": "inventory.stocktransactionlog",
+    "pk": 86,
+    "fields": {
+      "product_stock": 27,
+      "action": "order_deduction",
+      "quantity": 1,
+      "performed_by": null,
+      "note": "Reservation 537d807d-5b01-56ab-8279-22fb25eb191b committed for Order #10",
+      "is_active": true,
+      "created_at": "2026-09-22T20:07:00Z",
+      "updated_at": "2026-09-22T20:07:00Z"
+    }
+  },
+  {
+    "model": "inventory.stocktransactionlog",
+    "pk": 87,
+    "fields": {
+      "product_stock": 28,
+      "action": "restock",
+      "quantity": 30,
+      "performed_by": 102,
+      "note": "Opening stock received into the warehouse.",
+      "is_active": true,
+      "created_at": "2026-08-12T10:28:00Z",
+      "updated_at": "2026-08-12T10:28:00Z"
+    }
+  },
+  {
+    "model": "inventory.stocktransactionlog",
+    "pk": 88,
+    "fields": {
+      "product_stock": 28,
+      "action": "reserve",
+      "quantity": 1,
+      "performed_by": null,
+      "note": "Reservation 11ad127a-b2b9-5c52-87c9-513c0f50570c created for Order #14",
+      "is_active": true,
+      "created_at": "2026-09-29T09:30:00Z",
+      "updated_at": "2026-09-29T09:30:00Z"
+    }
+  },
+  {
+    "model": "inventory.stocktransactionlog",
+    "pk": 89,
+    "fields": {
+      "product_stock": 28,
+      "action": "order_deduction",
+      "quantity": 1,
+      "performed_by": null,
+      "note": "Reservation 11ad127a-b2b9-5c52-87c9-513c0f50570c committed for Order #14",
+      "is_active": true,
+      "created_at": "2026-09-29T09:56:00Z",
+      "updated_at": "2026-09-29T09:56:00Z"
+    }
+  },
+  {
+    "model": "inventory.stocktransactionlog",
+    "pk": 90,
+    "fields": {
+      "product_stock": 29,
+      "action": "restock",
+      "quantity": 60,
+      "performed_by": 102,
+      "note": "Opening stock received into the warehouse.",
+      "is_active": true,
+      "created_at": "2026-08-12T10:29:00Z",
+      "updated_at": "2026-08-12T10:29:00Z"
+    }
+  },
+  {
+    "model": "inventory.stocktransactionlog",
+    "pk": 91,
+    "fields": {
+      "product_stock": 29,
+      "action": "reserve",
+      "quantity": 3,
+      "performed_by": null,
+      "note": "Reservation e96c03d1-0151-5946-b9c4-2596b1c657a8 created for Order #3",
+      "is_active": true,
+      "created_at": "2026-09-05T18:40:00Z",
+      "updated_at": "2026-09-05T18:40:00Z"
+    }
+  },
+  {
+    "model": "inventory.stocktransactionlog",
+    "pk": 92,
+    "fields": {
+      "product_stock": 29,
+      "action": "order_deduction",
+      "quantity": 3,
+      "performed_by": null,
+      "note": "Reservation e96c03d1-0151-5946-b9c4-2596b1c657a8 committed for Order #3",
+      "is_active": true,
+      "created_at": "2026-09-05T18:55:00Z",
+      "updated_at": "2026-09-05T18:55:00Z"
+    }
+  },
+  {
+    "model": "inventory.stocktransactionlog",
+    "pk": 93,
+    "fields": {
+      "product_stock": 29,
+      "action": "reserve",
+      "quantity": 1,
+      "performed_by": null,
+      "note": "Reservation 98fb5eab-d9a4-5ce5-8ac4-c8e3e45fb88d created for Order #20",
+      "is_active": true,
+      "created_at": "2026-09-16T14:30:00Z",
+      "updated_at": "2026-09-16T14:30:00Z"
+    }
+  },
+  {
+    "model": "inventory.stocktransactionlog",
+    "pk": 94,
+    "fields": {
+      "product_stock": 29,
+      "action": "order_deduction",
+      "quantity": 1,
+      "performed_by": null,
+      "note": "Reservation 98fb5eab-d9a4-5ce5-8ac4-c8e3e45fb88d committed for Order #20",
+      "is_active": true,
+      "created_at": "2026-09-16T15:02:00Z",
+      "updated_at": "2026-09-16T15:02:00Z"
+    }
+  },
+  {
+    "model": "inventory.stocktransactionlog",
+    "pk": 95,
+    "fields": {
+      "product_stock": 29,
+      "action": "restock",
+      "quantity": 1,
+      "performed_by": 101,
+      "note": "Order #20 refunded before dispatch: units returned to stock.",
+      "is_active": true,
+      "created_at": "2026-09-18T15:02:00Z",
+      "updated_at": "2026-09-18T15:02:00Z"
+    }
+  },
+  {
+    "model": "inventory.stocktransactionlog",
+    "pk": 96,
+    "fields": {
+      "product_stock": 30,
+      "action": "restock",
+      "quantity": 50,
+      "performed_by": 102,
+      "note": "Opening stock received into the warehouse.",
+      "is_active": true,
+      "created_at": "2026-08-12T10:30:00Z",
+      "updated_at": "2026-08-12T10:30:00Z"
+    }
+  },
+  {
+    "model": "inventory.stocktransactionlog",
+    "pk": 97,
+    "fields": {
+      "product_stock": 30,
+      "action": "reserve",
+      "quantity": 2,
+      "performed_by": null,
+      "note": "Reservation 738659b8-f028-50fc-b0f1-325ec642b5fd created for Order #17",
+      "is_active": true,
+      "created_at": "2026-09-30T21:15:00Z",
+      "updated_at": "2026-09-30T21:15:00Z"
+    }
+  },
+  {
+    "model": "inventory.stocktransactionlog",
+    "pk": 98,
+    "fields": {
+      "product_stock": 31,
+      "action": "restock",
+      "quantity": 60,
+      "performed_by": 102,
+      "note": "Opening stock received into the warehouse.",
+      "is_active": true,
+      "created_at": "2026-08-12T10:31:00Z",
+      "updated_at": "2026-08-12T10:31:00Z"
+    }
+  },
+  {
+    "model": "inventory.stocktransactionlog",
+    "pk": 99,
+    "fields": {
+      "product_stock": 31,
+      "action": "reserve",
+      "quantity": 4,
+      "performed_by": null,
+      "note": "Reservation 15ff0b99-0536-5973-8ce6-fd4805866eb0 created for Order #5",
+      "is_active": true,
+      "created_at": "2026-09-08T20:30:00Z",
+      "updated_at": "2026-09-08T20:30:00Z"
+    }
+  },
+  {
+    "model": "inventory.stocktransactionlog",
+    "pk": 100,
+    "fields": {
+      "product_stock": 31,
+      "action": "order_deduction",
+      "quantity": 4,
+      "performed_by": null,
+      "note": "Reservation 15ff0b99-0536-5973-8ce6-fd4805866eb0 committed for Order #5",
+      "is_active": true,
+      "created_at": "2026-09-08T20:47:00Z",
+      "updated_at": "2026-09-08T20:47:00Z"
+    }
+  },
+  {
+    "model": "inventory.stocktransactionlog",
+    "pk": 101,
+    "fields": {
+      "product_stock": 32,
+      "action": "restock",
+      "quantity": 55,
+      "performed_by": 102,
+      "note": "Opening stock received into the warehouse.",
+      "is_active": true,
+      "created_at": "2026-08-12T10:32:00Z",
+      "updated_at": "2026-08-12T10:32:00Z"
+    }
+  },
+  {
+    "model": "inventory.stocktransactionlog",
+    "pk": 102,
+    "fields": {
+      "product_stock": 32,
+      "action": "reserve",
+      "quantity": 2,
+      "performed_by": null,
+      "note": "Reservation aff2b009-d1df-502e-856f-176398d17f59 created for Order #5",
+      "is_active": true,
+      "created_at": "2026-09-08T20:30:00Z",
+      "updated_at": "2026-09-08T20:30:00Z"
+    }
+  },
+  {
+    "model": "inventory.stocktransactionlog",
+    "pk": 103,
+    "fields": {
+      "product_stock": 32,
+      "action": "order_deduction",
+      "quantity": 2,
+      "performed_by": null,
+      "note": "Reservation aff2b009-d1df-502e-856f-176398d17f59 committed for Order #5",
+      "is_active": true,
+      "created_at": "2026-09-08T20:47:00Z",
+      "updated_at": "2026-09-08T20:47:00Z"
+    }
+  },
+  {
+    "model": "inventory.stocktransactionlog",
+    "pk": 104,
+    "fields": {
+      "product_stock": 32,
+      "action": "reserve",
+      "quantity": 2,
+      "performed_by": null,
+      "note": "Reservation 58aca5f1-3e9f-5add-9a7b-faab9fa33532 created for Order #14",
+      "is_active": true,
+      "created_at": "2026-09-29T09:30:00Z",
+      "updated_at": "2026-09-29T09:30:00Z"
+    }
+  },
+  {
+    "model": "inventory.stocktransactionlog",
+    "pk": 105,
+    "fields": {
+      "product_stock": 32,
+      "action": "order_deduction",
+      "quantity": 2,
+      "performed_by": null,
+      "note": "Reservation 58aca5f1-3e9f-5add-9a7b-faab9fa33532 committed for Order #14",
+      "is_active": true,
+      "created_at": "2026-09-29T09:56:00Z",
+      "updated_at": "2026-09-29T09:56:00Z"
+    }
+  },
+  {
+    "model": "inventory.stocktransactionlog",
+    "pk": 106,
+    "fields": {
+      "product_stock": 33,
+      "action": "restock",
+      "quantity": 40,
+      "performed_by": 102,
+      "note": "Opening stock received into the warehouse.",
+      "is_active": true,
+      "created_at": "2026-08-12T10:33:00Z",
+      "updated_at": "2026-08-12T10:33:00Z"
+    }
+  },
+  {
+    "model": "inventory.stocktransactionlog",
+    "pk": 107,
+    "fields": {
+      "product_stock": 33,
+      "action": "reserve",
+      "quantity": 1,
+      "performed_by": null,
+      "note": "Reservation 0d0c726c-d468-593f-ae40-5c55b90cf4f6 created for Order #6",
+      "is_active": true,
+      "created_at": "2026-09-10T16:15:00Z",
+      "updated_at": "2026-09-10T16:15:00Z"
+    }
+  },
+  {
+    "model": "inventory.stocktransactionlog",
+    "pk": 108,
+    "fields": {
+      "product_stock": 33,
+      "action": "order_deduction",
+      "quantity": 1,
+      "performed_by": null,
+      "note": "Reservation 0d0c726c-d468-593f-ae40-5c55b90cf4f6 committed for Order #6",
+      "is_active": true,
+      "created_at": "2026-09-10T16:33:00Z",
+      "updated_at": "2026-09-10T16:33:00Z"
+    }
+  },
+  {
+    "model": "inventory.stocktransactionlog",
+    "pk": 109,
+    "fields": {
+      "product_stock": 34,
+      "action": "restock",
+      "quantity": 70,
+      "performed_by": 102,
+      "note": "Opening stock received into the warehouse.",
+      "is_active": true,
+      "created_at": "2026-08-12T10:34:00Z",
+      "updated_at": "2026-08-12T10:34:00Z"
+    }
+  },
+  {
+    "model": "inventory.stocktransactionlog",
+    "pk": 110,
+    "fields": {
+      "product_stock": 34,
+      "action": "reserve",
+      "quantity": 1,
+      "performed_by": null,
+      "note": "Reservation 41448b1a-55ec-52ea-ba97-0605f35271c8 created for Order #6",
+      "is_active": true,
+      "created_at": "2026-09-10T16:15:00Z",
+      "updated_at": "2026-09-10T16:15:00Z"
+    }
+  },
+  {
+    "model": "inventory.stocktransactionlog",
+    "pk": 111,
+    "fields": {
+      "product_stock": 34,
+      "action": "order_deduction",
+      "quantity": 1,
+      "performed_by": null,
+      "note": "Reservation 41448b1a-55ec-52ea-ba97-0605f35271c8 committed for Order #6",
+      "is_active": true,
+      "created_at": "2026-09-10T16:33:00Z",
+      "updated_at": "2026-09-10T16:33:00Z"
+    }
+  },
+  {
+    "model": "inventory.stocktransactionlog",
+    "pk": 112,
+    "fields": {
+      "product_stock": 35,
+      "action": "restock",
+      "quantity": 99999,
+      "performed_by": 102,
+      "note": "Opening stock received into the warehouse.",
+      "is_active": true,
+      "created_at": "2026-08-12T10:35:00Z",
+      "updated_at": "2026-08-12T10:35:00Z"
+    }
+  },
+  {
+    "model": "inventory.stocktransactionlog",
+    "pk": 113,
+    "fields": {
+      "product_stock": 35,
+      "action": "reserve",
+      "quantity": 1,
+      "performed_by": null,
+      "note": "Reservation 1d9d4e6a-91fb-5ce4-abee-c38ff7d033c0 created for Order #7",
+      "is_active": true,
+      "created_at": "2026-09-11T08:50:00Z",
+      "updated_at": "2026-09-11T08:50:00Z"
+    }
+  },
+  {
+    "model": "inventory.stocktransactionlog",
+    "pk": 114,
+    "fields": {
+      "product_stock": 35,
+      "action": "order_deduction",
+      "quantity": 1,
+      "performed_by": null,
+      "note": "Reservation 1d9d4e6a-91fb-5ce4-abee-c38ff7d033c0 committed for Order #7",
+      "is_active": true,
+      "created_at": "2026-09-11T09:09:00Z",
+      "updated_at": "2026-09-11T09:09:00Z"
+    }
+  },
+  {
+    "model": "inventory.stocktransactionlog",
+    "pk": 115,
+    "fields": {
+      "product_stock": 36,
+      "action": "restock",
+      "quantity": 99999,
+      "performed_by": 102,
+      "note": "Opening stock received into the warehouse.",
+      "is_active": true,
+      "created_at": "2026-08-12T10:36:00Z",
+      "updated_at": "2026-08-12T10:36:00Z"
+    }
+  },
+  {
+    "model": "inventory.stocktransactionlog",
+    "pk": 116,
+    "fields": {
+      "product_stock": 36,
+      "action": "reserve",
+      "quantity": 1,
+      "performed_by": null,
+      "note": "Reservation 4d41ad7a-5abb-5ec6-afde-b7f87cfb3e44 created for Order #7",
+      "is_active": true,
+      "created_at": "2026-09-11T08:50:00Z",
+      "updated_at": "2026-09-11T08:50:00Z"
+    }
+  },
+  {
+    "model": "inventory.stocktransactionlog",
+    "pk": 117,
+    "fields": {
+      "product_stock": 36,
+      "action": "order_deduction",
+      "quantity": 1,
+      "performed_by": null,
+      "note": "Reservation 4d41ad7a-5abb-5ec6-afde-b7f87cfb3e44 committed for Order #7",
+      "is_active": true,
+      "created_at": "2026-09-11T09:09:00Z",
+      "updated_at": "2026-09-11T09:09:00Z"
+    }
+  },
+  {
+    "model": "inventory.stocktransactionlog",
+    "pk": 118,
+    "fields": {
+      "product_stock": 37,
+      "action": "restock",
+      "quantity": 99999,
+      "performed_by": 102,
+      "note": "Opening stock received into the warehouse.",
+      "is_active": true,
+      "created_at": "2026-08-12T10:37:00Z",
+      "updated_at": "2026-08-12T10:37:00Z"
+    }
+  },
+  {
+    "model": "inventory.stocktransactionlog",
+    "pk": 119,
+    "fields": {
+      "product_stock": 37,
+      "action": "reserve",
+      "quantity": 1,
+      "performed_by": null,
+      "note": "Reservation 0466638a-6367-54fe-8bf6-94cd9822aa3e created for Order #7",
+      "is_active": true,
+      "created_at": "2026-09-11T08:50:00Z",
+      "updated_at": "2026-09-11T08:50:00Z"
+    }
+  },
+  {
+    "model": "inventory.stocktransactionlog",
+    "pk": 120,
+    "fields": {
+      "product_stock": 37,
+      "action": "order_deduction",
+      "quantity": 1,
+      "performed_by": null,
+      "note": "Reservation 0466638a-6367-54fe-8bf6-94cd9822aa3e committed for Order #7",
+      "is_active": true,
+      "created_at": "2026-09-11T09:09:00Z",
+      "updated_at": "2026-09-11T09:09:00Z"
+    }
+  },
+  {
+    "model": "inventory.stocktransactionlog",
+    "pk": 121,
+    "fields": {
+      "product_stock": 38,
+      "action": "restock",
+      "quantity": 8,
+      "performed_by": 102,
+      "note": "Opening stock received into the warehouse.",
+      "is_active": true,
+      "created_at": "2026-08-12T10:38:00Z",
+      "updated_at": "2026-08-12T10:38:00Z"
+    }
+  },
+  {
+    "model": "inventory.stocktransactionlog",
+    "pk": 122,
+    "fields": {
+      "product_stock": 38,
+      "action": "adjustment",
+      "quantity": 8,
+      "performed_by": 102,
+      "note": "Manual write-off: lot retired after quality audit.",
+      "is_active": true,
+      "created_at": "2026-08-30T16:00:00Z",
+      "updated_at": "2026-08-30T16:00:00Z"
+    }
+  }
+]

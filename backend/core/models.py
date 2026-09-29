@@ -5,6 +5,7 @@ from django.utils.deconstruct import deconstructible
 from django.core.validators import ValidationError
 from django.utils.translation import gettext_lazy as _
 from django.utils import timezone
+from simple_history.models import HistoricalRecords
 
 
 class BaseModel(models.Model):
@@ -21,6 +22,7 @@ class BaseModel(models.Model):
         blank=True,
         null=True
     )
+    history = HistoricalRecords(inherit=True)
 
     class Meta:
         abstract = True

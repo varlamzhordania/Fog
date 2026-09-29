@@ -1,18 +1,12 @@
 "use client"
 import BackgroundImage from "@/components/BackgroundImage";
 import {Breadcrumbs, Typography} from "@heroui/react";
-import TagsFilter from "@/components/categories/TagsFilter";
-import {useState} from "react";
-import {useSearchParams} from "next/navigation";
+import TagsFilter from "@/components/inventory/TagsFilter";
 import ProductsFilter from "@/components/filters/ProductsFilter";
+import ProductList from "@/components/inventory/ProductList";
+import SuspenseBoundary from "@/components/SuspenseBoundary";
 
 export default function ProductsPage() {
-    const searchParams = useSearchParams();
-    const category = searchParams.get("category");
-    const [selected, setSelected] = useState(
-        category ? new Set([category]) : new Set(["all-products"])
-    );
-
     return (
         <div className={"w-full flex flex-col items-stretch justify-start gap-4"}>
             <BackgroundImage lightImage="/bg/bg-light-r-to-l.jpg"
@@ -36,29 +30,28 @@ export default function ProductsPage() {
                         </Typography>
 
                         <Breadcrumbs>
-                            <Breadcrumbs.Item href="/home">Home</Breadcrumbs.Item>
+                            <Breadcrumbs.Item href="/">Home</Breadcrumbs.Item>
                             <Breadcrumbs.Item href="/products">Shop</Breadcrumbs.Item>
                         </Breadcrumbs>
                     </div>
                 </div>
             </BackgroundImage>
-            <div className={"container grid grid-cols-12 gap-6"}>
+            <SuspenseBoundary>
+                <div className={"container grid grid-cols-12 gap-6 pb-16 md:pb-24"}>
 
-                <div className="col-span-12">
-                    <TagsFilter
-                        selected={selected}
-                        setSelected={setSelected}
-                    />
-                </div>
+                    <div className="col-span-12">
+                        <TagsFilter/>
+                    </div>
 
-                <div className="col-span-12 lg:col-span-3">
-                    <ProductsFilter/>
-                </div>
+                    <div className="col-span-12 lg:col-span-3">
+                        <ProductsFilter/>
+                    </div>
 
-                <div className="col-span-12 lg:col-span-9">
-                    products
+                    <div className="col-span-12 lg:col-span-9">
+                        <ProductList/>
+                    </div>
                 </div>
-            </div>
+            </SuspenseBoundary>
         </div>
     )
 }

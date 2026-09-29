@@ -1,0 +1,865 @@
+[
+  {
+    "model": "inventory.product",
+    "pk": 1,
+    "fields": {
+      "category": 3,
+      "tags": [
+        1,
+        3,
+        7,
+        17
+      ],
+      "name": "Hericium erinaceus / Lion's Mane (Whole Fruit)",
+      "slug": "hericium-erinaceus-lions-mane-whole-fruit",
+      "sku": "FOG-WFB-HE-001",
+      "product_type": "physical",
+      "short_description": "Intact fruiting bodies dehydrated at low temperature to preserve hericenones and erinacines.",
+      "description": "<p>Grown on supplemented hardwood substrate and harvested at full morphological maturity, these Lion's Mane fruiting bodies are dehydrated at low temperature to protect heat-sensitive hericenones and erinacines.</p><p>Supplied as 50 g of whole, unbroken spines, vacuum sealed with a desiccant. Suitable for extraction, decoction or culinary use.</p>",
+      "base_price": "45.00",
+      "is_active": true,
+      "is_featured": true,
+      "created_at": "2026-08-10T10:00:00Z",
+      "updated_at": "2026-08-10T10:00:00Z"
+    }
+  },
+  {
+    "model": "inventory.product",
+    "pk": 2,
+    "fields": {
+      "category": 3,
+      "tags": [
+        1,
+        5,
+        7
+      ],
+      "name": "Cordyceps militaris (Intact Stromata)",
+      "slug": "cordyceps-militaris-intact-stromata",
+      "sku": "FOG-WFB-CM-002",
+      "product_type": "physical",
+      "short_description": "Vivid orange stromata grown on grain-based substrate, rich in cordycepin.",
+      "description": "<p>Cultivated on a nutrient-dense grain substrate under controlled light cycles, these intact orange stromata are dried slowly to retain cordycepin and adenosine.</p><p>30 g per pouch. Ideal for infusions and laboratory extraction work.</p>",
+      "base_price": "50.00",
+      "is_active": true,
+      "is_featured": true,
+      "created_at": "2026-08-10T11:00:00Z",
+      "updated_at": "2026-08-10T11:00:00Z"
+    }
+  },
+  {
+    "model": "inventory.product",
+    "pk": 3,
+    "fields": {
+      "category": 3,
+      "tags": [
+        1,
+        6,
+        5
+      ],
+      "name": "Inonotus obliquus / Chaga (Raw Sclerotium)",
+      "slug": "inonotus-obliquus-chaga-raw-sclerotium",
+      "sku": "FOG-WFB-IO-003",
+      "product_type": "physical",
+      "short_description": "Wild-harvested birch chaga sclerotium, broken into coarse chunks for decoction.",
+      "description": "<p>Sustainably wild-harvested from mature birch in cold northern forests. The sclerotium is cleaned of bark, dried and broken into chunks for long simmer decoctions.</p><p>100 g per bag. Natural variation in colour and density is expected.</p>",
+      "base_price": "48.00",
+      "is_active": true,
+      "is_featured": false,
+      "created_at": "2026-08-10T12:00:00Z",
+      "updated_at": "2026-08-10T12:00:00Z"
+    }
+  },
+  {
+    "model": "inventory.product",
+    "pk": 4,
+    "fields": {
+      "category": 3,
+      "tags": [
+        1,
+        4,
+        7,
+        18
+      ],
+      "name": "Ganoderma lucidum / Reishi (Reserve Grade Antler Conks)",
+      "slug": "ganoderma-lucidum-reishi-reserve-grade-antler-conks",
+      "sku": "FOG-WFB-GL-004",
+      "product_type": "physical",
+      "short_description": "Large antler-form reishi conks with deep red lacquered caps, reserve grade.",
+      "description": "<p>Reserve grade antler-form Ganoderma lucidum grown in high-CO2 chambers, producing dense, deeply lacquered conks with a thick triterpene-rich context.</p><p>250 g lot, hand selected. Limited quantities per harvest.</p>",
+      "base_price": "110.00",
+      "is_active": true,
+      "is_featured": false,
+      "created_at": "2026-08-10T13:00:00Z",
+      "updated_at": "2026-08-10T13:00:00Z"
+    }
+  },
+  {
+    "model": "inventory.product",
+    "pk": 5,
+    "fields": {
+      "category": 3,
+      "tags": [
+        1,
+        12
+      ],
+      "name": "Pleurotus eryngii / King Trumpet (Dried Whole)",
+      "slug": "pleurotus-eryngii-king-trumpet-dried-whole",
+      "sku": "FOG-WFB-PE-005",
+      "product_type": "physical",
+      "short_description": "Thick-stemmed king trumpet mushrooms dried whole for culinary use.",
+      "description": "<p>Meaty king trumpet mushrooms dried whole to lock in their savoury umami character. Rehydrate in warm water for 20 minutes before cooking.</p><p>60 g per bag.</p>",
+      "base_price": "26.00",
+      "is_active": true,
+      "is_featured": false,
+      "created_at": "2026-08-10T14:00:00Z",
+      "updated_at": "2026-08-10T14:00:00Z"
+    }
+  },
+  {
+    "model": "inventory.product",
+    "pk": 6,
+    "fields": {
+      "category": 2,
+      "tags": [
+        1,
+        4,
+        6
+      ],
+      "name": "Trametes versicolor / Turkey Tail (Transverse Slices)",
+      "slug": "trametes-versicolor-turkey-tail-transverse-slices",
+      "sku": "FOG-SLC-TV-006",
+      "product_type": "physical",
+      "short_description": "Thin dehydrated turkey tail slices, ideal for teas and decoctions.",
+      "description": "<p>Hand-collected turkey tail brackets sliced thin to expose maximum surface area, then dehydrated at low heat. A rich source of PSK and PSP polysaccharide-peptides studied in immunology research.</p><p>75 g per bag.</p>",
+      "base_price": "35.00",
+      "is_active": true,
+      "is_featured": false,
+      "created_at": "2026-08-10T15:00:00Z",
+      "updated_at": "2026-08-10T15:00:00Z"
+    }
+  },
+  {
+    "model": "inventory.product",
+    "pk": 7,
+    "fields": {
+      "category": 2,
+      "tags": [
+        1,
+        12,
+        18
+      ],
+      "name": "Tremella fuciformis (Dehydrated Fronds)",
+      "slug": "tremella-fuciformis-dehydrated-fronds",
+      "sku": "FOG-SLC-TF-007",
+      "product_type": "physical",
+      "short_description": "Delicate snow fungus fronds that rehydrate into a soft, gelatinous texture.",
+      "description": "<p>Pale, ruffled Tremella fronds dehydrated whole. Rehydrate and simmer to release their signature soft gel, prized in soups and desserts.</p><p>40 g per bag.</p>",
+      "base_price": "28.00",
+      "is_active": true,
+      "is_featured": false,
+      "created_at": "2026-08-10T16:00:00Z",
+      "updated_at": "2026-08-10T16:00:00Z"
+    }
+  },
+  {
+    "model": "inventory.product",
+    "pk": 8,
+    "fields": {
+      "category": 2,
+      "tags": [
+        1,
+        12,
+        7,
+        17
+      ],
+      "name": "Lentinula edodes / Shiitake (Dried Slices)",
+      "slug": "lentinula-edodes-shiitake-dried-slices",
+      "sku": "FOG-SLC-LE-008",
+      "product_type": "physical",
+      "short_description": "Thick-cut dried shiitake slices from hardwood-log cultivation.",
+      "description": "<p>Log-grown shiitake sliced to a consistent 4 mm and dried slowly, concentrating guanylate flavour compounds and lentinan.</p><p>100 g per bag.</p>",
+      "base_price": "24.00",
+      "is_active": true,
+      "is_featured": false,
+      "created_at": "2026-08-10T17:00:00Z",
+      "updated_at": "2026-08-10T17:00:00Z"
+    }
+  },
+  {
+    "model": "inventory.product",
+    "pk": 9,
+    "fields": {
+      "category": 2,
+      "tags": [
+        1,
+        4,
+        7
+      ],
+      "name": "Ganoderma lucidum / Reishi (Sliced Fruit Body)",
+      "slug": "ganoderma-lucidum-reishi-sliced-fruit-body",
+      "sku": "FOG-SLC-GL-009",
+      "product_type": "physical",
+      "short_description": "Pre-sliced reishi fruit body for long-simmer teas.",
+      "description": "<p>Mature reishi fruit bodies cut into thin, even slices so they can be simmered directly without grinding.</p><p>100 g per bag.</p>",
+      "base_price": "32.00",
+      "is_active": true,
+      "is_featured": false,
+      "created_at": "2026-08-10T18:00:00Z",
+      "updated_at": "2026-08-10T18:00:00Z"
+    }
+  },
+  {
+    "model": "inventory.product",
+    "pk": 10,
+    "fields": {
+      "category": 5,
+      "tags": [
+        2,
+        4,
+        5,
+        14,
+        17
+      ],
+      "name": "Ganoderma lucidum / Reishi (Dual Extract)",
+      "slug": "ganoderma-lucidum-reishi-dual-extract",
+      "sku": "FOG-DEX-GL-010",
+      "product_type": "physical",
+      "short_description": "Hot-water and alcohol dual extract concentrating beta-glucans and triterpenes.",
+      "description": "<p>A 1:2 dual extract made from fruiting-body reishi: hot-water extraction for beta-glucans followed by ethanol extraction for triterpenes, recombined into a single liquid.</p><p>60 ml amber glass bottle with dropper. Each lot ships with batch documentation.</p>",
+      "base_price": "65.00",
+      "is_active": true,
+      "is_featured": true,
+      "created_at": "2026-08-10T19:00:00Z",
+      "updated_at": "2026-08-10T19:00:00Z"
+    }
+  },
+  {
+    "model": "inventory.product",
+    "pk": 11,
+    "fields": {
+      "category": 5,
+      "tags": [
+        2,
+        4,
+        14
+      ],
+      "name": "Grifola frondosa / Maitake (Dual Extract)",
+      "slug": "grifola-frondosa-maitake-dual-extract",
+      "sku": "FOG-DEX-GF-011",
+      "product_type": "physical",
+      "short_description": "Dual extract of maitake fruiting bodies standardised for beta-glucan content.",
+      "description": "<p>Made from log-grown maitake fruiting bodies, extracted in hot water and ethanol to capture both polysaccharide and lipophilic fractions.</p><p>60 ml amber glass bottle with dropper.</p>",
+      "base_price": "60.00",
+      "is_active": true,
+      "is_featured": false,
+      "created_at": "2026-08-10T20:00:00Z",
+      "updated_at": "2026-08-10T20:00:00Z"
+    }
+  },
+  {
+    "model": "inventory.product",
+    "pk": 12,
+    "fields": {
+      "category": 5,
+      "tags": [
+        2,
+        3,
+        14,
+        17
+      ],
+      "name": "Hericium erinaceus / Lion's Mane (Dual Extract)",
+      "slug": "hericium-erinaceus-lions-mane-dual-extract",
+      "sku": "FOG-DEX-HE-012",
+      "product_type": "physical",
+      "short_description": "Dual extract capturing both water-soluble beta-glucans and alcohol-soluble hericenones.",
+      "description": "<p>Lion's Mane fruiting bodies extracted in two stages so the final liquid contains beta-glucans as well as hericenones, the compounds most often studied in neurotrophic research.</p><p>60 ml amber glass bottle with dropper.</p>",
+      "base_price": "68.00",
+      "is_active": true,
+      "is_featured": true,
+      "created_at": "2026-08-10T21:00:00Z",
+      "updated_at": "2026-08-10T21:00:00Z"
+    }
+  },
+  {
+    "model": "inventory.product",
+    "pk": 13,
+    "fields": {
+      "category": 5,
+      "tags": [
+        2,
+        4,
+        6,
+        14
+      ],
+      "name": "Phellinus linteus / Meshima (Dual Extract)",
+      "slug": "phellinus-linteus-meshima-dual-extract",
+      "sku": "FOG-DEX-PL-013",
+      "product_type": "physical",
+      "short_description": "A rare, polysaccharide-rich dual extract of Meshima, produced in small batches.",
+      "description": "<p>Meshima is one of the rarest polypores in the catalog. Each small batch is extracted in hot water and ethanol and concentrated to a rich, dark tincture.</p><p>60 ml amber glass bottle with dropper.</p>",
+      "base_price": "85.00",
+      "is_active": true,
+      "is_featured": true,
+      "created_at": "2026-08-10T22:00:00Z",
+      "updated_at": "2026-08-10T22:00:00Z"
+    }
+  },
+  {
+    "model": "inventory.product",
+    "pk": 14,
+    "fields": {
+      "category": 6,
+      "tags": [
+        10,
+        5,
+        14
+      ],
+      "name": "Inonotus obliquus / Chaga (Micronized Extract)",
+      "slug": "inonotus-obliquus-chaga-micronized-extract",
+      "sku": "FOG-POW-IO-014",
+      "product_type": "physical",
+      "short_description": "Water-soluble chaga extract powder, micronized for easy dispersion.",
+      "description": "<p>A concentrated hot-water chaga extract spray-dried and micronized so it dissolves readily in warm liquids.</p><p>60 g resealable pouch.</p>",
+      "base_price": "58.00",
+      "is_active": true,
+      "is_featured": false,
+      "created_at": "2026-08-10T23:00:00Z",
+      "updated_at": "2026-08-10T23:00:00Z"
+    }
+  },
+  {
+    "model": "inventory.product",
+    "pk": 15,
+    "fields": {
+      "category": 6,
+      "tags": [
+        1,
+        12,
+        14
+      ],
+      "name": "Lentinula edodes / Shiitake (Micronized Powder)",
+      "slug": "lentinula-edodes-shiitake-micronized-powder",
+      "sku": "FOG-POW-LE-015",
+      "product_type": "physical",
+      "short_description": "Fine shiitake fruiting body powder for cooking and extraction work.",
+      "description": "<p>Whole shiitake fruit bodies milled to a fine powder below 80 mesh. Suited to seasoning blends and as a feedstock for extraction.</p><p>100 g resealable pouch.</p>",
+      "base_price": "42.00",
+      "is_active": true,
+      "is_featured": false,
+      "created_at": "2026-08-11T00:00:00Z",
+      "updated_at": "2026-08-11T00:00:00Z"
+    }
+  },
+  {
+    "model": "inventory.product",
+    "pk": 16,
+    "fields": {
+      "category": 6,
+      "tags": [
+        10,
+        4
+      ],
+      "name": "Agaricus blazei (Mycelial Biomass)",
+      "slug": "agaricus-blazei-mycelial-biomass",
+      "sku": "FOG-POW-AB-016",
+      "product_type": "physical",
+      "short_description": "Fermented mycelial biomass powder of Agaricus blazei.",
+      "description": "<p>Produced by submerged fermentation of Agaricus blazei mycelium, then dried and milled. Provides a consistent, fruit-body-free reference material.</p><p>80 g resealable pouch.</p>",
+      "base_price": "38.00",
+      "is_active": true,
+      "is_featured": false,
+      "created_at": "2026-08-11T01:00:00Z",
+      "updated_at": "2026-08-11T01:00:00Z"
+    }
+  },
+  {
+    "model": "inventory.product",
+    "pk": 17,
+    "fields": {
+      "category": 6,
+      "tags": [
+        10,
+        4,
+        18
+      ],
+      "name": "Ganoderma lucidum (Cracked Spore Powder)",
+      "slug": "ganoderma-lucidum-cracked-spore-powder",
+      "sku": "FOG-POW-GL-017",
+      "product_type": "physical",
+      "short_description": "Mechanically cracked reishi spores with the chitin wall broken open.",
+      "description": "<p>Reishi spores collected during peak sporulation and mechanically cracked to break the resistant chitin shell, exposing the contents for extraction.</p><p>30 g sealed sachet.</p>",
+      "base_price": "75.00",
+      "is_active": true,
+      "is_featured": false,
+      "created_at": "2026-08-11T02:00:00Z",
+      "updated_at": "2026-08-11T02:00:00Z"
+    }
+  },
+  {
+    "model": "inventory.product",
+    "pk": 18,
+    "fields": {
+      "category": 6,
+      "tags": [
+        5,
+        14
+      ],
+      "name": "Cordyceps militaris (Micronized Extract)",
+      "slug": "cordyceps-militaris-micronized-extract",
+      "sku": "FOG-POW-CM-018",
+      "product_type": "physical",
+      "short_description": "Micronized cordyceps extract standardised for cordycepin content.",
+      "description": "<p>A hot-water and ethanol cordyceps extract, dried and micronized, with cordycepin verified by HPLC on each lot.</p><p>50 g resealable pouch.</p>",
+      "base_price": "62.00",
+      "is_active": true,
+      "is_featured": false,
+      "created_at": "2026-08-11T03:00:00Z",
+      "updated_at": "2026-08-11T03:00:00Z"
+    }
+  },
+  {
+    "model": "inventory.product",
+    "pk": 19,
+    "fields": {
+      "category": 19,
+      "tags": [
+        8,
+        11,
+        18
+      ],
+      "name": "Pleurotus ostreatus 'Blue Oyster' (Spore Print)",
+      "slug": "pleurotus-ostreatus-blue-oyster-spore-print",
+      "sku": "FOG-SPO-PO-019",
+      "product_type": "physical",
+      "short_description": "Foil-wrapped blue oyster spore print for microscopy and study.",
+      "description": "<p>A clean, single-fruit spore print deposited on sterile foil, ideal for spore morphology studies under the microscope.</p><p>Supplied for microscopy and educational use.</p>",
+      "base_price": "12.00",
+      "is_active": true,
+      "is_featured": false,
+      "created_at": "2026-08-11T04:00:00Z",
+      "updated_at": "2026-08-11T04:00:00Z"
+    }
+  },
+  {
+    "model": "inventory.product",
+    "pk": 20,
+    "fields": {
+      "category": 19,
+      "tags": [
+        8,
+        13,
+        15
+      ],
+      "name": "Stropharia rugosoannulata 'Wine Cap' (Spore Syringe)",
+      "slug": "stropharia-rugosoannulata-wine-cap-spore-syringe",
+      "sku": "FOG-SPO-SR-020",
+      "product_type": "physical",
+      "short_description": "10 ml sterile syringe of wine cap spores in solution.",
+      "description": "<p>Wine cap spores suspended in sterile distilled water and loaded into a 10 ml syringe. Spore density is verified by haemocytometer count.</p><p>Sealed and gamma-clean packaged.</p>",
+      "base_price": "16.00",
+      "is_active": true,
+      "is_featured": false,
+      "created_at": "2026-08-11T05:00:00Z",
+      "updated_at": "2026-08-11T05:00:00Z"
+    }
+  },
+  {
+    "model": "inventory.product",
+    "pk": 21,
+    "fields": {
+      "category": 19,
+      "tags": [
+        8,
+        13,
+        15
+      ],
+      "name": "Hericium erinaceus (Spore Syringe)",
+      "slug": "hericium-erinaceus-spore-syringe",
+      "sku": "FOG-SPO-HE-021",
+      "product_type": "physical",
+      "short_description": "10 ml sterile syringe of Lion's Mane spores for microscopy.",
+      "description": "<p>Lion's Mane spores in a 10 ml sterile syringe, prepared under laminar flow. Ideal for spore analysis and documentation.</p><p>Store refrigerated on arrival.</p>",
+      "base_price": "18.00",
+      "is_active": true,
+      "is_featured": false,
+      "created_at": "2026-08-11T06:00:00Z",
+      "updated_at": "2026-08-11T06:00:00Z"
+    }
+  },
+  {
+    "model": "inventory.product",
+    "pk": 22,
+    "fields": {
+      "category": 19,
+      "tags": [
+        8,
+        6
+      ],
+      "name": "Coprinus comatus / Shaggy Mane (Spore Print)",
+      "slug": "coprinus-comatus-shaggy-mane-spore-print",
+      "sku": "FOG-SPO-CC-022",
+      "product_type": "physical",
+      "short_description": "Wild-collected shaggy mane spore print, ready for slide preparation.",
+      "description": "<p>Shaggy mane caps deliquesce within hours, so this print was taken in the field at first cap opening and sealed immediately.</p><p>Supplied for microscopy and educational use.</p>",
+      "base_price": "14.00",
+      "is_active": true,
+      "is_featured": false,
+      "created_at": "2026-08-11T07:00:00Z",
+      "updated_at": "2026-08-11T07:00:00Z"
+    }
+  },
+  {
+    "model": "inventory.product",
+    "pk": 23,
+    "fields": {
+      "category": 18,
+      "tags": [
+        9,
+        3,
+        15
+      ],
+      "name": "Hericium erinaceus (Liquid Culture Isolate)",
+      "slug": "hericium-erinaceus-liquid-culture-isolate",
+      "sku": "FOG-LC-HE-023",
+      "product_type": "physical",
+      "short_description": "12 ml isolate liquid culture of a vigorous Lion's Mane strain.",
+      "description": "<p>An isolated, fast-colonising Lion's Mane strain in nutrient broth, cultured for 14 days and inspected before dispatch.</p><p>12 ml syringe. Ships in insulated packaging.</p>",
+      "base_price": "30.00",
+      "is_active": true,
+      "is_featured": false,
+      "created_at": "2026-08-11T08:00:00Z",
+      "updated_at": "2026-08-11T08:00:00Z"
+    }
+  },
+  {
+    "model": "inventory.product",
+    "pk": 24,
+    "fields": {
+      "category": 18,
+      "tags": [
+        9,
+        5,
+        15
+      ],
+      "name": "Cordyceps militaris (Liquid Culture Isolate)",
+      "slug": "cordyceps-militaris-liquid-culture-isolate",
+      "sku": "FOG-LC-CM-024",
+      "product_type": "physical",
+      "short_description": "12 ml liquid culture isolate of a high-cordycepin Cordyceps strain.",
+      "description": "<p>A stable, high-fruiting Cordyceps militaris isolate maintained in nutrient broth with routine contamination screening.</p><p>12 ml syringe. Ships in insulated packaging.</p>",
+      "base_price": "28.00",
+      "is_active": true,
+      "is_featured": false,
+      "created_at": "2026-08-11T09:00:00Z",
+      "updated_at": "2026-08-11T09:00:00Z"
+    }
+  },
+  {
+    "model": "inventory.product",
+    "pk": 25,
+    "fields": {
+      "category": 18,
+      "tags": [
+        9,
+        11,
+        15
+      ],
+      "name": "Pleurotus ostreatus (Liquid Culture)",
+      "slug": "pleurotus-ostreatus-liquid-culture",
+      "sku": "FOG-LC-PO-025",
+      "product_type": "physical",
+      "short_description": "Fast, forgiving oyster mushroom liquid culture for first-time inoculation.",
+      "description": "<p>Oyster mushrooms are among the most vigorous cultivars, making this liquid culture a good starting point for new cultivators.</p><p>10 ml syringe.</p>",
+      "base_price": "20.00",
+      "is_active": true,
+      "is_featured": false,
+      "created_at": "2026-08-11T10:00:00Z",
+      "updated_at": "2026-08-11T10:00:00Z"
+    }
+  },
+  {
+    "model": "inventory.product",
+    "pk": 26,
+    "fields": {
+      "category": 8,
+      "tags": [
+        11,
+        12,
+        17
+      ],
+      "name": "Blue Oyster Ready-to-Fruit Kit",
+      "slug": "blue-oyster-ready-to-fruit-kit",
+      "sku": "FOG-KIT-PO-026",
+      "product_type": "physical",
+      "short_description": "Fully colonised blue oyster block that fruits within 7-10 days of opening.",
+      "description": "<p>Open the box, cut the flap, mist twice daily and harvest clusters of blue oyster mushrooms in about a week. Blocks commonly yield two to three flushes.</p><p>Ships fully colonised in a breathable filter-patch bag.</p>",
+      "base_price": "29.00",
+      "is_active": true,
+      "is_featured": true,
+      "created_at": "2026-08-11T11:00:00Z",
+      "updated_at": "2026-08-11T11:00:00Z"
+    }
+  },
+  {
+    "model": "inventory.product",
+    "pk": 27,
+    "fields": {
+      "category": 8,
+      "tags": [
+        11,
+        3,
+        7
+      ],
+      "name": "Lion's Mane Fruiting Block",
+      "slug": "lions-mane-fruiting-block",
+      "sku": "FOG-KIT-HE-027",
+      "product_type": "physical",
+      "short_description": "Colonised hardwood block that fruits shaggy white Lion's Mane spines.",
+      "description": "<p>A hardwood-sawdust block fully colonised by Hericium erinaceus. Keep humidity high and fresh air moving to grow pillowy white spines in 10-14 days.</p><p>Includes misting bottle and quick-start guide.</p>",
+      "base_price": "34.00",
+      "is_active": true,
+      "is_featured": true,
+      "created_at": "2026-08-11T12:00:00Z",
+      "updated_at": "2026-08-11T12:00:00Z"
+    }
+  },
+  {
+    "model": "inventory.product",
+    "pk": 28,
+    "fields": {
+      "category": 9,
+      "tags": [
+        7,
+        12
+      ],
+      "name": "Shiitake Log Kit (Plug Spawn & Wax)",
+      "slug": "shiitake-log-kit-plug-spawn-wax",
+      "sku": "FOG-KIT-LE-028",
+      "product_type": "physical",
+      "short_description": "Everything needed to inoculate hardwood logs with shiitake plug spawn.",
+      "description": "<p>Includes 100 shiitake plug spawn dowels, cheese wax and a daubing applicator. Logs typically begin fruiting after 6-12 months and continue for several years.</p><p>Logs are not included.</p>",
+      "base_price": "42.00",
+      "is_active": true,
+      "is_featured": false,
+      "created_at": "2026-08-11T13:00:00Z",
+      "updated_at": "2026-08-11T13:00:00Z"
+    }
+  },
+  {
+    "model": "inventory.product",
+    "pk": 29,
+    "fields": {
+      "category": 11,
+      "tags": [
+        15
+      ],
+      "name": "FOG Proprietary Agar Matrix (MEA-P)",
+      "slug": "fog-proprietary-agar-matrix-mea-p",
+      "sku": "FOG-LAB-AG-029",
+      "product_type": "physical",
+      "short_description": "Malt extract agar with peptone, optimised for fast mycelial expansion.",
+      "description": "<p>A malt extract agar enriched with peptone and trace minerals, formulated to speed radial growth and suppress bacterial contamination.</p><p>250 g powder makes about 10 litres of medium.</p>",
+      "base_price": "18.00",
+      "is_active": true,
+      "is_featured": false,
+      "created_at": "2026-08-11T14:00:00Z",
+      "updated_at": "2026-08-11T14:00:00Z"
+    }
+  },
+  {
+    "model": "inventory.product",
+    "pk": 30,
+    "fields": {
+      "category": 11,
+      "tags": [
+        15,
+        11
+      ],
+      "name": "Potato Dextrose Agar Plates (10-pack)",
+      "slug": "potato-dextrose-agar-plates-10-pack",
+      "sku": "FOG-LAB-AG-030",
+      "product_type": "physical",
+      "short_description": "Ten pre-poured, sterile 90 mm potato dextrose agar plates.",
+      "description": "<p>Pre-poured PDA plates that are sterility-tested and vacuum sealed in sleeves of ten. Ready to use for isolating cultures and transfers.</p><p>Store at 4 degrees C. Best used within 90 days.</p>",
+      "base_price": "21.00",
+      "is_active": true,
+      "is_featured": false,
+      "created_at": "2026-08-11T15:00:00Z",
+      "updated_at": "2026-08-11T15:00:00Z"
+    }
+  },
+  {
+    "model": "inventory.product",
+    "pk": 31,
+    "fields": {
+      "category": 12,
+      "tags": [
+        15
+      ],
+      "name": "Sterilized Grain Matrix (Rye/Sorghum)",
+      "slug": "sterilized-grain-matrix-rye/sorghum",
+      "sku": "FOG-LAB-GR-031",
+      "product_type": "physical",
+      "short_description": "Pressure-sterilised rye and sorghum grain in a self-healing injection port bag.",
+      "description": "<p>A 3 lb bag of hydrated, pressure-cooked rye and sorghum grain blend with a self-healing injection port. Ready for liquid culture or agar transfers.</p><p>Ships within 48 hours of sterilisation.</p>",
+      "base_price": "24.00",
+      "is_active": true,
+      "is_featured": false,
+      "created_at": "2026-08-11T16:00:00Z",
+      "updated_at": "2026-08-11T16:00:00Z"
+    }
+  },
+  {
+    "model": "inventory.product",
+    "pk": 32,
+    "fields": {
+      "category": 12,
+      "tags": [
+        15,
+        7
+      ],
+      "name": "Supplemented Hardwood Fruiting Substrate (5 lb)",
+      "slug": "supplemented-hardwood-fruiting-substrate-5-lb",
+      "sku": "FOG-LAB-SB-032",
+      "product_type": "physical",
+      "short_description": "Masters-mix style hardwood sawdust and soy hull fruiting substrate.",
+      "description": "<p>A 50/50 blend of hardwood fuel pellets and soy hulls, hydrated to field capacity, in a 5 lb filter-patch bag. Ready to sterilise and inoculate.</p><p>Suited to oyster, Lion's Mane and shiitake.</p>",
+      "base_price": "19.00",
+      "is_active": true,
+      "is_featured": false,
+      "created_at": "2026-08-11T17:00:00Z",
+      "updated_at": "2026-08-11T17:00:00Z"
+    }
+  },
+  {
+    "model": "inventory.product",
+    "pk": 33,
+    "fields": {
+      "category": 13,
+      "tags": [
+        8,
+        11
+      ],
+      "name": "Mycology Microscopy Slide Kit",
+      "slug": "mycology-microscopy-slide-kit",
+      "sku": "FOG-TLS-MS-033",
+      "product_type": "physical",
+      "short_description": "Slides, cover slips, stain and a pipette set for spore and hyphae study.",
+      "description": "<p>Includes 50 glass slides, 100 cover slips, Melzer's reagent, cotton blue stain, dropper pipettes and a laminated spore-shape reference card.</p><p>Designed for use with a 400x compound microscope.</p>",
+      "base_price": "34.00",
+      "is_active": true,
+      "is_featured": false,
+      "created_at": "2026-08-11T18:00:00Z",
+      "updated_at": "2026-08-11T18:00:00Z"
+    }
+  },
+  {
+    "model": "inventory.product",
+    "pk": 34,
+    "fields": {
+      "category": 13,
+      "tags": [
+        15,
+        8
+      ],
+      "name": "Sterile Scalpel & Inoculation Loop Set",
+      "slug": "sterile-scalpel-inoculation-loop-set",
+      "sku": "FOG-TLS-SC-034",
+      "product_type": "physical",
+      "short_description": "Individually wrapped sterile scalpels and inoculation loops.",
+      "description": "<p>Ten individually wrapped stainless steel scalpel blades and ten disposable inoculation loops, gamma-sterilised for agar work.</p><p>Single use.</p>",
+      "base_price": "16.00",
+      "is_active": true,
+      "is_featured": false,
+      "created_at": "2026-08-11T19:00:00Z",
+      "updated_at": "2026-08-11T19:00:00Z"
+    }
+  },
+  {
+    "model": "inventory.product",
+    "pk": 35,
+    "fields": {
+      "category": 15,
+      "tags": [
+        16
+      ],
+      "name": "FOG Lab Protocol: Substrate Optimization Data",
+      "slug": "fog-lab-protocol-substrate-optimization-data",
+      "sku": "FOG-DG-PROT-035",
+      "product_type": "downloadable",
+      "short_description": "Downloadable dataset of substrate recipes, hydration ratios and yield results.",
+      "description": "<p>A 42 page PDF and companion spreadsheet documenting substrate formulations, moisture targets, sterilisation cycles and yield data across seven species.</p><p>Instant download after payment confirmation.</p>",
+      "base_price": "15.00",
+      "is_active": true,
+      "is_featured": false,
+      "created_at": "2026-08-11T20:00:00Z",
+      "updated_at": "2026-08-11T20:00:00Z"
+    }
+  },
+  {
+    "model": "inventory.product",
+    "pk": 36,
+    "fields": {
+      "category": 15,
+      "tags": [
+        16
+      ],
+      "name": "FOG Lab Protocol: Cryogenic Preservation Data",
+      "slug": "fog-lab-protocol-cryogenic-preservation-data",
+      "sku": "FOG-DG-PROT-036",
+      "product_type": "downloadable",
+      "short_description": "Step-by-step cryopreservation protocols for long-term culture storage.",
+      "description": "<p>A 28 page PDF covering cryoprotectant selection, controlled cooling rates, viability testing and revival for ten mushroom species.</p><p>Instant download after payment confirmation.</p>",
+      "base_price": "15.00",
+      "is_active": true,
+      "is_featured": false,
+      "created_at": "2026-08-11T21:00:00Z",
+      "updated_at": "2026-08-11T21:00:00Z"
+    }
+  },
+  {
+    "model": "inventory.product",
+    "pk": 37,
+    "fields": {
+      "category": 15,
+      "tags": [
+        16,
+        18
+      ],
+      "name": "Field Guide: Identifying Medicinal Polypores (PDF)",
+      "slug": "field-guide-identifying-medicinal-polypores-pdf",
+      "sku": "FOG-DG-GUIDE-037",
+      "product_type": "downloadable",
+      "short_description": "Illustrated identification guide to reishi, turkey tail, chaga and other polypores.",
+      "description": "<p>A 60 page illustrated field guide with spore print colours, host trees, seasonal timing and look-alike warnings for twelve medicinal polypores.</p><p>Instant download after payment confirmation.</p>",
+      "base_price": "12.00",
+      "is_active": true,
+      "is_featured": false,
+      "created_at": "2026-08-11T22:00:00Z",
+      "updated_at": "2026-08-11T22:00:00Z"
+    }
+  },
+  {
+    "model": "inventory.product",
+    "pk": 38,
+    "fields": {
+      "category": 16,
+      "tags": [
+        1,
+        6,
+        19
+      ],
+      "name": "Fomitopsis officinalis / Agarikon (Wild Conk)",
+      "slug": "fomitopsis-officinalis-agarikon-wild-conk",
+      "sku": "FOG-ARC-FO-038",
+      "product_type": "physical",
+      "short_description": "Retired wild-harvest agarikon conk. No longer available.",
+      "description": "<p>A wild-harvested old-growth agarikon conk lot that has been retired from the catalog. Kept here for order history and reference.</p><p>No longer sold.</p>",
+      "base_price": "120.00",
+      "is_active": false,
+      "is_featured": false,
+      "created_at": "2026-08-11T23:00:00Z",
+      "updated_at": "2026-08-11T23:00:00Z"
+    }
+  }
+]

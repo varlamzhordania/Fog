@@ -145,7 +145,7 @@ class Order(BaseModel):
     )
     total_price = models.DecimalField(
         max_digits=12,
-        decimal_places=4,
+        decimal_places=2,
         verbose_name=_('Total Price'),
     )
     notes = models.TextField(
@@ -189,12 +189,12 @@ class OrderItem(BaseModel):
     )
     unit_price = models.DecimalField(
         max_digits=12,
-        decimal_places=4,
+        decimal_places=2,
         verbose_name=_('Unit Price'),
     )
     total_price = models.DecimalField(
         max_digits=12,
-        decimal_places=4,
+        decimal_places=2,
         verbose_name=_('Total Price'),
     )
 

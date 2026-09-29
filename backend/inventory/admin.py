@@ -7,8 +7,9 @@ from django.utils.translation import gettext_lazy as _
 from treebeard.admin import TreeAdmin
 from treebeard.forms import movenodeform_factory
 from unfold import admin
+from simple_history.admin import SimpleHistoryAdmin
 
-from core.admin import UnfoldImportExportAdmin
+from core.admin import UnfoldImportExportHistoryAdmin
 from .models import (
     Category,
     Tag,
@@ -166,12 +167,13 @@ class MediaAdmin(admin.ModelAdmin):
 
 
 @django_admin.register(Category)
-class CategoryAdmin(UnfoldImportExportAdmin, TreeAdmin):
+class CategoryAdmin(UnfoldImportExportHistoryAdmin, TreeAdmin):
     form = movenodeform_factory(Category)
     list_display = ["name", "slug", "is_featured", "is_filterable",
                     "is_active", "created_at"]
     list_filter = ["is_active", "is_filterable", "is_featured"]
     search_fields = ["name", "slug"]
+    readonly_fields = ["slug"]
 
     class Media:
         css = {
@@ -183,7 +185,7 @@ class CategoryAdmin(UnfoldImportExportAdmin, TreeAdmin):
 
 
 @django_admin.register(Tag)
-class TagAdmin(UnfoldImportExportAdmin):
+class TagAdmin(UnfoldImportExportHistoryAdmin):
     list_display = ["name", "slug", "is_filterable",
                     "is_active", "created_at"]
     list_filter = ["is_active", "is_filterable", ]
@@ -192,9 +194,8 @@ class TagAdmin(UnfoldImportExportAdmin):
 
 @django_admin.register(Product)
 class ProductAdmin(
-    UnfoldImportExportAdmin,
-    nested_admin.NestedModelAdmin,
-    admin.ModelAdmin
+    UnfoldImportExportHistoryAdmin,
+    nested_admin.NestedModelAdmin
 ):
     resource_classes = [ProductResource]
     inlines = [ProductStockInline, ProductMediaInline]
@@ -270,7 +271,7 @@ class ProductAdmin(
 
 
 @django_admin.register(ProductStock)
-class ProductStockAdmin(admin.ModelAdmin):
+class ProductStockAdmin(SimpleHistoryAdmin, admin.ModelAdmin):
     inlines = [StockReservationInline]
     list_display = [
         "product",
@@ -290,7 +291,7 @@ class ProductStockAdmin(admin.ModelAdmin):
 
 
 @django_admin.register(StockReservation)
-class StockReservationAdmin(admin.ModelAdmin):
+class StockReservationAdmin(SimpleHistoryAdmin, admin.ModelAdmin):
     list_display = [
         "id_short",
         "order_link",
@@ -364,7 +365,7 @@ class StockReservationAdmin(admin.ModelAdmin):
 
 
 @django_admin.register(StockTransactionLog)
-class StockTransactionLogAdmin(admin.ModelAdmin):
+class StockTransactionLogAdmin(SimpleHistoryAdmin, admin.ModelAdmin):
     list_display = [
         "created_at",
         "product_stock",

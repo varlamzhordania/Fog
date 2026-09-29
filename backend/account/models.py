@@ -2,6 +2,7 @@ from django.db import models
 from django.contrib.auth.models import AbstractUser
 from django.utils.translation import gettext_lazy as _
 from django.contrib.auth.base_user import BaseUserManager
+from simple_history.models import HistoricalRecords
 
 from core.models import BaseModel
 
@@ -44,6 +45,7 @@ class User(AbstractUser):
         null=True,
         blank=True
     )
+    history = HistoricalRecords()
 
     USERNAME_FIELD = "email"
     REQUIRED_FIELDS = ["first_name", "last_name"]

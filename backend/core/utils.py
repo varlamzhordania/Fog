@@ -87,3 +87,43 @@ def pending_orders_badge_callback(request):
     except Exception:
         # Fallback to prevent admin rendering failures during migrations or DB unavailability
         return None
+
+
+def pending_shipments_badge_callback(request):
+    """
+    Counts shipments that have not left the warehouse yet.
+    """
+    try:
+        from checkout.models import OrderShipment
+        pending_count = OrderShipment.objects.filter(
+            status=OrderShipment.StatusChoices.PENDING
+        ).count()
+        return str(pending_count) if pending_count > 0 else None
+    except Exception:
+        return None
+
+
+def low_stock_badge_callback(request):
+    """
+    Counts active products whose available quantity
+    (on hand minus reserved) is at or below their low stock threshold.
+    """
+    try:
+        from django.db.models import F
+        from inventory.models import ProductStock
+        low_count = ProductStock.objects.filter(
+            product__is_active=True
+        ).annotate(
+            available=F("quantity") - F("reserved_quantity")
+        ).filter(available__lte=F("low_stock_threshold")).count()
+        return str(low_count) if low_count > 0 else None
+    except Exception:
+        return None
+
+
+def storefront_url(request):
+    """
+    Public storefront (Next.js) address used by the admin quick access menu.
+    """
+    scheme = "http" if getattr(settings, "DEBUG", False) else "https"
+    return f"{scheme}://{settings.FRONTEND_DOMAIN}"

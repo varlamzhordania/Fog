@@ -4,13 +4,13 @@ import {products} from "@/data/products";
 import {Typography} from "@heroui/react";
 import Icon from "@/components/Icon/Icon";
 import {FlaskConical, Network, ShieldCheck} from "lucide-react";
-import ShowCase from "@/components/categories/ShowCase";
+import CategoriesShowCase from "@/components/inventory/CategoriesShowCase";
 import BackgroundImage from "@/components/BackgroundImage";
 
 export default function Home() {
     return (<>
         <HeroSection/>
-        <ShowCase/>
+        <CategoriesShowCase/>
         <WhyFOG/>
         <ProductSlider title={"Featured Products"} productData={products} featured cardDepth/>
         <ProductSlider title={"FOG Products"} productData={products}/>

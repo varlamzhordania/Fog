@@ -209,5 +209,8 @@
     .checkbox__control{
         --radius: 0.425rem;
     }
+    .dropdown__popover,.select__popover{
+        @apply rounded-xl
+    }
 
 }

@@ -1,12 +1,15 @@
 from rest_framework import serializers
 
-from inventory.models import Media, Category, Tag
+from inventory.models import (
+    Media, Category, Tag, ProductMedia, Product,
+)
 
 
 class MediaSerializer(serializers.ModelSerializer):
     class Meta:
         model = Media
-        fields = '__all__'
+        fields = ["id", "file", "media_type", "alt_text", "title"]
+        read_only_fields = fields
 
 
 class CategorySerializer(serializers.ModelSerializer):
@@ -49,4 +52,72 @@ class CategorySerializer(serializers.ModelSerializer):
 class TagSerializer(serializers.ModelSerializer):
     class Meta:
         model = Tag
-        fields = ['id', 'name','slug','is_filterable']
+        fields = ['id', 'name', 'slug', 'is_filterable']
+
+
+class TagMinimalSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Tag
+        fields = ["id", "name", "slug"]
+        read_only_fields = fields
+
+
+class CategoryMinimalSerializer(serializers.ModelSerializer):
+    breadcrumb = serializers.CharField(
+        source="get_breadcrumb",
+        read_only=True
+    )
+
+    class Meta:
+        model = Category
+        fields = ["id", "name", "slug", "breadcrumb"]
+        read_only_fields = fields
+
+
+class ProductMediaSerializer(serializers.ModelSerializer):
+    media = MediaSerializer(read_only=True)
+
+    class Meta:
+        model = ProductMedia
+        fields = ["id", "media", "is_featured", "display_order"]
+        read_only_fields = fields
+
+
+class ProductSerializer(serializers.ModelSerializer):
+    category = CategoryMinimalSerializer(read_only=True)
+    tags = TagMinimalSerializer(many=True, read_only=True)
+    primary_image = MediaSerializer(read_only=True)
+    gallery = ProductMediaSerializer(
+        source="product_media_items",
+        many=True,
+        read_only=True
+    )
+
+    # Extract calculated available stock (quantity - reserved_quantity)
+    available_stock = serializers.IntegerField(
+        source="product_stock.available_quantity",
+        read_only=True,
+        default=0
+    )
+
+    class Meta:
+        model = Product
+        fields = [
+            "id",
+            "name",
+            "slug",
+            "sku",
+            "product_type",
+            "short_description",
+            "description",
+            "base_price",
+            "is_featured",
+            "category",
+            "tags",
+            "primary_image",
+            "gallery",
+            "available_stock",
+            "created_at",
+            "updated_at",
+        ]
+        read_only_fields = fields

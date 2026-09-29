@@ -1,0 +1,254 @@
+[
+  {
+    "model": "account.address",
+    "pk": 1,
+    "fields": {
+      "user": 104,
+      "full_name": "Noah Bennett",
+      "line1": "1420 NE Alberta Street",
+      "line2": "Apt 3B",
+      "city": "Portland",
+      "state": "Oregon",
+      "postal_code": "97211",
+      "country": "United States",
+      "is_default": true,
+      "is_active": true,
+      "created_at": "2026-06-12T12:15:00Z",
+      "updated_at": "2026-06-12T12:15:00Z"
+    }
+  },
+  {
+    "model": "account.address",
+    "pk": 2,
+    "fields": {
+      "user": 104,
+      "full_name": "Noah Bennett",
+      "line1": "88 SW Naito Parkway",
+      "line2": "Suite 210",
+      "city": "Portland",
+      "state": "Oregon",
+      "postal_code": "97204",
+      "country": "United States",
+      "is_default": false,
+      "is_active": true,
+      "created_at": "2026-07-02T12:15:00Z",
+      "updated_at": "2026-07-02T12:15:00Z"
+    }
+  },
+  {
+    "model": "account.address",
+    "pk": 3,
+    "fields": {
+      "user": 105,
+      "full_name": "Emma Hartmann",
+      "line1": "Kastanienallee 47",
+      "line2": null,
+      "city": "Berlin",
+      "state": "Berlin",
+      "postal_code": "10435",
+      "country": "Germany",
+      "is_default": true,
+      "is_active": true,
+      "created_at": "2026-06-21T09:00:00Z",
+      "updated_at": "2026-06-21T09:00:00Z"
+    }
+  },
+  {
+    "model": "account.address",
+    "pk": 4,
+    "fields": {
+      "user": 105,
+      "full_name": "Emma Hartmann",
+      "line1": "Schlossstrasse 12",
+      "line2": "c/o Hartmann GmbH",
+      "city": "Potsdam",
+      "state": "Brandenburg",
+      "postal_code": "14467",
+      "country": "Germany",
+      "is_default": false,
+      "is_active": true,
+      "created_at": "2026-07-11T09:00:00Z",
+      "updated_at": "2026-07-11T09:00:00Z"
+    }
+  },
+  {
+    "model": "account.address",
+    "pk": 5,
+    "fields": {
+      "user": 106,
+      "full_name": "Liam Tremblay",
+      "line1": "2255 Rue Saint-Denis",
+      "line2": "Unit 4",
+      "city": "Montreal",
+      "state": "Quebec",
+      "postal_code": "H2X 3K8",
+      "country": "Canada",
+      "is_default": true,
+      "is_active": true,
+      "created_at": "2026-07-03T16:20:00Z",
+      "updated_at": "2026-07-03T16:20:00Z"
+    }
+  },
+  {
+    "model": "account.address",
+    "pk": 6,
+    "fields": {
+      "user": 107,
+      "full_name": "Olivia Dubois",
+      "line1": "14 Rue de la Republique",
+      "line2": null,
+      "city": "Lyon",
+      "state": "Auvergne-Rhone-Alpes",
+      "postal_code": "69002",
+      "country": "France",
+      "is_default": true,
+      "is_active": true,
+      "created_at": "2026-07-10T11:10:00Z",
+      "updated_at": "2026-07-10T11:10:00Z"
+    }
+  },
+  {
+    "model": "account.address",
+    "pk": 7,
+    "fields": {
+      "user": 108,
+      "full_name": "Lucas van Dijk",
+      "line1": "Oudegracht 210",
+      "line2": null,
+      "city": "Utrecht",
+      "state": "Utrecht",
+      "postal_code": "3511 NR",
+      "country": "Netherlands",
+      "is_default": true,
+      "is_active": true,
+      "created_at": "2026-07-16T14:45:00Z",
+      "updated_at": "2026-07-16T14:45:00Z"
+    }
+  },
+  {
+    "model": "account.address",
+    "pk": 8,
+    "fields": {
+      "user": 109,
+      "full_name": "Ava Kowalski",
+      "line1": "ul. Mokotowska 33",
+      "line2": "m. 12",
+      "city": "Warsaw",
+      "state": "Mazowieckie",
+      "postal_code": "00-560",
+      "country": "Poland",
+      "is_default": true,
+      "is_active": true,
+      "created_at": "2026-07-29T18:30:00Z",
+      "updated_at": "2026-07-29T18:30:00Z"
+    }
+  },
+  {
+    "model": "account.address",
+    "pk": 9,
+    "fields": {
+      "user": 110,
+      "full_name": "Ethan Brooks",
+      "line1": "3901 Guadalupe Street",
+      "line2": null,
+      "city": "Austin",
+      "state": "Texas",
+      "postal_code": "78751",
+      "country": "United States",
+      "is_default": true,
+      "is_active": true,
+      "created_at": "2026-08-04T10:05:00Z",
+      "updated_at": "2026-08-04T10:05:00Z"
+    }
+  },
+  {
+    "model": "account.address",
+    "pk": 10,
+    "fields": {
+      "user": 110,
+      "full_name": "Ethan Brooks",
+      "line1": "701 Brazos Street",
+      "line2": "Floor 5",
+      "city": "Austin",
+      "state": "Texas",
+      "postal_code": "78701",
+      "country": "United States",
+      "is_default": false,
+      "is_active": true,
+      "created_at": "2026-08-24T10:05:00Z",
+      "updated_at": "2026-08-24T10:05:00Z"
+    }
+  },
+  {
+    "model": "account.address",
+    "pk": 11,
+    "fields": {
+      "user": 111,
+      "full_name": "Isla MacKenzie",
+      "line1": "27 Leith Walk",
+      "line2": "Flat 2/1",
+      "city": "Edinburgh",
+      "state": "Scotland",
+      "postal_code": "EH6 8LN",
+      "country": "United Kingdom",
+      "is_default": true,
+      "is_active": true,
+      "created_at": "2026-08-10T13:35:00Z",
+      "updated_at": "2026-08-10T13:35:00Z"
+    }
+  },
+  {
+    "model": "account.address",
+    "pk": 12,
+    "fields": {
+      "user": 112,
+      "full_name": "Mateo Herrera",
+      "line1": "Carrer de Colon 58",
+      "line2": "3o A",
+      "city": "Valencia",
+      "state": "Valencia",
+      "postal_code": "46004",
+      "country": "Spain",
+      "is_default": true,
+      "is_active": true,
+      "created_at": "2026-08-15T08:55:00Z",
+      "updated_at": "2026-08-15T08:55:00Z"
+    }
+  },
+  {
+    "model": "account.address",
+    "pk": 13,
+    "fields": {
+      "user": 113,
+      "full_name": "Chloe Nakamura",
+      "line1": "42 Crown Street",
+      "line2": null,
+      "city": "Sydney",
+      "state": "New South Wales",
+      "postal_code": "2010",
+      "country": "Australia",
+      "is_default": true,
+      "is_active": true,
+      "created_at": "2026-08-22T20:25:00Z",
+      "updated_at": "2026-08-22T20:25:00Z"
+    }
+  },
+  {
+    "model": "account.address",
+    "pk": 14,
+    "fields": {
+      "user": 114,
+      "full_name": "Oscar Lindgren",
+      "line1": "Drottninggatan 71",
+      "line2": null,
+      "city": "Stockholm",
+      "state": "Stockholm",
+      "postal_code": "111 36",
+      "country": "Sweden",
+      "is_default": true,
+      "is_active": true,
+      "created_at": "2026-06-02T09:00:00Z",
+      "updated_at": "2026-06-02T09:00:00Z"
+    }
+  }
+]

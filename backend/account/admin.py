@@ -8,8 +8,12 @@ from django.utils.html import format_html
 from django.utils.translation import gettext_lazy as _
 from unfold import admin
 from unfold.forms import AdminPasswordChangeForm
+from simple_history.admin import SimpleHistoryAdmin
+from oauth2_provider.admin import ApplicationAdmin,AccessTokenAdmin
+from oauth2_provider.models import Application,AccessToken
 
-from core.admin import UnfoldImportExportAdmin
+
+from core.admin import UnfoldImportExportHistoryAdmin
 from .models import Address
 from .forms import CustomUserChangeForm, CustomUserCreationForm
 
@@ -28,7 +32,7 @@ class AddressInline(admin.StackedInline):
 
 
 @django_admin.register(User)
-class UserAdmin(UnfoldImportExportAdmin, BaseUserAdmin):
+class UserAdmin(UnfoldImportExportHistoryAdmin, BaseUserAdmin):
     form = CustomUserChangeForm
     add_form = CustomUserCreationForm
     change_password_form = AdminPasswordChangeForm
@@ -133,7 +137,7 @@ class UserAdmin(UnfoldImportExportAdmin, BaseUserAdmin):
 
 
 @django_admin.register(Address)
-class AddressAdmin(admin.ModelAdmin):
+class AddressAdmin(SimpleHistoryAdmin, admin.ModelAdmin):
     list_display = [
         "full_name",
         "user_link",
@@ -221,6 +225,9 @@ class AddressAdmin(admin.ModelAdmin):
 
 try:
     django_admin.site.unregister(Group)
+    django_admin.site.unregister(Application)
+    django_admin.site.unregister(AccessToken)
+
 except django_admin.sites.NotRegistered:
     pass
 
@@ -229,3 +236,11 @@ except django_admin.sites.NotRegistered:
 class GroupAdmin(BaseGroupAdmin, admin.ModelAdmin):
     list_display = ["name"]
     search_fields = ["name"]
+
+@django_admin.register(Application)
+class ApplicationAdmin(SimpleHistoryAdmin, admin.ModelAdmin,ApplicationAdmin):
+    pass
+
+@django_admin.register(AccessToken)
+class AccessTokenAdmin(SimpleHistoryAdmin, admin.ModelAdmin,AccessTokenAdmin):
+    pass

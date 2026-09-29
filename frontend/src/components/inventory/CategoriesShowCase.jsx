@@ -6,7 +6,7 @@ import {useCategories} from "@/queries/inventory";
 import {notFoundImage} from "@/lib/config";
 import Link from "next/link";
 
-const ShowCase = ({title = "product discovery"}) => {
+const CategoriesShowCase = ({title = "product discovery"}) => {
     const {
         data,
         isLoading,
@@ -82,4 +82,4 @@ const ShowCase = ({title = "product discovery"}) => {
     );
 };
 
-export default ShowCase;
+export default CategoriesShowCase;

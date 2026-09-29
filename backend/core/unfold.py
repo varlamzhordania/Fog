@@ -1,8 +1,93 @@
 from django.templatetags.static import static
-from django.urls import reverse_lazy
+from django.urls import reverse, reverse_lazy
+from django.utils.functional import lazy
 from django.utils.translation import gettext_lazy as _
 from unfold.contrib.constance.settings import \
     UNFOLD_CONSTANCE_ADDITIONAL_FIELDS
+
+
+# ------------------------------------------------------------------------------
+# Navigation helpers
+# ------------------------------------------------------------------------------
+def _changelist_url(model, query=""):
+    url = reverse(f"admin:{model.replace('.', '_')}_changelist")
+    return f"{url}?{query}" if query else url
+
+
+# Lazy admin changelist URL, optionally pre-filtered:
+#   changelist("checkout.order", "status__exact=pending")
+changelist = lazy(_changelist_url, str)
+
+
+def superuser_only(request):
+    return request.user.is_superuser
+
+
+def can_view(model):
+    """Permission callback: user may view (or change) the given "app.model"."""
+    app_label, model_name = model.split(".")
+
+    def check(request):
+        return request.user.has_perm(
+            f"{app_label}.view_{model_name}"
+        ) or request.user.has_perm(f"{app_label}.change_{model_name}")
+
+    return check
+
+
+def nav_item(title, icon, model, permission=None, badge=None,
+             badge_variant="warning"):
+    """Sidebar link to a model changelist, hidden without view permission."""
+    item = {
+        "title": title,
+        "icon": icon,
+        "link": changelist(model),
+        "permission": permission or can_view(model),
+    }
+
+    if badge:
+        item.update({
+            "badge": badge,
+            "badge_variant": badge_variant,
+            "badge_style": "solid",
+            "badge_class": "ml-auto text-xs font-semibold !rounded-full",
+        })
+
+    return item
+
+
+def model_tab(title, model, permission=None):
+    """Tab linking to a model changelist."""
+    return {
+        "title": title,
+        "link": changelist(model),
+        "permission": permission or can_view(model),
+    }
+
+
+def status_tabs(model, choices, param="status__exact"):
+    """
+    "All" tab followed by one pre-filtered tab per (title, value) choice.
+    The "All" tab is only active while no status filter is applied.
+    """
+    permission = can_view(model)
+
+    return [
+        {
+            "title": _("All"),
+            "link": changelist(model),
+            "permission": permission,
+            "active": lambda request: param not in request.GET,
+        },
+        *[
+            {
+                "title": title,
+                "link": changelist(model, f"{param}={value}"),
+                "permission": permission,
+            }
+            for title, value in choices
+        ],
+    ]
 
 UNFOLD_SETTINGS = {
     # --------------------------------------------------------------------------
@@ -26,17 +111,39 @@ UNFOLD_SETTINGS = {
             "link": reverse_lazy("admin:index"),
         },
         {
-            "icon": "storefront",
-            "title": _("Public Storefront"),
-            "link": "/",
-            "attrs": {
-                "target": "_blank",
-            },
+            "icon": "add_box",
+            "title": _("Add Product"),
+            "link": reverse_lazy("admin:inventory_product_add"),
+        },
+        {
+            "icon": "pending_actions",
+            "title": _("Orders to Review"),
+            "link": changelist("checkout.order", "status__exact=pending"),
+        },
+        {
+            "icon": "local_shipping",
+            "title": _("Pending Shipments"),
+            "link": changelist(
+                "checkout.ordershipment", "status__exact=pending"
+            ),
+        },
+        {
+            "icon": "warehouse",
+            "title": _("Stock Levels"),
+            "link": changelist("inventory.productstock"),
         },
         {
             "icon": "tune",
             "title": _("Live Dynamic Config"),
             "link": reverse_lazy("admin:constance_config_changelist"),
+        },
+        {
+            "icon": "storefront",
+            "title": _("Public Storefront"),
+            "link": "core.utils.storefront_url",
+            "attrs": {
+                "target": "_blank",
+            },
         },
     ],
 
@@ -56,7 +163,7 @@ UNFOLD_SETTINGS = {
     # Environment & UI Telemetry
     # --------------------------------------------------------------------------
     "ENVIRONMENT": "core.utils.environment_callback",
-    "SHOW_HISTORY": False,
+    "SHOW_HISTORY": True,
     "SHOW_VIEW_ON_SITE": True,
     "SHOW_BACK_BUTTON": True,
     "SHOW_UI_WARNINGS": False,
@@ -118,6 +225,32 @@ UNFOLD_SETTINGS = {
     },
 
     # --------------------------------------------------------------------------
+    # Command Palette (Ctrl/Cmd + K) - quick access to any record or model
+    # --------------------------------------------------------------------------
+    "COMMAND": {
+        "search_models": True,
+        "show_history": True,
+    },
+
+    # --------------------------------------------------------------------------
+    # Account Menu (user dropdown in the sidebar footer)
+    # --------------------------------------------------------------------------
+    "ACCOUNT": {
+        "navigation": [
+            {
+                "title": _("My profile"),
+                "link": lambda request: reverse(
+                    "admin:account_user_change", args=[request.user.pk]
+                ),
+            },
+            {
+                "title": _("Change password"),
+                "link": reverse_lazy("admin:password_change"),
+            },
+        ],
+    },
+
+    # --------------------------------------------------------------------------
     # Sidebar Navigation Structure
     # --------------------------------------------------------------------------
     "SIDEBAR": {
@@ -126,26 +259,42 @@ UNFOLD_SETTINGS = {
         # Ensures unlisted models remain discoverable
         "navigation": [
             {
-                "title": _("Operations & Orders"),
-                "separator": True,
-                "collapsible": True,
+                "title": _("Overview"),
                 "items": [
                     {
                         "title": _("Dashboard"),
                         "icon": "dashboard",
                         "link": reverse_lazy("admin:index"),
                     },
-                    {
-                        "title": _("Orders & Checkout"),
-                        "icon": "receipt_long",
-                        "link": reverse_lazy(
-                            "admin:checkout_order_changelist"
-                        ),
-                        "badge": "core.utils.pending_orders_badge_callback",
-                        "badge_variant": "warning",
-                        "badge_style": "solid",
-                        "badge_class": "ml-auto text-xs font-semibold !rounded-full",
-                    },
+                ],
+            },
+            {
+                "title": _("Sales & Fulfilment"),
+                "separator": True,
+                "collapsible": True,
+                "items": [
+                    nav_item(
+                        _("Orders"), "receipt_long", "checkout.order",
+                        badge="core.utils.pending_orders_badge_callback",
+                        badge_variant="warning",
+                    ),
+                    nav_item(
+                        _("Payments"), "payments", "checkout.orderpayment",
+                    ),
+                    nav_item(
+                        _("Shipments"), "local_shipping",
+                        "checkout.ordershipment",
+                        badge="core.utils.pending_shipments_badge_callback",
+                        badge_variant="info",
+                    ),
+                    nav_item(
+                        _("Shopping Carts"), "shopping_cart",
+                        "checkout.shoppingcart",
+                    ),
+                    nav_item(
+                        _("Payment Methods"), "credit_card",
+                        "checkout.paymentmethod",
+                    ),
                 ],
             },
             {
@@ -153,48 +302,47 @@ UNFOLD_SETTINGS = {
                 "separator": True,
                 "collapsible": True,
                 "items": [
-                    {
-                        "title": _("Products"),
-                        "icon": "inventory_2",
-                        "link": reverse_lazy(
-                            "admin:inventory_product_changelist"
-                        ),
-                    },
-                    {
-                        "title": _("Categories"),
-                        "icon": "category",
-                        "link": reverse_lazy(
-                            "admin:inventory_category_changelist"
-                        ),
-                    },
-                    {
-                        "title": _("Tags"),
-                        "icon": "tag",
-                        "link": reverse_lazy(
-                            "admin:inventory_tag_changelist"
-                        ),
-                    },
+                    nav_item(_("Products"), "inventory_2", "inventory.product"),
+                    nav_item(_("Categories"), "category", "inventory.category"),
+                    nav_item(_("Tags"), "sell", "inventory.tag"),
+                    nav_item(
+                        _("General Media"), "perm_media", "inventory.media",
+                        permission=superuser_only,
+                    ),
                 ],
             },
             {
-                "title": _("Accounts & Access"),
+                "title": _("Inventory"),
                 "separator": True,
                 "collapsible": True,
                 "items": [
-                    {
-                        "title": _("Users"),
-                        "icon": "people",
-                        "link": reverse_lazy(
-                            "admin:account_user_changelist"
-                        ),
-                    },
-                    {
-                        "title": _("Groups & Permissions"),
-                        "icon": "shield_person",
-                        "link": reverse_lazy(
-                            "admin:auth_group_changelist"
-                        ),
-                    },
+                    nav_item(
+                        _("Stock Levels"), "warehouse",
+                        "inventory.productstock",
+                        badge="core.utils.low_stock_badge_callback",
+                        badge_variant="danger",
+                    ),
+                    nav_item(
+                        _("Reservations"), "lock_clock",
+                        "inventory.stockreservation",
+                    ),
+                    nav_item(
+                        _("Stock Log"), "history",
+                        "inventory.stocktransactionlog",
+                    ),
+                ],
+            },
+            {
+                "title": _("Customers & Access"),
+                "separator": True,
+                "collapsible": True,
+                "items": [
+                    nav_item(_("Users"), "people", "account.user"),
+                    nav_item(_("Addresses"), "location_on", "account.address"),
+                    nav_item(
+                        _("Groups & Permissions"), "shield_person",
+                        "auth.group",
+                    ),
                 ],
             },
             {
@@ -208,73 +356,104 @@ UNFOLD_SETTINGS = {
                         "link": reverse_lazy(
                             "admin:constance_config_changelist"
                         ),
-                        "permission": lambda
-                            request: request.user.is_superuser,
+                        "permission": superuser_only,
                     },
-                    {
-                        "title": _("OAuth Applications"),
-                        "icon": "key",
-                        "link": reverse_lazy(
-                            "admin:oauth2_provider_application_changelist"
-                        ),
-                        "permission": lambda
-                            request: request.user.is_superuser,
-                    },
-                ],
-            },
-            {
-                "title": _("Uploads"),
-                "separator": True,
-                "collapsible": True,
-                "icon": "picture",
-                "items": [
-                    {
-                        "title": _("General Media"),
-                        "icon": "image",
-                        "link": reverse_lazy(
-                            "admin:inventory_media_changelist"
-                        ),
-                        "permission": lambda
-                            request: request.user.is_superuser,
-                    },
+                    nav_item(
+                        _("OAuth Applications"), "key",
+                        "oauth2_provider.application",
+                        permission=superuser_only,
+                    ),
+                    nav_item(
+                        _("OAuth Access Tokens"), "vpn_key",
+                        "oauth2_provider.accesstoken",
+                        permission=superuser_only,
+                    ),
+                    # nav_item(
+                    #     _("Social Accounts"), "link",
+                    #     "social_django.usersocialauth",
+                    #     permission=superuser_only,
+                    # ),
                 ],
             },
         ],
     },
 
     # --------------------------------------------------------------------------
-    # Tabbed Navigation on Model Change Views
+    # Tabbed Navigation on Model Changelists
+    # (status tabs are pre-filtered changelists, "All" clears the filter)
     # --------------------------------------------------------------------------
     "TABS": [
+        {
+            "models": ["checkout.order"],
+            "items": status_tabs("checkout.order", [
+                (_("Awaiting Payment"), "payment"),
+                (_("Pending"), "pending"),
+                (_("Processing"), "processing"),
+                (_("Shipped"), "shipped"),
+                (_("Delivered"), "delivered"),
+                (_("Cancelled"), "cancelled"),
+            ]),
+        },
+        {
+            "models": ["checkout.orderpayment"],
+            "items": status_tabs("checkout.orderpayment", [
+                (_("Pending"), "PENDING"),
+                (_("Completed"), "COMPLETED"),
+                (_("Failed"), "FAILED"),
+                (_("Refunded"), "REFUNDED"),
+            ]),
+        },
+        {
+            "models": ["checkout.ordershipment"],
+            "items": status_tabs("checkout.ordershipment", [
+                (_("Pending"), "pending"),
+                (_("In Transit"), "in_transit"),
+                (_("Delivered"), "delivered"),
+            ]),
+        },
         {
             "models": [
                 "inventory.product",
                 "inventory.category",
                 "inventory.tag",
+                "inventory.media",
             ],
             "items": [
-                {
-                    "title": _("Products"),
-                    "link": reverse_lazy(
-                        "admin:inventory_product_changelist"
-                    ),
-                },
-                {
-                    "title": _("Categories"),
-                    "link": reverse_lazy(
-                        "admin:inventory_category_changelist"
-                    ),
-                },
-                {
-                    "title": _("Tags"),
-                    "link": reverse_lazy(
-                        "admin:inventory_tag_changelist"
-                    ),
-                },
+                model_tab(_("Products"), "inventory.product"),
+                model_tab(_("Categories"), "inventory.category"),
+                model_tab(_("Tags"), "inventory.tag"),
+                model_tab(
+                    _("Media"), "inventory.media", permission=superuser_only
+                ),
+            ],
+        },
+        {
+            "models": [
+                "inventory.productstock",
+                "inventory.stockreservation",
+                "inventory.stocktransactionlog",
+            ],
+            "items": [
+                model_tab(_("Stock Levels"), "inventory.productstock"),
+                model_tab(_("Reservations"), "inventory.stockreservation"),
+                model_tab(_("Stock Log"), "inventory.stocktransactionlog"),
+            ],
+        },
+        {
+            "models": [
+                "account.user",
+                "account.address",
+                "auth.group",
+            ],
+            "items": [
+                model_tab(_("Users"), "account.user"),
+                model_tab(_("Addresses"), "account.address"),
+                model_tab(_("Groups"), "auth.group"),
             ],
         },
     ],
 }
+
 
 CUSTOM_UNFOLD_CONSTANCE_ADDITIONAL_FIELDS = {
     **UNFOLD_CONSTANCE_ADDITIONAL_FIELDS,

@@ -9,6 +9,7 @@ export const API_ENDPOINTS = {
         products: `${API_BASE}/inventory/products/`,
         productDetail: (slug) =>
             `${API_BASE}/inventory/products/${slug}/`,
+        priceRange: `${API_BASE}/inventory/price-range/`,
         categories: `${API_BASE}/inventory/categories/`,
         tags: `${API_BASE}/inventory/tags/`,
     },

@@ -4,9 +4,10 @@ from django.utils import timezone
 from django.utils.html import format_html
 from django.utils.translation import gettext_lazy as _
 from unfold import admin
+from simple_history.admin import SimpleHistoryAdmin
 
 from inventory.models import StockReservation
-from core.admin import UnfoldImportExportAdmin
+from core.admin import UnfoldImportExportHistoryAdmin
 from .models import (
     Order,
     OrderItem,
@@ -16,8 +17,11 @@ from .models import (
     ShoppingCart,
     ShoppingCartItem,
 )
-from .resources import OrderResource
-
+from .resources import (
+    OrderResource, PaymentMethodResource,
+    ShoppingCartResource, ShoppingCartItemResource, OrderPaymentResource,
+    OrderShipmentResource, OrderItemResource,
+)
 
 
 class ShoppingCartItemInline(admin.TabularInline):
@@ -63,8 +67,10 @@ class OrderStockReservationInline(admin.TabularInline):
     model = StockReservation
     extra = 0
     can_delete = False
-    fields = ["id_short", "product_stock", "quantity", "status", "expires_at", "is_expired"]
-    readonly_fields = ["id_short", "product_stock", "quantity", "status", "expires_at", "is_expired"]
+    fields = ["id_short", "product_stock", "quantity", "status",
+              "expires_at", "is_expired"]
+    readonly_fields = ["id_short", "product_stock", "quantity", "status",
+                       "expires_at", "is_expired"]
     verbose_name = _("Stock Hold")
     verbose_name_plural = _("Stock Holds")
 
@@ -78,10 +84,11 @@ class OrderStockReservationInline(admin.TabularInline):
             return timezone.now() > obj.expires_at
 
 
-
 @django_admin.register(PaymentMethod)
-class PaymentMethodAdmin(admin.ModelAdmin):
-    list_display = ["icon_preview", "name", "code", "min_amount_display", "created_at"]
+class PaymentMethodAdmin(UnfoldImportExportHistoryAdmin):
+    resource_classes = [PaymentMethodResource]
+    list_display = ["icon_preview", "name", "code", "min_amount_display",
+                    "created_at"]
     search_fields = ["name", "code", "description"]
     readonly_fields = ["created_at", "updated_at"]
     ordering = ["name"]
@@ -123,9 +130,12 @@ class PaymentMethodAdmin(admin.ModelAdmin):
 
 
 @django_admin.register(ShoppingCart)
-class ShoppingCartAdmin(admin.ModelAdmin):
-    list_display = ["id_short", "customer_display", "items_count", "created_at"]
-    search_fields = ["user__username", "user__email", "user__first_name", "user__last_name"]
+class ShoppingCartAdmin(UnfoldImportExportHistoryAdmin):
+    resource_classes = [ShoppingCartResource]
+    list_display = ["id_short", "customer_display", "items_count",
+                    "created_at"]
+    search_fields = ["user__username", "user__email", "user__first_name",
+                     "user__last_name"]
     readonly_fields = ["created_at", "updated_at"]
     inlines = [ShoppingCartItemInline]
     ordering = ["-created_at"]
@@ -147,7 +157,7 @@ class ShoppingCartAdmin(admin.ModelAdmin):
 
 
 @django_admin.register(Order)
-class OrderAdmin(UnfoldImportExportAdmin):
+class OrderAdmin(UnfoldImportExportHistoryAdmin):
     resource_classes = [OrderResource]
     inlines = [
         OrderItemInline,
@@ -165,7 +175,8 @@ class OrderAdmin(UnfoldImportExportAdmin):
         "total_price_display",
         "created_at",
     ]
-    list_filter = ["status", "payment__status", "shipment__status", "created_at"]
+    list_filter = ["status", "payment__status", "shipment__status",
+                   "created_at"]
     search_fields = [
         "id",
         "user__email",
@@ -208,7 +219,10 @@ class OrderAdmin(UnfoldImportExportAdmin):
 
     @django_admin.display(description=_("Order #"))
     def id_short(self, obj):
-        return format_html('<span class="font-mono font-semibold">#{}</span>', str(obj.id)[:8])
+        return format_html(
+            '<span class="font-mono font-semibold">#{}</span>',
+            str(obj.id)[:8]
+            )
 
     @django_admin.display(description=_("Customer"))
     def customer_display(self, obj):
@@ -242,7 +256,9 @@ class OrderAdmin(UnfoldImportExportAdmin):
     def payment_status_badge(self, obj):
         payment = getattr(obj, "payment", None)
         if not payment:
-            return format_html('<span class="text-xs text-gray-400">None</span>')
+            return format_html(
+                '<span class="text-xs text-gray-400">None</span>'
+                )
 
         styles = {
             OrderPayment.StatusChoices.PENDING: "bg-amber-50 text-amber-700 dark:bg-amber-950 dark:text-amber-300",
@@ -262,7 +278,9 @@ class OrderAdmin(UnfoldImportExportAdmin):
     def shipment_status_badge(self, obj):
         shipment = getattr(obj, "shipment", None)
         if not shipment:
-            return format_html('<span class="text-xs text-gray-400">—</span>')
+            return format_html(
+                '<span class="text-xs text-gray-400">—</span>',{}
+                )
 
         styles = {
             OrderShipment.StatusChoices.PENDING: "bg-amber-50 text-amber-700 dark:bg-amber-950 dark:text-amber-300",
@@ -278,7 +296,8 @@ class OrderAdmin(UnfoldImportExportAdmin):
 
 
 @django_admin.register(OrderPayment)
-class OrderPaymentAdmin(admin.ModelAdmin):
+class OrderPaymentAdmin(UnfoldImportExportHistoryAdmin):
+    resource_classes = [OrderPaymentResource]
     list_display = [
         "order_link",
         "method",
@@ -318,7 +337,10 @@ class OrderPaymentAdmin(admin.ModelAdmin):
     @django_admin.display(description=_("Order"))
     def order_link(self, obj):
         try:
-            url = reverse("admin:checkout_order_change", args=[obj.order.id])
+            url = reverse(
+                "admin:checkout_order_change",
+                args=[obj.order.id]
+                )
             return format_html(
                 '<a href="{}" class="font-semibold text-primary-600 underline">Order #{}</a>',
                 url,
@@ -335,7 +357,10 @@ class OrderPaymentAdmin(admin.ModelAdmin):
     def transaction_id_display(self, obj):
         if not obj.transaction_id:
             return "—"
-        return format_html('<span class="font-mono text-xs">{}</span>', obj.transaction_id)
+        return format_html(
+            '<span class="font-mono text-xs">{}</span>',
+            obj.transaction_id
+            )
 
     @django_admin.display(description=_("Status"))
     def status_badge(self, obj):
@@ -352,13 +377,18 @@ class OrderPaymentAdmin(admin.ModelAdmin):
             obj.get_status_display(),
         )
 
-    @django_admin.action(description=_("Mark selected payments as COMPLETED"))
+    @django_admin.action(
+        description=_("Mark selected payments as COMPLETED")
+        )
     def mark_as_completed(self, request, queryset):
         count = 0
         for payment in queryset:
             payment.mark_completed()
             count += 1
-        self.message_user(request, f"Marked {count} payment(s) as completed.")
+        self.message_user(
+            request,
+            f"Marked {count} payment(s) as completed."
+            )
 
     @django_admin.action(description=_("Mark selected payments as FAILED"))
     def mark_as_failed(self, request, queryset):
@@ -370,7 +400,8 @@ class OrderPaymentAdmin(admin.ModelAdmin):
 
 
 @django_admin.register(OrderShipment)
-class OrderShipmentAdmin(admin.ModelAdmin):
+class OrderShipmentAdmin(UnfoldImportExportHistoryAdmin):
+    resource_classes = [OrderShipmentResource]
     list_display = [
         "order_link",
         "carrier",
@@ -381,7 +412,8 @@ class OrderShipmentAdmin(admin.ModelAdmin):
     ]
     list_filter = ["status", "carrier", "created_at"]
     search_fields = ["order__id", "tracking_number", "carrier", "notes"]
-    readonly_fields = ["shipped_at", "delivered_at", "created_at", "updated_at"]
+    readonly_fields = ["shipped_at", "delivered_at", "created_at",
+                       "updated_at"]
     actions = ["mark_as_shipped_action", "mark_as_delivered_action"]
 
     fieldsets = [
@@ -410,7 +442,10 @@ class OrderShipmentAdmin(admin.ModelAdmin):
     @django_admin.display(description=_("Order"))
     def order_link(self, obj):
         try:
-            url = reverse("admin:checkout_order_change", args=[obj.order.id])
+            url = reverse(
+                "admin:checkout_order_change",
+                args=[obj.order.id]
+                )
             return format_html(
                 '<a href="{}" class="font-semibold text-primary-600 underline">Order #{}</a>',
                 url,
@@ -423,7 +458,10 @@ class OrderShipmentAdmin(admin.ModelAdmin):
     def tracking_number_display(self, obj):
         if not obj.tracking_number:
             return "—"
-        return format_html('<span class="font-mono text-xs font-semibold">{}</span>', obj.tracking_number)
+        return format_html(
+            '<span class="font-mono text-xs font-semibold">{}</span>',
+            obj.tracking_number
+            )
 
     @django_admin.display(description=_("Status"))
     def status_badge(self, obj):
@@ -439,18 +477,28 @@ class OrderShipmentAdmin(admin.ModelAdmin):
             obj.get_status_display(),
         )
 
-    @django_admin.action(description=_("Mark selected shipments as IN TRANSIT"))
+    @django_admin.action(
+        description=_("Mark selected shipments as IN TRANSIT")
+        )
     def mark_as_shipped_action(self, request, queryset):
         count = 0
         for shipment in queryset:
             shipment.mark_shipped()
             count += 1
-        self.message_user(request, f"Marked {count} shipment(s) as in transit.")
+        self.message_user(
+            request,
+            f"Marked {count} shipment(s) as in transit."
+            )
 
-    @django_admin.action(description=_("Mark selected shipments as DELIVERED"))
+    @django_admin.action(
+        description=_("Mark selected shipments as DELIVERED")
+        )
     def mark_as_delivered_action(self, request, queryset):
         count = 0
         for shipment in queryset:
             shipment.mark_delivered()
             count += 1
-        self.message_user(request, f"Marked {count} shipment(s) as delivered.")
+        self.message_user(
+            request,
+            f"Marked {count} shipment(s) as delivered."
+            )

@@ -1,0 +1,576 @@
+[
+  {
+    "model": "inventory.stockreservation",
+    "pk": "ce1ec932-6f19-5958-94b1-88dcc16ece83",
+    "fields": {
+      "order": 1,
+      "product_stock": 1,
+      "quantity": 2,
+      "status": "committed",
+      "expires_at": "2026-09-02T15:10:00Z",
+      "is_active": true,
+      "created_at": "2026-09-02T14:10:00Z",
+      "updated_at": "2026-09-02T14:23:00Z"
+    }
+  },
+  {
+    "model": "inventory.stockreservation",
+    "pk": "e634b1c2-a2a7-539c-b303-db3eb539a467",
+    "fields": {
+      "order": 1,
+      "product_stock": 10,
+      "quantity": 1,
+      "status": "committed",
+      "expires_at": "2026-09-02T15:10:00Z",
+      "is_active": true,
+      "created_at": "2026-09-02T14:10:00Z",
+      "updated_at": "2026-09-02T14:23:00Z"
+    }
+  },
+  {
+    "model": "inventory.stockreservation",
+    "pk": "e7943c2a-abd5-5816-a19e-9a57184212ab",
+    "fields": {
+      "order": 2,
+      "product_stock": 14,
+      "quantity": 1,
+      "status": "committed",
+      "expires_at": "2026-09-03T10:25:00Z",
+      "is_active": true,
+      "created_at": "2026-09-03T09:25:00Z",
+      "updated_at": "2026-09-03T09:39:00Z"
+    }
+  },
+  {
+    "model": "inventory.stockreservation",
+    "pk": "7c10a94d-ada8-5e27-9e11-8fde290c1ce4",
+    "fields": {
+      "order": 2,
+      "product_stock": 7,
+      "quantity": 2,
+      "status": "committed",
+      "expires_at": "2026-09-03T10:25:00Z",
+      "is_active": true,
+      "created_at": "2026-09-03T09:25:00Z",
+      "updated_at": "2026-09-03T09:39:00Z"
+    }
+  },
+  {
+    "model": "inventory.stockreservation",
+    "pk": "3df122c8-49d0-5dbd-9781-2530f4d767d8",
+    "fields": {
+      "order": 3,
+      "product_stock": 26,
+      "quantity": 1,
+      "status": "committed",
+      "expires_at": "2026-09-05T19:40:00Z",
+      "is_active": true,
+      "created_at": "2026-09-05T18:40:00Z",
+      "updated_at": "2026-09-05T18:55:00Z"
+    }
+  },
+  {
+    "model": "inventory.stockreservation",
+    "pk": "1faf656e-605a-5564-8f98-c31a9be931f8",
+    "fields": {
+      "order": 3,
+      "product_stock": 19,
+      "quantity": 2,
+      "status": "committed",
+      "expires_at": "2026-09-05T19:40:00Z",
+      "is_active": true,
+      "created_at": "2026-09-05T18:40:00Z",
+      "updated_at": "2026-09-05T18:55:00Z"
+    }
+  },
+  {
+    "model": "inventory.stockreservation",
+    "pk": "e96c03d1-0151-5946-b9c4-2596b1c657a8",
+    "fields": {
+      "order": 3,
+      "product_stock": 29,
+      "quantity": 3,
+      "status": "committed",
+      "expires_at": "2026-09-05T19:40:00Z",
+      "is_active": true,
+      "created_at": "2026-09-05T18:40:00Z",
+      "updated_at": "2026-09-05T18:55:00Z"
+    }
+  },
+  {
+    "model": "inventory.stockreservation",
+    "pk": "ba496316-cec5-5908-958a-7d11bfe1ad70",
+    "fields": {
+      "order": 4,
+      "product_stock": 11,
+      "quantity": 1,
+      "status": "committed",
+      "expires_at": "2026-09-06T12:05:00Z",
+      "is_active": true,
+      "created_at": "2026-09-06T11:05:00Z",
+      "updated_at": "2026-09-06T11:21:00Z"
+    }
+  },
+  {
+    "model": "inventory.stockreservation",
+    "pk": "dfd29d04-e45c-5580-8707-13d526147c9e",
+    "fields": {
+      "order": 4,
+      "product_stock": 6,
+      "quantity": 1,
+      "status": "committed",
+      "expires_at": "2026-09-06T12:05:00Z",
+      "is_active": true,
+      "created_at": "2026-09-06T11:05:00Z",
+      "updated_at": "2026-09-06T11:21:00Z"
+    }
+  },
+  {
+    "model": "inventory.stockreservation",
+    "pk": "15ff0b99-0536-5973-8ce6-fd4805866eb0",
+    "fields": {
+      "order": 5,
+      "product_stock": 31,
+      "quantity": 4,
+      "status": "committed",
+      "expires_at": "2026-09-08T21:30:00Z",
+      "is_active": true,
+      "created_at": "2026-09-08T20:30:00Z",
+      "updated_at": "2026-09-08T20:47:00Z"
+    }
+  },
+  {
+    "model": "inventory.stockreservation",
+    "pk": "aff2b009-d1df-502e-856f-176398d17f59",
+    "fields": {
+      "order": 5,
+      "product_stock": 32,
+      "quantity": 2,
+      "status": "committed",
+      "expires_at": "2026-09-08T21:30:00Z",
+      "is_active": true,
+      "created_at": "2026-09-08T20:30:00Z",
+      "updated_at": "2026-09-08T20:47:00Z"
+    }
+  },
+  {
+    "model": "inventory.stockreservation",
+    "pk": "0e335ffd-7acf-5107-942a-b68a4b4a49a2",
+    "fields": {
+      "order": 5,
+      "product_stock": 25,
+      "quantity": 2,
+      "status": "committed",
+      "expires_at": "2026-09-08T21:30:00Z",
+      "is_active": true,
+      "created_at": "2026-09-08T20:30:00Z",
+      "updated_at": "2026-09-08T20:47:00Z"
+    }
+  },
+  {
+    "model": "inventory.stockreservation",
+    "pk": "0d0c726c-d468-593f-ae40-5c55b90cf4f6",
+    "fields": {
+      "order": 6,
+      "product_stock": 33,
+      "quantity": 1,
+      "status": "committed",
+      "expires_at": "2026-09-10T17:15:00Z",
+      "is_active": true,
+      "created_at": "2026-09-10T16:15:00Z",
+      "updated_at": "2026-09-10T16:33:00Z"
+    }
+  },
+  {
+    "model": "inventory.stockreservation",
+    "pk": "41448b1a-55ec-52ea-ba97-0605f35271c8",
+    "fields": {
+      "order": 6,
+      "product_stock": 34,
+      "quantity": 1,
+      "status": "committed",
+      "expires_at": "2026-09-10T17:15:00Z",
+      "is_active": true,
+      "created_at": "2026-09-10T16:15:00Z",
+      "updated_at": "2026-09-10T16:33:00Z"
+    }
+  },
+  {
+    "model": "inventory.stockreservation",
+    "pk": "a3e06c06-6487-5310-9f17-3a71be4eeec7",
+    "fields": {
+      "order": 6,
+      "product_stock": 21,
+      "quantity": 1,
+      "status": "committed",
+      "expires_at": "2026-09-10T17:15:00Z",
+      "is_active": true,
+      "created_at": "2026-09-10T16:15:00Z",
+      "updated_at": "2026-09-10T16:33:00Z"
+    }
+  },
+  {
+    "model": "inventory.stockreservation",
+    "pk": "1d9d4e6a-91fb-5ce4-abee-c38ff7d033c0",
+    "fields": {
+      "order": 7,
+      "product_stock": 35,
+      "quantity": 1,
+      "status": "committed",
+      "expires_at": "2026-09-11T09:50:00Z",
+      "is_active": true,
+      "created_at": "2026-09-11T08:50:00Z",
+      "updated_at": "2026-09-11T09:09:00Z"
+    }
+  },
+  {
+    "model": "inventory.stockreservation",
+    "pk": "4d41ad7a-5abb-5ec6-afde-b7f87cfb3e44",
+    "fields": {
+      "order": 7,
+      "product_stock": 36,
+      "quantity": 1,
+      "status": "committed",
+      "expires_at": "2026-09-11T09:50:00Z",
+      "is_active": true,
+      "created_at": "2026-09-11T08:50:00Z",
+      "updated_at": "2026-09-11T09:09:00Z"
+    }
+  },
+  {
+    "model": "inventory.stockreservation",
+    "pk": "0466638a-6367-54fe-8bf6-94cd9822aa3e",
+    "fields": {
+      "order": 7,
+      "product_stock": 37,
+      "quantity": 1,
+      "status": "committed",
+      "expires_at": "2026-09-11T09:50:00Z",
+      "is_active": true,
+      "created_at": "2026-09-11T08:50:00Z",
+      "updated_at": "2026-09-11T09:09:00Z"
+    }
+  },
+  {
+    "model": "inventory.stockreservation",
+    "pk": "38b51ef5-6750-5e78-8d9b-87eccb478f6f",
+    "fields": {
+      "order": 8,
+      "product_stock": 2,
+      "quantity": 1,
+      "status": "committed",
+      "expires_at": "2026-09-13T14:00:00Z",
+      "is_active": true,
+      "created_at": "2026-09-13T13:00:00Z",
+      "updated_at": "2026-09-13T13:20:00Z"
+    }
+  },
+  {
+    "model": "inventory.stockreservation",
+    "pk": "132997d0-919c-593a-9747-6c629bb90854",
+    "fields": {
+      "order": 8,
+      "product_stock": 8,
+      "quantity": 3,
+      "status": "committed",
+      "expires_at": "2026-09-13T14:00:00Z",
+      "is_active": true,
+      "created_at": "2026-09-13T13:00:00Z",
+      "updated_at": "2026-09-13T13:20:00Z"
+    }
+  },
+  {
+    "model": "inventory.stockreservation",
+    "pk": "b069ba47-fb9a-56a7-af4b-61dab6a7f7ce",
+    "fields": {
+      "order": 9,
+      "product_stock": 12,
+      "quantity": 1,
+      "status": "committed",
+      "expires_at": "2026-09-20T11:20:00Z",
+      "is_active": true,
+      "created_at": "2026-09-20T10:20:00Z",
+      "updated_at": "2026-09-20T10:41:00Z"
+    }
+  },
+  {
+    "model": "inventory.stockreservation",
+    "pk": "5c52810f-2f63-5e3a-b8cf-07b846020a55",
+    "fields": {
+      "order": 9,
+      "product_stock": 23,
+      "quantity": 1,
+      "status": "committed",
+      "expires_at": "2026-09-20T11:20:00Z",
+      "is_active": true,
+      "created_at": "2026-09-20T10:20:00Z",
+      "updated_at": "2026-09-20T10:41:00Z"
+    }
+  },
+  {
+    "model": "inventory.stockreservation",
+    "pk": "537d807d-5b01-56ab-8279-22fb25eb191b",
+    "fields": {
+      "order": 10,
+      "product_stock": 27,
+      "quantity": 1,
+      "status": "committed",
+      "expires_at": "2026-09-22T20:45:00Z",
+      "is_active": true,
+      "created_at": "2026-09-22T19:45:00Z",
+      "updated_at": "2026-09-22T20:07:00Z"
+    }
+  },
+  {
+    "model": "inventory.stockreservation",
+    "pk": "5a9d65c6-2356-5389-b937-d5e69d6e6102",
+    "fields": {
+      "order": 10,
+      "product_stock": 26,
+      "quantity": 1,
+      "status": "committed",
+      "expires_at": "2026-09-22T20:45:00Z",
+      "is_active": true,
+      "created_at": "2026-09-22T19:45:00Z",
+      "updated_at": "2026-09-22T20:07:00Z"
+    }
+  },
+  {
+    "model": "inventory.stockreservation",
+    "pk": "f18af3dc-a6d9-5fae-8a52-db2a3cef4ce1",
+    "fields": {
+      "order": 11,
+      "product_stock": 9,
+      "quantity": 2,
+      "status": "committed",
+      "expires_at": "2026-09-24T08:35:00Z",
+      "is_active": true,
+      "created_at": "2026-09-24T07:35:00Z",
+      "updated_at": "2026-09-24T07:58:00Z"
+    }
+  },
+  {
+    "model": "inventory.stockreservation",
+    "pk": "537b5863-4414-5194-b268-0e16600734cc",
+    "fields": {
+      "order": 11,
+      "product_stock": 17,
+      "quantity": 1,
+      "status": "committed",
+      "expires_at": "2026-09-24T08:35:00Z",
+      "is_active": true,
+      "created_at": "2026-09-24T07:35:00Z",
+      "updated_at": "2026-09-24T07:58:00Z"
+    }
+  },
+  {
+    "model": "inventory.stockreservation",
+    "pk": "8d812c23-e3a5-52ba-ad6f-0e23a9bdd8be",
+    "fields": {
+      "order": 12,
+      "product_stock": 13,
+      "quantity": 1,
+      "status": "committed",
+      "expires_at": "2026-09-27T13:10:00Z",
+      "is_active": true,
+      "created_at": "2026-09-27T12:10:00Z",
+      "updated_at": "2026-09-27T12:34:00Z"
+    }
+  },
+  {
+    "model": "inventory.stockreservation",
+    "pk": "50105936-a5ba-5b4e-84a5-cce9352de51e",
+    "fields": {
+      "order": 12,
+      "product_stock": 18,
+      "quantity": 1,
+      "status": "committed",
+      "expires_at": "2026-09-27T13:10:00Z",
+      "is_active": true,
+      "created_at": "2026-09-27T12:10:00Z",
+      "updated_at": "2026-09-27T12:34:00Z"
+    }
+  },
+  {
+    "model": "inventory.stockreservation",
+    "pk": "e0a556cc-cc9b-5d82-b1ce-c1ecbcaefd8d",
+    "fields": {
+      "order": 13,
+      "product_stock": 4,
+      "quantity": 1,
+      "status": "committed",
+      "expires_at": "2026-09-28T16:55:00Z",
+      "is_active": true,
+      "created_at": "2026-09-28T15:55:00Z",
+      "updated_at": "2026-09-28T16:20:00Z"
+    }
+  },
+  {
+    "model": "inventory.stockreservation",
+    "pk": "11ad127a-b2b9-5c52-87c9-513c0f50570c",
+    "fields": {
+      "order": 14,
+      "product_stock": 28,
+      "quantity": 1,
+      "status": "committed",
+      "expires_at": "2026-09-29T10:30:00Z",
+      "is_active": true,
+      "created_at": "2026-09-29T09:30:00Z",
+      "updated_at": "2026-09-29T09:56:00Z"
+    }
+  },
+  {
+    "model": "inventory.stockreservation",
+    "pk": "58aca5f1-3e9f-5add-9a7b-faab9fa33532",
+    "fields": {
+      "order": 14,
+      "product_stock": 32,
+      "quantity": 2,
+      "status": "committed",
+      "expires_at": "2026-09-29T10:30:00Z",
+      "is_active": true,
+      "created_at": "2026-09-29T09:30:00Z",
+      "updated_at": "2026-09-29T09:56:00Z"
+    }
+  },
+  {
+    "model": "inventory.stockreservation",
+    "pk": "6701f955-737d-57d9-8a8d-df1edfb85b4d",
+    "fields": {
+      "order": 15,
+      "product_stock": 3,
+      "quantity": 2,
+      "status": "committed",
+      "expires_at": "2026-09-29T18:20:00Z",
+      "is_active": true,
+      "created_at": "2026-09-29T17:20:00Z",
+      "updated_at": "2026-09-29T17:47:00Z"
+    }
+  },
+  {
+    "model": "inventory.stockreservation",
+    "pk": "292034eb-16e6-5869-9e8b-790da7d13508",
+    "fields": {
+      "order": 15,
+      "product_stock": 5,
+      "quantity": 1,
+      "status": "committed",
+      "expires_at": "2026-09-29T18:20:00Z",
+      "is_active": true,
+      "created_at": "2026-09-29T17:20:00Z",
+      "updated_at": "2026-09-29T17:47:00Z"
+    }
+  },
+  {
+    "model": "inventory.stockreservation",
+    "pk": "2393977a-8876-55e5-a8ba-681ab023f8d7",
+    "fields": {
+      "order": 16,
+      "product_stock": 1,
+      "quantity": 1,
+      "status": "active",
+      "expires_at": "2026-09-30T22:05:00Z",
+      "is_active": true,
+      "created_at": "2026-09-30T21:05:00Z",
+      "updated_at": "2026-09-30T21:05:00Z"
+    }
+  },
+  {
+    "model": "inventory.stockreservation",
+    "pk": "5b385fd5-3418-5156-98d5-821ef98f2b94",
+    "fields": {
+      "order": 16,
+      "product_stock": 20,
+      "quantity": 1,
+      "status": "active",
+      "expires_at": "2026-09-30T22:05:00Z",
+      "is_active": true,
+      "created_at": "2026-09-30T21:05:00Z",
+      "updated_at": "2026-09-30T21:05:00Z"
+    }
+  },
+  {
+    "model": "inventory.stockreservation",
+    "pk": "738659b8-f028-50fc-b0f1-325ec642b5fd",
+    "fields": {
+      "order": 17,
+      "product_stock": 30,
+      "quantity": 2,
+      "status": "active",
+      "expires_at": "2026-09-30T22:15:00Z",
+      "is_active": true,
+      "created_at": "2026-09-30T21:15:00Z",
+      "updated_at": "2026-09-30T21:15:00Z"
+    }
+  },
+  {
+    "model": "inventory.stockreservation",
+    "pk": "7ab5711b-4d6a-5a38-8485-2d2f419c44f8",
+    "fields": {
+      "order": 17,
+      "product_stock": 10,
+      "quantity": 1,
+      "status": "active",
+      "expires_at": "2026-09-30T22:15:00Z",
+      "is_active": true,
+      "created_at": "2026-09-30T21:15:00Z",
+      "updated_at": "2026-09-30T21:15:00Z"
+    }
+  },
+  {
+    "model": "inventory.stockreservation",
+    "pk": "71265657-3847-56b8-832c-57c4608bdb08",
+    "fields": {
+      "order": 18,
+      "product_stock": 11,
+      "quantity": 2,
+      "status": "released",
+      "expires_at": "2026-09-15T11:00:00Z",
+      "is_active": true,
+      "created_at": "2026-09-15T10:00:00Z",
+      "updated_at": "2026-09-15T11:00:00Z"
+    }
+  },
+  {
+    "model": "inventory.stockreservation",
+    "pk": "84098b58-bc97-5113-883f-8773755aebad",
+    "fields": {
+      "order": 19,
+      "product_stock": 26,
+      "quantity": 2,
+      "status": "released",
+      "expires_at": "2026-09-18T23:10:00Z",
+      "is_active": true,
+      "created_at": "2026-09-18T22:10:00Z",
+      "updated_at": "2026-09-18T23:10:00Z"
+    }
+  },
+  {
+    "model": "inventory.stockreservation",
+    "pk": "ef74209b-5f93-5f35-acbb-fc1746e95892",
+    "fields": {
+      "order": 20,
+      "product_stock": 24,
+      "quantity": 2,
+      "status": "committed",
+      "expires_at": "2026-09-16T15:30:00Z",
+      "is_active": true,
+      "created_at": "2026-09-16T14:30:00Z",
+      "updated_at": "2026-09-16T15:02:00Z"
+    }
+  },
+  {
+    "model": "inventory.stockreservation",
+    "pk": "98fb5eab-d9a4-5ce5-8ac4-c8e3e45fb88d",
+    "fields": {
+      "order": 20,
+      "product_stock": 29,
+      "quantity": 1,
+      "status": "committed",
+      "expires_at": "2026-09-16T15:30:00Z",
+      "is_active": true,
+      "created_at": "2026-09-16T14:30:00Z",
+      "updated_at": "2026-09-16T15:02:00Z"
+    }
+  }
+]

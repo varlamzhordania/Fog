@@ -25,7 +25,7 @@ class ShoppingCartItemResource(resources.ModelResource):
         model = ShoppingCartItem
 
 
-class PaymentResource(resources.ModelResource):
+class OrderPaymentResource(resources.ModelResource):
     class Meta:
         model = OrderPayment
 

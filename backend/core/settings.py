@@ -40,6 +40,7 @@ UNFOLD_APPS = [
     "unfold.contrib.inlines",
     "unfold.contrib.import_export",
     "unfold.contrib.constance",
+    "unfold.contrib.simple_history",
     # "unfold.contrib.guardian",
 ]
 
@@ -71,9 +72,11 @@ THIRD_PARTY_APPS = [
     "drf_social_oauth2",
     # Import / Export (Must follow unfold.contrib.import_export)
     "import_export",
+    "simple_history",
 ]
 
 LOCAL_APPS = [
+    "core",
     "account.apps.AccountConfig",
     "inventory.apps.InventoryConfig",
     "checkout.apps.CheckoutConfig",
@@ -91,6 +94,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'simple_history.middleware.HistoryRequestMiddleware',
     # 'hijack.middleware.HijackUserMiddleware',
 ]
 

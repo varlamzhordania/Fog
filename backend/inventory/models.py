@@ -140,6 +140,7 @@ class Category(MP_Node, BaseModel):
         ancestors.append(self.name)
         return " > ".join(ancestors)
 
+
 class Tag(BaseModel):
     name = models.CharField(
         max_length=64,
@@ -252,10 +253,16 @@ class Product(BaseModel):
     is_active = models.BooleanField(
         default=True,
         verbose_name=_("Active in Store"),
+        help_text=_(
+            "Disabling hides this product from the storefront."
+        ),
     )
     is_featured = models.BooleanField(
         default=False,
         verbose_name=_("Featured Item"),
+        help_text=_(
+            "Activating will show this product in the featured list on the storefront."
+        ),
     )
 
     class Meta:
