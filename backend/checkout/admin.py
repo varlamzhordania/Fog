@@ -4,7 +4,7 @@ from django.utils import timezone
 from django.utils.html import format_html
 from django.utils.translation import gettext_lazy as _
 from unfold import admin
-from simple_history.admin import SimpleHistoryAdmin
+from unfold.decorators import display
 
 from inventory.models import StockReservation
 from core.admin import UnfoldImportExportHistoryAdmin
@@ -19,8 +19,8 @@ from .models import (
 )
 from .resources import (
     OrderResource, PaymentMethodResource,
-    ShoppingCartResource, ShoppingCartItemResource, OrderPaymentResource,
-    OrderShipmentResource, OrderItemResource,
+    ShoppingCartResource, OrderPaymentResource,
+    OrderShipmentResource,
 )
 
 
@@ -235,65 +235,53 @@ class OrderAdmin(UnfoldImportExportHistoryAdmin):
     def total_price_display(self, obj):
         return f"${obj.total_price:,.2f}"
 
-    @django_admin.display(description=_("Order Status"))
-    def status_badge(self, obj):
-        styles = {
-            Order.StatusChoices.PAYMENT: "bg-amber-50 text-amber-700 dark:bg-amber-950 dark:text-amber-300",
-            Order.StatusChoices.PENDING: "bg-blue-50 text-blue-700 dark:bg-blue-950 dark:text-blue-300",
-            Order.StatusChoices.PROCESSING: "bg-purple-50 text-purple-700 dark:bg-purple-950 dark:text-purple-300",
-            Order.StatusChoices.SHIPPED: "bg-indigo-50 text-indigo-700 dark:bg-indigo-950 dark:text-indigo-300",
-            Order.StatusChoices.DELIVERED: "bg-emerald-50 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300",
-            Order.StatusChoices.CANCELLED: "bg-rose-50 text-rose-700 dark:bg-rose-950 dark:text-rose-300",
+    @display(
+        description=_("Order Status"),
+        ordering="status",
+        label={
+            Order.StatusChoices.PAYMENT: "warning",
+            Order.StatusChoices.PENDING: "info",
+            Order.StatusChoices.PROCESSING: "info",
+            Order.StatusChoices.SHIPPED: "success",
+            Order.StatusChoices.DELIVERED: "success",
+            Order.StatusChoices.CANCELLED: "danger",
         }
-        css = styles.get(obj.status, "bg-gray-100 text-gray-700")
-        return format_html(
-            '<span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold {}">{}</span>',
-            css,
-            obj.get_status_display(),
-        )
+    )
+    def status_badge(self, obj):
+        return obj.status, obj.get_status_display()
 
-    @django_admin.display(description=_("Payment"))
+    @display(
+        description=_("Payment"),
+        label={
+            OrderPayment.StatusChoices.PENDING: "warning",
+            OrderPayment.StatusChoices.COMPLETED: "success",
+            OrderPayment.StatusChoices.FAILED: "danger",
+            OrderPayment.StatusChoices.REFUNDED: "info",
+        }
+    )
     def payment_status_badge(self, obj):
         payment = getattr(obj, "payment", None)
         if not payment:
-            return format_html(
-                '<span class="text-xs text-gray-400">None</span>'
-                )
+            return None, "None"
 
-        styles = {
-            OrderPayment.StatusChoices.PENDING: "bg-amber-50 text-amber-700 dark:bg-amber-950 dark:text-amber-300",
-            OrderPayment.StatusChoices.COMPLETED: "bg-emerald-50 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300",
-            OrderPayment.StatusChoices.FAILED: "bg-rose-50 text-rose-700 dark:bg-rose-950 dark:text-rose-300",
-            OrderPayment.StatusChoices.REFUNDED: "bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300",
+        # Preserves your original text format combining status and method
+        display_text = f"{payment.get_status_display()} ({payment.method})"
+        return payment.status, display_text
+
+    @display(
+        description=_("Shipment"),
+        label={
+            OrderShipment.StatusChoices.PENDING: "warning",
+            OrderShipment.StatusChoices.IN_TRANSIT: "info",
+            OrderShipment.StatusChoices.DELIVERED: "success",
         }
-        css = styles.get(payment.status, "bg-gray-100 text-gray-700")
-        return format_html(
-            '<span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold {}">{} ({})</span>',
-            css,
-            payment.get_status_display(),
-            payment.method,
-        )
-
-    @django_admin.display(description=_("Shipment"))
+    )
     def shipment_status_badge(self, obj):
         shipment = getattr(obj, "shipment", None)
         if not shipment:
-            return format_html(
-                '<span class="text-xs text-gray-400">—</span>',{}
-                )
+            return None, "—"
 
-        styles = {
-            OrderShipment.StatusChoices.PENDING: "bg-amber-50 text-amber-700 dark:bg-amber-950 dark:text-amber-300",
-            OrderShipment.StatusChoices.IN_TRANSIT: "bg-indigo-50 text-indigo-700 dark:bg-indigo-950 dark:text-indigo-300",
-            OrderShipment.StatusChoices.DELIVERED: "bg-emerald-50 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300",
-        }
-        css = styles.get(shipment.status, "bg-gray-100 text-gray-700")
-        return format_html(
-            '<span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold {}">{}</span>',
-            css,
-            shipment.get_status_display(),
-        )
-
+        return shipment.status, shipment.get_status_display()
 
 @django_admin.register(OrderPayment)
 class OrderPaymentAdmin(UnfoldImportExportHistoryAdmin):
@@ -362,20 +350,18 @@ class OrderPaymentAdmin(UnfoldImportExportHistoryAdmin):
             obj.transaction_id
             )
 
-    @django_admin.display(description=_("Status"))
-    def status_badge(self, obj):
-        styles = {
-            OrderPayment.StatusChoices.PENDING: "bg-amber-50 text-amber-700 dark:bg-amber-950 dark:text-amber-300",
-            OrderPayment.StatusChoices.COMPLETED: "bg-emerald-50 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300",
-            OrderPayment.StatusChoices.FAILED: "bg-rose-50 text-rose-700 dark:bg-rose-950 dark:text-rose-300",
-            OrderPayment.StatusChoices.REFUNDED: "bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300",
+    @display(
+        description=_("Status"),
+        ordering="status",
+        label={
+            OrderPayment.StatusChoices.PENDING: "warning",
+            OrderPayment.StatusChoices.COMPLETED: "success",
+            OrderPayment.StatusChoices.FAILED: "danger",
+            OrderPayment.StatusChoices.REFUNDED: "info",
         }
-        css = styles.get(obj.status, "bg-gray-100 text-gray-700")
-        return format_html(
-            '<span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold {}">{}</span>',
-            css,
-            obj.get_status_display(),
-        )
+    )
+    def status_badge(self, obj):
+        return obj.status, obj.get_status_display()
 
     @django_admin.action(
         description=_("Mark selected payments as COMPLETED")
@@ -463,19 +449,17 @@ class OrderShipmentAdmin(UnfoldImportExportHistoryAdmin):
             obj.tracking_number
             )
 
-    @django_admin.display(description=_("Status"))
-    def status_badge(self, obj):
-        styles = {
-            OrderShipment.StatusChoices.PENDING: "bg-amber-50 text-amber-700 dark:bg-amber-950 dark:text-amber-300",
-            OrderShipment.StatusChoices.IN_TRANSIT: "bg-indigo-50 text-indigo-700 dark:bg-indigo-950 dark:text-indigo-300",
-            OrderShipment.StatusChoices.DELIVERED: "bg-emerald-50 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300",
+    @display(
+        description=_("Status"),
+        ordering="status",
+        label={
+            OrderShipment.StatusChoices.PENDING: "warning",
+            OrderShipment.StatusChoices.IN_TRANSIT: "info",
+            OrderShipment.StatusChoices.DELIVERED: "success",
         }
-        css = styles.get(obj.status, "bg-gray-100 text-gray-700")
-        return format_html(
-            '<span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold {}">{}</span>',
-            css,
-            obj.get_status_display(),
-        )
+    )
+    def status_badge(self, obj):
+        return obj.status, obj.get_status_display()
 
     @django_admin.action(
         description=_("Mark selected shipments as IN TRANSIT")

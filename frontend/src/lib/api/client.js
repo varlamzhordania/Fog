@@ -1,6 +1,7 @@
 import axios from 'axios';
 import { API_ENDPOINTS } from '@/lib/config';
 import { useAuthStore } from '@/stores/auth';
+import {useLogout} from "@/queries/auth";
 
 const apiClient = axios.create({
     headers: {
@@ -26,11 +27,11 @@ async function refreshAccessToken() {
         )
         .then((response) => {
             const {
-                expires_in,
+                access_token,
             } = response.data;
 
             useAuthStore.setState({
-                expires_in,
+                access_token,
                 logged_in: true,
             });
 
@@ -57,7 +58,6 @@ apiClient.interceptors.request.use((config) => {
 });
 
 
-// Handle 401
 apiClient.interceptors.response.use(
     (response) => response,
 
@@ -71,34 +71,23 @@ apiClient.interceptors.response.use(
             originalRequest._retry = true;
 
             try {
-                const accessToken =
-                    await refreshAccessToken();
+                await refreshAccessToken();
+
+                const {access_token} = useAuthStore.getState();
 
                 originalRequest.headers.Authorization =
-                    `Bearer ${accessToken}`;
+                    `Bearer ${access_token}`;
 
                 return apiClient(originalRequest);
-            } catch {
-                useAuthStore.getState().clearAuth();
 
-                throw {
-                    status: 401,
-                    data: {
-                        detail:
-                            'Unauthorized: Please log in again.',
-                    },
-                };
+            } catch {
+                useLogout().mutate()
+
+                throw error;
             }
         }
 
-        throw {
-            status: error.response?.status || 0,
-            data:
-                error.response?.data || {
-                    detail:
-                        error.message || 'Network error.',
-                },
-        };
+        throw error;
     }
 );
 

@@ -61,8 +61,6 @@ def string_to_context(input_string):
     return context
 
 
-
-
 def environment_callback(request):
     """
     Displays an authoritative badge in the Unfold header showing the active environment.

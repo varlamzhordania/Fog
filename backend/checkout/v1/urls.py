@@ -4,6 +4,7 @@ from rest_framework.routers import SimpleRouter
 from .views import (
     PaymentMethodListView,
     ShoppingCartView,
+    ShoppingCartItemView,
     UserOrderView,
 )
 
@@ -21,6 +22,11 @@ urlpatterns = [
         'cart/',
         ShoppingCartView.as_view(),
         name='shopping_cart'
+    ),
+    path(
+        'cart/items/<int:product>/',
+        ShoppingCartItemView.as_view(),
+        name='shopping_cart_item'
     ),
 ]
 

@@ -53,19 +53,19 @@ export async function fetchTags({
 
 
 export async function fetchProducts({
-    page = 1,
-    page_size = 25,
-    pagination = true,
-    search,
-    category,
-    tags,
-    min_price,
-    max_price,
-    stock,
-    is_featured,
-    product_type,
-    ordering,
-} = {}) {
+                                        page = 1,
+                                        page_size = 25,
+                                        pagination = true,
+                                        search,
+                                        category,
+                                        tags,
+                                        min_price,
+                                        max_price,
+                                        stock,
+                                        is_featured,
+                                        product_type,
+                                        ordering,
+                                    } = {}) {
     const params = {
         page,
         page_size,

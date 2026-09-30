@@ -9,7 +9,15 @@ class CharInFilter(django_filters.BaseInFilter, django_filters.CharFilter):
     """Accepts comma separated values, e.g. ?category=spores,kits"""
 
 
+class NumberInFilter(django_filters.BaseInFilter, django_filters.NumberFilter):
+    """Accepts comma separated numbers, e.g. ?ids=1,2,3"""
+
+
 class ProductFilter(django_filters.FilterSet):
+    ids = NumberInFilter(
+        field_name="id",
+        lookup_expr="in"
+    )
     category = CharInFilter(
         field_name="category__slug",
         lookup_expr="in"

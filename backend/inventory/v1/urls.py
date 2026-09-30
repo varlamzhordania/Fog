@@ -1,4 +1,5 @@
 from django.urls import path
+from rest_framework.routers import SimpleRouter
 
 from .views import (
     CategoryViewSet, TagViewSet, ProductViewSet, ProductPriceRangeView,
@@ -6,18 +7,18 @@ from .views import (
 
 app_name = 'inventory-v1'
 
+router = SimpleRouter()
+router.register('products', ProductViewSet,basename='product')
+
+
 urlpatterns = [
     path('categories/', CategoryViewSet.as_view(), name='categories'),
     path('tags/', TagViewSet.as_view(), name='tags'),
-    path('products/', ProductViewSet.as_view(), name='products'),
     path(
         'price-range/',
         ProductPriceRangeView.as_view(),
         name='price-range'
     ),
-    path(
-        'products/<slug:slug>/',
-        ProductViewSet.as_view(),
-        name='product-by-slug'
-    ),
 ]
+
+urlpatterns += router.urls

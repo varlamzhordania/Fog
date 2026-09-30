@@ -1,7 +1,8 @@
 import math
 
 from django.db.models import Max, Min
-from rest_framework.generics import ListAPIView, RetrieveAPIView
+from rest_framework.generics import ListAPIView
+from rest_framework.viewsets import ReadOnlyModelViewSet
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework import permissions, filters
@@ -42,9 +43,8 @@ class TagViewSet(OptionalPaginationMixin, ListAPIView):
 @extend_schema(tags=["Inventory"])
 class ProductViewSet(
     OptionalPaginationMixin,
-    ListAPIView,
-    RetrieveAPIView
-    ):
+    ReadOnlyModelViewSet
+):
     serializer_class = ProductSerializer
     permission_classes = (permissions.AllowAny,)
     lookup_field = "slug"

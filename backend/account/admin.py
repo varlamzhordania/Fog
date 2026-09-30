@@ -220,7 +220,7 @@ class AddressAdmin(SimpleHistoryAdmin, admin.ModelAdmin):
                 '<span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold bg-emerald-50 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300">{}</span>',
                 _("Default"),
             )
-        return format_html('<span class="text-xs text-gray-400">—</span>')
+        return format_html('<span class="text-xs text-gray-400">—</span>',{})
 
 
 try:

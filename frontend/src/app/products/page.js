@@ -8,11 +8,9 @@ import SuspenseBoundary from "@/components/SuspenseBoundary";
 
 export default function ProductsPage() {
     return (
-        <div className={"w-full flex flex-col items-stretch justify-start gap-4"}>
-            <BackgroundImage lightImage="/bg/bg-light-r-to-l.jpg"
-                             darkImage="/bg/bg-dark-r-to-l.jpg">
-                <div
-                    className="container container-space relative flex min-h-[320px] flex-col justify-center py-14 lg:min-h-[380px] lg:py-20">
+        <div className={"w-full flex flex-col items-stretch justify-start"}>
+            <BackgroundImage lightImage="/bg/bg-light-r-to-l.jpg" darkImage="/bg/bg-dark-r-to-l.jpg">
+                <div className="container relative flex min-h-[320px] flex-col justify-center lg:min-h-[380px]">
                     <div className="relative z-10 flex flex-col gap-5">
                         <Typography
                             type="h1"
@@ -20,7 +18,6 @@ export default function ProductsPage() {
                         >
                             Explore the Collection
                         </Typography>
-
                         <Typography
                             type="body"
                             className="max-w-2xl sm:text-lg"

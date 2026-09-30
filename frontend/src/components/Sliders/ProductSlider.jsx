@@ -3,23 +3,27 @@
 import {useState} from "react";
 import {A11y} from "swiper/modules";
 import {Swiper, SwiperSlide} from "swiper/react";
+import {Button, Skeleton, Typography} from "@heroui/react";
+import {ChevronRight, ChevronLeft} from "lucide-react";
+
+import Icon from "@/components/Icon/Icon";
+import ProductCard from "@/components/inventory/ProductCard";
 
 import "swiper/css";
 import "swiper/css/scrollbar";
 
-import { Button, Typography} from "@heroui/react";
-import {ChevronRight, ChevronLeft} from "lucide-react";
-import Icon from "@/components/Icon/Icon";
-import ProductCard from "@/components/inventory/ProductCard";
-
 const ProductSlider = ({
-                           productData = [],
-                           title = "Product Slider Title",
-                           cardDepth = false,
-                           featured = false
-                       }) => {
+    productData = [],
+    title = "Product Slider Title",
+    cardDepth = false,
+    featured = false,
+    isLoading = false,
+}) => {
     const [swiperInstance, setSwiperInstance] = useState(null);
-    const [slideStatus, setSlideStatus] = useState({isBeginning: true, isEnd: false});
+    const [slideStatus, setSlideStatus] = useState({
+        isBeginning: true,
+        isEnd: false,
+    });
 
     const handleSlideChange = (swiper) => {
         setSlideStatus({
@@ -30,36 +34,64 @@ const ProductSlider = ({
 
     return (
         <section className="relative container container-space">
-            <div className="flex flex-row justify-between items-center mb-6 gap-4">
-                <Typography type="h3"
-                            className="text-2xl lg:text-4xl 2xl:text-5xl text-accent/80 uppercase font-bold tracking-tight">
-                    {title}
-                </Typography>
+            {/* Header */}
+            <div className="mb-6 flex flex-row items-center justify-between gap-4">
+                {isLoading ? (
+                    <Skeleton className="h-9 w-48 rounded-lg lg:h-11 lg:w-64 2xl:h-14 2xl:w-80"/>
+                ) : (
+                    <Typography
+                        type="h3"
+                        className="text-2xl font-bold uppercase tracking-tight text-accent/80 lg:text-4xl 2xl:text-5xl"
+                    >
+                        {title}
+                    </Typography>
+                )}
 
-                <div className="flex items-center gap-2 shrink-0">
-                    <Button
-                        isIconOnly
-                        variant="secondary"
-                        aria-label="Previous slide"
-                        isDisabled={slideStatus.isBeginning}
-                        onClick={() => swiperInstance?.slidePrev()}
-                    >
-                        <Icon icon={ChevronLeft}/>
-                    </Button>
-                    <Button
-                        isIconOnly
-                        variant="secondary"
-                        aria-label="Next slide"
-                        isDisabled={slideStatus.isEnd}
-                        onClick={() => swiperInstance?.slideNext()}
-                    >
-                        <Icon icon={ChevronRight}/>
-                    </Button>
-                </div>
+                {!isLoading && (
+                    <div className="flex shrink-0 items-center gap-2">
+                        <Button
+                            isIconOnly
+                            variant="secondary"
+                            aria-label="Previous slide"
+                            isDisabled={slideStatus.isBeginning}
+                            onPress={() => swiperInstance?.slidePrev()}
+                        >
+                            <Icon icon={ChevronLeft}/>
+                        </Button>
+
+                        <Button
+                            isIconOnly
+                            variant="secondary"
+                            aria-label="Next slide"
+                            isDisabled={slideStatus.isEnd}
+                            onPress={() => swiperInstance?.slideNext()}
+                        >
+                            <Icon icon={ChevronRight}/>
+                        </Button>
+                    </div>
+                )}
             </div>
 
-            {productData.length === 0 ? (
-                <div className="py-12 text-center text-muted-foreground">
+            {/* Loading */}
+            {isLoading ? (
+                <div
+                    className="
+                        grid grid-cols-1 gap-4
+                        sm:grid-cols-2
+                        md:grid-cols-3
+                        lg:grid-cols-4
+                        xl:grid-cols-5
+                    "
+                >
+                    {Array.from({length: featured ? 4 : 5}).map((_, index) => (
+                        <ProductCardSkeleton
+                            key={index}
+                            featured={featured}
+                        />
+                    ))}
+                </div>
+            ) : productData.length === 0 ? (
+                <div className="py-12 text-center text-default-500">
                     No products available to display.
                 </div>
             ) : (
@@ -96,8 +128,15 @@ const ProductSlider = ({
                     className="w-full !pb-8 [&_.swiper-wrapper]:items-stretch"
                 >
                     {productData.map((product, index) => (
-                        <SwiperSlide key={product.id || index} className="!h-auto flex">
-                            <ProductCard data={product} depth={cardDepth} featured={featured}/>
+                        <SwiperSlide
+                            key={product.id || index}
+                            className="!h-auto flex"
+                        >
+                            <ProductCard
+                                data={product}
+                                depth={cardDepth}
+                                featured={featured}
+                            />
                         </SwiperSlide>
                     ))}
                 </Swiper>
@@ -106,5 +145,28 @@ const ProductSlider = ({
     );
 };
 
-export default ProductSlider;
 
+function ProductCardSkeleton({featured = false}) {
+    return (
+        <div className="w-full">
+            {/* Image */}
+            <Skeleton
+                className={[
+                    "w-full overflow-hidden rounded-2xl",
+                    featured
+                        ? "aspect-[4/5]"
+                        : "aspect-square",
+                ].join(" ")}
+            />
+
+            {/* Content */}
+            <div className="mt-4 space-y-3">
+                <Skeleton className="h-4 w-2/3 rounded-lg"/>
+                <Skeleton className="h-5 w-full rounded-lg"/>
+                <Skeleton className="h-4 w-1/2 rounded-lg"/>
+            </div>
+        </div>
+    );
+}
+
+export default ProductSlider;

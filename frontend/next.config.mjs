@@ -37,6 +37,7 @@ const nextConfig = {
         // dangerouslyAllowLocalIP:true,
     },
     allowedDevOrigins: ['127.0.0.1', 'localhost'],
+    trailingSlash:true,
     async rewrites() {
         const mediaBase = process.env.NEXT_PUBLIC_MEDIA_BASE_URL || "http://127.0.0.1:8000";
         if (!mediaBase) return [];

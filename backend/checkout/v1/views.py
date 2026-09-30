@@ -9,16 +9,19 @@ from rest_framework.request import Request
 from rest_framework import status
 from drf_spectacular.utils import extend_schema
 
+from django.shortcuts import get_object_or_404
+
 from checkout.models import (
     PaymentMethod,
     ShoppingCart,
-    ShoppingCartItem,
     Order,
 )
+from checkout.services import clear_cart, set_item_quantity, set_items
 
 from inventory.models import Product
 
 from .serializers import (
+    CartItemInputSerializer,
     ShoppingCartSerializer,
     PaymentMethodSerializer,
     OrderSerializer,
@@ -35,109 +38,99 @@ class PaymentMethodListView(ListAPIView):
     pagination_class = None
 
 
+def serialize_cart(request: Request, cart: ShoppingCart) -> Response:
+    # Re-read the cart so the response reflects what was actually stored.
+    cart = ShoppingCart.objects.get(pk=cart.pk)
+    return Response(
+        ShoppingCartSerializer(cart, context={"request": request}).data,
+        status=status.HTTP_200_OK,
+    )
+
+
 @extend_schema(tags=["Checkout"])
 class ShoppingCartView(APIView):
+    """
+    The authenticated user's shopping cart.
+
+    GET     returns the cart.
+    POST    sets quantities for a list of {product, quantity} lines (used to
+            merge a guest cart after login). Quantity 0 removes the line.
+    DELETE  empties the cart.
+
+    Every response is the full, up to date cart.
+    """
     permission_classes = [IsAuthenticated]
     serializer_class = ShoppingCartSerializer
 
     def get(self, request: Request, *args, **kwargs) -> Response:
-        user = request.user
+        cart, _ = ShoppingCart.objects.get_or_create(user=request.user)
+        return serialize_cart(request, cart)
 
-        shopping_cart, _ = ShoppingCart.objects.get_or_create(user=user)
-
-        serializer = self.serializer_class(
-            shopping_cart,
-            context={"request": request}
-        )
-
-        return Response(serializer.data, status=status.HTTP_200_OK)
-
+    @extend_schema(request=CartItemInputSerializer(many=True))
     def post(self, request: Request, *args, **kwargs) -> Response:
-        user = request.user
-        items: list = request.data
+        data = request.data
+        if isinstance(data, dict):
+            data = [data]
 
-        if not items:
+        if not isinstance(data, list) or not data:
             return Response(
                 {"detail": "No items provided."},
                 status=status.HTTP_400_BAD_REQUEST
             )
 
-        shopping_cart, _ = ShoppingCart.objects.get_or_create(user=user)
+        serializer = CartItemInputSerializer(data=data, many=True)
+        serializer.is_valid(raise_exception=True)
 
-        for item in items:
-            try:
-                quantity = int(item["quantity"])
-                product = Product.objects.get(id=item["product"])
-
-                if quantity <= 0:
-                    return Response(
-                        {"detail": "Quantity must be positive."},
-                        status=status.HTTP_400_BAD_REQUEST
-                    )
-
-                ShoppingCartItem.objects.update_or_create(
-                    cart=shopping_cart,
-                    product=product,
-                    defaults={"quantity": quantity}
-                )
-            except ValueError:
-                return Response(
-                    {"detail": "Quantity must be positive integer."},
-                    status=status.HTTP_400_BAD_REQUEST
-                )
-            except Product.DoseNotExist:
-                return Response(
-                    {"detail": "Product does not exist."},
-                    status=status.HTTP_400_BAD_REQUEST
-                )
-            except KeyError:
-                return Response(
-                    {"detail": "Invalid item format."},
-                    status=status.HTTP_400_BAD_REQUEST
-                )
-
-        return Response(
-            {
-                "message": "Your shopping cart has been updated successfully."},
-            status=status.HTTP_200_OK
+        cart, _ = ShoppingCart.objects.get_or_create(user=request.user)
+        set_items(
+            cart,
+            [
+                (line["product"], line["quantity"])
+                for line in serializer.validated_data
+            ],
         )
 
+        return serialize_cart(request, cart)
+
     def delete(self, request: Request, *args, **kwargs) -> Response:
-        user = request.user
-        data = request.data
+        cart, _ = ShoppingCart.objects.get_or_create(user=request.user)
+        clear_cart(cart)
+        return serialize_cart(request, cart)
 
-        if not data:
-            return Response(
-                {"detail": "No data provided for deletion."},
-                status=status.HTTP_400_BAD_REQUEST
-            )
 
-        shopping_cart, _ = ShoppingCart.objects.get_or_create(user=user)
-        product = Product.objects.get(id=data.get("product"))
+@extend_schema(tags=["Checkout"])
+class ShoppingCartItemView(APIView):
+    """
+    A single line of the authenticated user's cart, addressed by product id.
 
-        try:
-            deleted, _ = ShoppingCartItem.objects.filter(
-                cart=shopping_cart,
-                product=product,
-            ).delete()
+    PUT     sets the absolute quantity {quantity}, creating the line if needed.
+            Quantities above the available stock are clamped.
+    DELETE  removes the line.
+    """
+    permission_classes = [IsAuthenticated]
+    serializer_class = ShoppingCartSerializer
 
-            return Response(
-                {
-                    "message": f"Deleted item from your shopping cart."},
-                status=status.HTTP_200_OK
-            )
+    @extend_schema(request=CartItemInputSerializer)
+    def put(self, request: Request, product: int, *args, **kwargs) -> Response:
+        serializer = CartItemInputSerializer(
+            data={"product": product, "quantity": request.data.get("quantity")}
+        )
+        serializer.is_valid(raise_exception=True)
 
-        except Product.DoseNotExist:
-            return Response(
-                {"detail": "Product does not exist."},
-            )
+        cart, _ = ShoppingCart.objects.get_or_create(user=request.user)
+        set_item_quantity(
+            cart,
+            serializer.validated_data["product"],
+            serializer.validated_data["quantity"],
+        )
 
-        except Exception as e:
-            return Response(
-                {
-                    "detail": f"Error processing item: {str(e)}"},
-                status=status.HTTP_400_BAD_REQUEST
-            )
+        return serialize_cart(request, cart)
+
+    def delete(self, request: Request, product: int, *args, **kwargs) -> Response:
+        cart, _ = ShoppingCart.objects.get_or_create(user=request.user)
+        get_object_or_404(Product, pk=product)
+        cart.items.filter(product_id=product).delete()
+        return serialize_cart(request, cart)
 
 
 @extend_schema(tags=["Checkout"])
