@@ -2,8 +2,9 @@ import uuid
 import environ
 
 from collections import OrderedDict
-from django.utils.translation import gettext_lazy as _
 from pathlib import Path
+from django.utils.translation import gettext_lazy as _
+from django.conf.urls.static import static
 
 from core.ckeditor import BASE_CKEDITOR_5_CONFIGS
 from core.unfold import (
@@ -412,7 +413,7 @@ CONSTANCE_CONFIG = OrderedDict([
     (
         "WEBSITE_FAVICON",
         (
-            "favicon.ico",
+            static("/imgs/logo_black_2.png"),
             "Browser favicon (.ico or .png).",
             "image_field",
         ),
@@ -420,7 +421,7 @@ CONSTANCE_CONFIG = OrderedDict([
     (
         "WEBSITE_PRIMARY_ICON",
         (
-            "logo-light.svg",
+            static("/imgs/logo_black_2.png"),
             "Primary brand logo used on default/light backgrounds.",
             "image_field",
         ),
@@ -428,7 +429,7 @@ CONSTANCE_CONFIG = OrderedDict([
     (
         "WEBSITE_SECONDARY_ICON",
         (
-            "logo-dark.svg",
+            static("/imgs/logo_white.png"),
             "Secondary brand logo used on dark or contrasting backgrounds.",
             "image_field",
         ),
