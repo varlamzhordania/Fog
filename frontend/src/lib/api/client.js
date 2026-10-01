@@ -57,6 +57,9 @@ apiClient.interceptors.request.use((config) => {
     return config;
 });
 
+const REFRESH_EXCLUDED_URLS = [
+    "/api/auth/authorize",
+];
 
 apiClient.interceptors.response.use(
     (response) => response,
@@ -64,9 +67,14 @@ apiClient.interceptors.response.use(
     async (error) => {
         const originalRequest = error.config;
 
+        const isExcluded = REFRESH_EXCLUDED_URLS.some((url) =>
+            originalRequest?.url?.includes(url)
+        );
+
         if (
             error.response?.status === 401 &&
-            !originalRequest?._retry
+            !originalRequest?._retry &&
+            !isExcluded
         ) {
             originalRequest._retry = true;
 
@@ -81,7 +89,7 @@ apiClient.interceptors.response.use(
                 return apiClient(originalRequest);
 
             } catch {
-                useLogout().mutate()
+                useLogout().mutate();
 
                 throw error;
             }
