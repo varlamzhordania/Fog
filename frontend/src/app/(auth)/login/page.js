@@ -19,6 +19,7 @@ import Icon from "@/components/Icon/Icon";
 import {useLogin} from "@/queries/auth";
 import {validateEmail, validatePassword} from "@/lib/utils";
 import {useAuthStore} from "@/stores/auth";
+import {useCartStore} from "@/stores/cart";
 
 export default function LoginPage() {
     const {logged_in} = useAuthStore(state => state)
@@ -33,8 +34,22 @@ export default function LoginPage() {
 
     const handleSubmit = (e) => {
         e.preventDefault();
+
         login(form, {
-            onSuccess: () => toast.success("Successfully logged in."),
+            onSuccess: async () => {
+                try {
+                    await useCartStore
+                        .getState()
+                        .syncGuestCart();
+
+                    toast.success("Successfully logged in.");
+                } catch (error) {
+                    console.error("Cart sync failed:", error);
+
+                    toast.success("Successfully logged in.");
+                }
+            },
+
             onError: () => {
                 const id = toast.danger("Login Failed", {
                     actionProps: {
@@ -43,8 +58,8 @@ export default function LoginPage() {
                         variant: "tertiary",
                     },
                     description: "Email or password is incorrect.",
-                })
-            }
+                });
+            },
         });
     };
 

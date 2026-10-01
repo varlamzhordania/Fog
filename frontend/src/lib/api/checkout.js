@@ -6,29 +6,48 @@ export async function fetchPaymentMethods() {
     return response.data
 }
 
+
 export async function fetchCart() {
-    const response = await apiClient.get(API_ENDPOINTS.checkout.cart)
-    return response.data
+    const response = await apiClient.get(API_ENDPOINTS.checkout.cart);
+    return response.data;
 }
+
 
 export async function deleteCart() {
-    const response = await apiClient.delete(API_ENDPOINTS.checkout.cart)
-    return response.status
+    const response = await apiClient.delete(
+        API_ENDPOINTS.checkout.cart
+    );
+
+    return response.status;
 }
+
 
 export async function addItemToCart(data) {
-    const response = await apiClient.post(API_ENDPOINTS.checkout.cartItem, data)
-    return response.data
+    const response = await apiClient.post(
+        API_ENDPOINTS.checkout.cartItem,
+        data
+    );
+
+    return response.data;
 }
+
 
 export async function updateCartItem({id, quantity}) {
-    const response = await apiClient.post(API_ENDPOINTS.checkout.cartItemDetail(id), {quantity})
-    return response.data
+    const response = await apiClient.patch(
+        API_ENDPOINTS.checkout.cartItemDetail(id),
+        {quantity}
+    );
+
+    return response.data;
 }
 
+
 export async function deleteCartItem(id) {
-    const response = await apiClient.delete(API_ENDPOINTS.checkout.cartItemDetail(id), )
-    return response.status
+    const response = await apiClient.delete(
+        API_ENDPOINTS.checkout.cartItemDetail(id)
+    );
+
+    return response.data;
 }
 
 export async function postOrder(data) {

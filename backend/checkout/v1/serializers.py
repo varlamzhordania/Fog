@@ -23,31 +23,68 @@ class PaymentMethodSerializer(serializers.ModelSerializer):
         ]
 
 
-class ShoppingCartItemSerializer(serializers.ModelSerializer):
-    product_id = serializers.PrimaryKeyRelatedField(
-        queryset=Product.objects.filter(is_active=True),
-        source='product'
-    )
-    product_name = serializers.CharField(
-        source='product.name',
-        read_only=True
-    )
-    product_price = serializers.DecimalField(
-        source='product.final_price',
-        max_digits=10,
-        decimal_places=2,
-        read_only=True
-    )
-    total_price = serializers.DecimalField(
-        max_digits=10,
-        decimal_places=2,
+class ShoppingCartProductSerializer(serializers.ModelSerializer):
+    primary_image = serializers.SerializerMethodField()
+    available_stock = serializers.SerializerMethodField()
+    discount_percentage = serializers.IntegerField(
         read_only=True
     )
 
     class Meta:
+        model = Product
+        fields = [
+            "id",
+            "name",
+            "slug",
+            "product_type",
+            "primary_image",
+            "available_stock",
+            "base_price",
+            "store_price",
+            "discount_percentage",
+        ]
+
+    def get_primary_image(self, obj):
+        image = obj.primary_image
+
+        if not image:
+            return None
+
+        request = self.context.get("request")
+
+        if request:
+            return request.build_absolute_uri(
+                image.file.url
+            )
+
+        return image.file.url
+
+    def get_available_stock(self, obj):
+        if not hasattr(obj, "product_stock"):
+            return 0
+
+        return obj.product_stock.available_quantity
+
+
+class ShoppingCartItemSerializer(serializers.ModelSerializer):
+    product = ShoppingCartProductSerializer(
+        read_only=True
+    )
+
+    total_price = serializers.DecimalField(
+        max_digits=12,
+        decimal_places=2,
+        read_only=True,
+    )
+
+    class Meta:
         model = ShoppingCartItem
-        fields = ['id', 'product_id', 'product_name', 'product_price',
-                  'quantity', 'total_price']
+        fields = [
+            "id",
+            "product",
+            "quantity",
+            "total_price",
+        ]
 
 
 class ShoppingCartInputSerializer(serializers.Serializer):
@@ -55,6 +92,7 @@ class ShoppingCartInputSerializer(serializers.Serializer):
         min_value=1,
         required=True,
     )
+
     quantity = serializers.IntegerField(
         min_value=1,
         default=1,
@@ -62,16 +100,24 @@ class ShoppingCartInputSerializer(serializers.Serializer):
 
 
 class ShoppingCartSerializer(serializers.ModelSerializer):
-    items = ShoppingCartItemSerializer(many=True, read_only=True)
+    items = ShoppingCartItemSerializer(
+        many=True,
+        read_only=True,
+    )
+
     total_price = serializers.DecimalField(
-        max_digits=10,
+        max_digits=12,
         decimal_places=2,
-        read_only=True
+        read_only=True,
     )
 
     class Meta:
         model = ShoppingCart
-        fields = ['id', 'items', 'total_price']
+        fields = [
+            "id",
+            "items",
+            "total_price",
+        ]
 
 
 class OrderPaymentPublicSerializer(serializers.ModelSerializer):

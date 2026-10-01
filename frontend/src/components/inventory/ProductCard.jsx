@@ -1,8 +1,8 @@
 import {notFoundImage} from "@/lib/config";
-import {Button, Card, Typography} from "@heroui/react";
+import { Card, Typography} from "@heroui/react";
 import Image from "@/components/Image";
 import Icon from "@/components/Icon/Icon";
-import {MoveRight, ShoppingCartPlus} from "lucide-react";
+import {MoveRight} from "lucide-react";
 import {cn} from "tailwind-variants";
 import Link from "next/link";
 import CartQuantityControl from "@/components/inventory/CartQuantityControl";

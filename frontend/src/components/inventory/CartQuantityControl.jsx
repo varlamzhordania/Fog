@@ -1,10 +1,15 @@
 "use client";
 
-import {Button, NumberField} from "@heroui/react";
-import {Download, ShoppingBag, Trash2} from "lucide-react";
+import {useEffect, useState} from "react";
+import {Button} from "@heroui/react";
+import {
+    Download,
+    ShoppingBag,
+    Trash2,
+} from "lucide-react";
+
 import {useCartStore} from "@/stores/cart";
 import Icon from "@/components/Icon/Icon";
-
 
 export default function CartQuantityControl({
                                                 product,
@@ -18,36 +23,66 @@ export default function CartQuantityControl({
                                                 onRemove,
                                             }) {
     const {
-        items, incrementItem, updateQuantity, removeItem
+        items,
+        incrementItem,
+        updateQuantity,
+        removeItem,
+        isItemPending,
+        isSyncing,
     } = useCartStore((state) => state);
 
-    const item = items.find((item) => item.product_id === product.id);
+    const item = items.find(
+        (item) =>
+            Number(item.product.id) ===
+            Number(product.id)
+    );
 
-    const quantity = item?.quantity ?? 0;
+    const quantity = Number(item?.quantity ?? 0);
     const stock = Number(product.available_stock ?? 0);
 
     const isInStock = stock > 0;
     const isInCart = Boolean(item);
     const isAtStockLimit = quantity >= stock;
 
-    const isDownloadable = product.product_type === "downloadable";
+    const isDownloadable =
+        product.product_type === "downloadable";
 
+    const isPending = isItemPending(product.id);
+    const isDisabled = isPending || isSyncing;
 
-    const handleAdd = () => {
-        if (!isInStock || isAtStockLimit) {
+    const [inputQuantity, setInputQuantity] = useState(quantity);
+
+    /*
+     * Keep the local NumberField value synchronized
+     * with the actual cart value.
+     *
+     * Do not update it while an operation is pending.
+     */
+    useEffect(() => {
+        if (!isPending) {
+            setInputQuantity(quantity);
+        }
+    }, [quantity, isPending]);
+
+    const handleAdd = async () => {
+        if (
+            isDisabled ||
+            !isInStock ||
+            isAtStockLimit
+        ) {
             return;
         }
 
-        incrementItem(product, 1);
+        await incrementItem(product, 1);
 
         onAdd?.({
-            product, quantity: 1,
+            product,
+            quantity: 1,
         });
     };
 
-
-    const handleQuantityChange = (newQuantity) => {
-        if (!item) {
+    const handleQuantityChange = async (newQuantity) => {
+        if (!item || isDisabled) {
             return;
         }
 
@@ -57,88 +92,136 @@ export default function CartQuantityControl({
             return;
         }
 
+        newQuantity = Math.min(
+            Math.max(newQuantity, 1),
+            stock
+        );
+
         /*
-         * NumberField can theoretically receive a value
-         * outside the stock limit, so enforce it here too.
+         * Update the local input immediately.
          */
-        newQuantity = Math.min(Math.max(newQuantity, 1), stock);
+        setInputQuantity(newQuantity);
 
         if (newQuantity === quantity) {
             return;
         }
 
-        updateQuantity(item.id, newQuantity);
+        await updateQuantity(
+            product.id,
+            newQuantity
+        );
 
         onUpdate?.({
-            product, item, quantity: newQuantity,
+            product,
+            item,
+            quantity: newQuantity,
         });
     };
 
-
-    const handleRemove = () => {
-        if (!item) {
+    const handleRemove = async () => {
+        if (!item || isDisabled) {
             return;
         }
 
-        removeItem(item.id);
+        await removeItem(product.id);
 
         onRemove?.({
-            product, item,
+            product,
+            item,
         });
     };
 
     /*
      * Product isn't in cart.
-     *
-     * Show the normal Add to Cart button.
      */
     if (!isInCart) {
         if (!showAddButton) {
             return null;
         }
 
-        return (<Button
-            size={size}
-            fullWidth
-            isDisabled={!isInStock}
-            onPress={handleAdd}
-            className={className}
-        >
-            <Icon icon={isDownloadable ? Download : ShoppingBag}/>
-            {isInStock ? "Add to Cart" : "Out of Stock"}
-        </Button>);
+        return (
+            <Button
+                size={size}
+                fullWidth
+                isDisabled={
+                    !isInStock ||
+                    isDisabled
+                }
+                onPress={handleAdd}
+                className={className}
+            >
+                <Icon
+                    icon={
+                        isDownloadable
+                            ? Download
+                            : ShoppingBag
+                    }
+                />
+
+                {isInStock
+                    ? "Add to Cart"
+                    : "Out of Stock"}
+            </Button>
+        );
     }
 
-
-    /*
-     * Product is already in the cart.
-     */
-    return (<div
-        className={`flex items-center gap-2 ${className}`}
-    >
-        <NumberField
-            minValue={1}
-            maxValue={stock}
-            value={quantity}
-            onChange={handleQuantityChange}
-            variant={"secondary"}
-            aria-label={`Quantity for ${product.name}`}
+    return (
+        <div
+            className={`flex items-center gap-2 ${className}`}
         >
-            <NumberField.Group>
-                <NumberField.DecrementButton/>
-                <NumberField.Input className={`${limitWidth && 'w-16'} text-center`}/>
-                <NumberField.IncrementButton/>
-            </NumberField.Group>
-        </NumberField>
+            <div className="flex items-center gap-1">
+                <Button
+                    isIconOnly
+                    size={size}
+                    variant="tertiary"
+                    isDisabled={
+                        isDisabled ||
+                        quantity <= 1
+                    }
+                    onPress={() =>
+                        decrementQuantity(product.id)
+                    }
+                    aria-label={`Decrease ${product.name} quantity`}
+                >
+                    −
+                </Button>
 
-        {showRemoveButton && (<Button
-            isIconOnly
-            size={size}
-            variant={"tertiary"}
-            aria-label={`Remove ${product.name} from cart`}
-            onPress={handleRemove}
-        >
-            <Icon icon={Trash2}/>
-        </Button>)}
-    </div>);
+                <span
+                    className="flex w-8 min-w-8 items-center justify-center text-center"
+                    aria-live="polite"
+                >
+        {quantity}
+    </span>
+
+                <Button
+                    isIconOnly
+                    size={size}
+                    variant="tertiary"
+                    isDisabled={
+                        isDisabled ||
+                        quantity >= stock
+                    }
+                    onPress={() =>
+                        incrementQuantity(product.id)
+                    }
+                    aria-label={`Increase ${product.name} quantity`}
+                >
+                    +
+                </Button>
+            </div>
+
+            {showRemoveButton && (
+                <Button
+                    isIconOnly
+                    size={size}
+                    variant="tertiary"
+                    isDisabled={isDisabled}
+                    aria-label={`Remove ${product.name} from cart`}
+                    onPress={handleRemove}
+                >
+                    <Icon icon={Trash2}/>
+                </Button>
+            )}
+        </div>
+    );
 }

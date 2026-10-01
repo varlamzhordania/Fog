@@ -6,8 +6,18 @@ from inventory.models import Product
 class CartService:
     @staticmethod
     def get_or_create_cart(user) -> ShoppingCart:
-        cart, _ = ShoppingCart.objects.get_or_create(user=user)
-        return cart
+        cart, _ = ShoppingCart.objects.get_or_create(
+            user=user
+        )
+
+        return (
+            ShoppingCart.objects
+            .prefetch_related(
+                "items__product__product_stock",
+                "items__product__product_media_items__media",
+            )
+            .get(pk=cart.pk)
+        )
 
     @staticmethod
     def clear_cart(user) -> None:
