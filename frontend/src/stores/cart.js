@@ -2,859 +2,246 @@
 
 import {create} from "zustand";
 import {persist} from "zustand/middleware";
-
+import {useAuthStore} from "@/stores/auth";
+import {toast} from "@heroui/react";
 import {
     fetchCart,
-    deleteCart,
     addItemToCart,
-    updateCartItem,
+    deleteCart,
     deleteCartItem,
+    updateCartItem
 } from "@/lib/api/checkout";
 
-import {useAuthStore} from "@/stores/auth";
-
-
-const isAuthenticated = () => {
-    return useAuthStore.getState().logged_in;
-};
-
-
-const calculateTotal = (items) => {
-    return items
-        .reduce(
-            (sum, item) =>
-                sum +
-                Number(
-                    item.product?.store_price ??
-                    item.product_price ??
-                    0
-                ) *
-                Number(item.quantity),
-            0
-        )
-        .toFixed(2);
-};
-
-
-const normalizeServerCart = (cart) => ({
-    id: cart?.id ?? null,
-    items: (cart?.items ?? []).map((item) => ({
-        id: item.id,
-        product: item.product,
-        quantity: Number(item.quantity),
-        total_price: item.total_price,
-    })),
-    total_price: cart?.total_price ?? "0.00",
-});
-
+const isAuthenticated = () => useAuthStore.getState().logged_in;
 
 export const useCartStore = create(
     persist(
         (set, get) => ({
             items: [],
-            cartId: null,
 
-            isLoading: false,
-            isAdding: false,
-            isUpdating: false,
-            isRemoving: false,
-            isClearing: false,
+            getTotalPrice: () => get().items.reduce(
+                (sum, item) => sum + Number(item.product?.store_price ?? 0) * Number(item.quantity), 0
+            ).toFixed(2),
 
-            /*
-             * Used after login.
-             */
-            isSyncing: false,
+            getTotalQuantity: () => get().items.reduce((t, i) => t + Number(i.quantity), 0),
 
-            /*
-             * Product IDs currently being modified.
-             *
-             * Example:
-             *
-             * {
-             *     12: true,
-             *     24: true
-             * }
-             *
-             * This lets the UI disable only the affected
-             * product instead of the entire cart.
-             */
-            pendingItems: {},
+            findItem: (productId) => get().items.find((i) => Number(i.product?.id) === Number(productId)),
 
-            error: null,
-
-
-            getTotalPrice: () => {
-                return calculateTotal(get().items);
-            },
-
-
-            getTotalQuantity: () => {
-                return get().items.reduce(
-                    (total, item) =>
-                        total + Number(item.quantity),
-                    0
-                );
-            },
-
-
-            findItem: (productId) => {
-                return get().items.find(
-                    (item) =>
-                        Number(item.product?.id) ===
-                        Number(productId)
-                );
-            },
-
-
-            findItemById: (cartItemId) => {
-                return get().items.find(
-                    (item) =>
-                        Number(item.id) ===
-                        Number(cartItemId)
-                );
-            },
-
-
-            isItemPending: (productId) => {
-                return Boolean(
-                    get().pendingItems[productId]
-                );
-            },
-
-
-            setItemPending: (productId, pending) => {
-                set((state) => {
-                    const pendingItems = {
-                        ...state.pendingItems,
-                    };
-
-                    if (pending) {
-                        pendingItems[productId] = true;
-                    } else {
-                        delete pendingItems[productId];
-                    }
-
-                    return {
-                        pendingItems,
-                    };
-                });
-            },
-
-
-            /* =========================================================
-             * LOAD SERVER CART
-             * ========================================================= */
 
             loadCart: async () => {
-                if (!isAuthenticated()) {
-                    return;
-                }
-
-                set({
-                    isLoading: true,
-                    error: null,
-                });
-
+                if (!isAuthenticated()) return;
                 try {
-                    const data = await fetchCart();
+                    const serverCart = await fetchCart();
 
-                    const cart =
-                        normalizeServerCart(data);
+                    // 1. Grab the old local items before we overwrite them
+                    const previousItems = get().items;
 
-                    set({
-                        cartId: cart.id,
-                        items: cart.items,
-                        error: null,
+                    // 2. Mark all items fresh from the server as synced
+                    const syncedItems = serverCart.items.map(item => ({
+                        ...item,
+                        is_synced: true
+                    }));
+
+                    // 3. Check for price changes (UX Enhancement)
+                    let priceChanged = false;
+
+                    syncedItems.forEach((serverItem) => {
+                        const localItem = previousItems.find(
+                            (i) => Number(i.product.id) === Number(serverItem.product.id)
+                        );
+
+                        if (localItem) {
+                            const oldPrice = Number(localItem.product.store_price);
+                            const newPrice = Number(serverItem.product.store_price);
+
+                            if (oldPrice !== newPrice) {
+                                priceChanged = true;
+                            }
+                        }
                     });
 
-                    return cart;
+                    // 4. Update the store with the fresh server data
+                    set({items: syncedItems});
+
+                    // 5. Notify the user if prices shifted
+                    if (priceChanged) {
+                        toast.info("Prices or discounts for items in your cart have been updated.");
+                    }
+
                 } catch (error) {
-                    console.error(
-                        "Failed to load server cart:",
-                        error
-                    );
-
-                    const message =
-                        error?.response?.data?.detail ||
-                        "Failed to load cart";
-
-                    set({
-                        error: message,
-                    });
-
-                    throw error;
-                } finally {
-                    set({
-                        isLoading: false,
-                    });
+                    console.error("Failed to load cart", error);
                 }
             },
-
-
-            /* =========================================================
-             * SYNC GUEST CART AFTER LOGIN
-             * ========================================================= */
 
             syncGuestCart: async () => {
-                const {
-                    items,
-                    isSyncing,
-                } = get();
+                if (!isAuthenticated()) return;
 
-                /*
-                 * Prevent duplicate synchronization.
-                 */
-                if (isSyncing) {
-                    return;
+                // FLAG: Only grab items that haven't been synced to the server yet
+                const guestItems = get().items.filter(i => !i.is_synced);
+
+                if (guestItems.length === 0) {
+                    // Just a normal page refresh! Fetch the server cart and exit.
+                    return await get().loadCart();
                 }
 
-                /*
-                 * Only synchronize items that don't have
-                 * a server ShoppingCartItem ID yet.
-                 */
-                const guestItems = items.filter(
-                    (item) => !item.id
-                );
-
-                set({
-                    isSyncing: true,
-                    error: null,
-                });
-
                 try {
+                    // Merge local offline items into the server cart
                     for (const item of guestItems) {
                         await addItemToCart({
-                            product_id: Number(item.product.id),
-                            quantity: Number(item.quantity),
-                        });
+                            id: item.product.id,
+                            quantity: item.quantity
+                        }).catch(() => null);
                     }
 
-                    /*
-                     * Always replace the local cart with the
-                     * authoritative server cart.
-                     */
-                    const data = await fetchCart();
-
-                    const cart = normalizeServerCart(data);
-
-                    set({
-                        cartId: cart.id,
-                        items: cart.items,
-                        error: null,
-                    });
-
-                    return cart;
+                    // Fetch the newly merged cart to guarantee exact synchronization
+                    await get().loadCart();
                 } catch (error) {
-                    console.error(
-                        "Failed to synchronize cart:",
-                        error
-                    );
-
-                    set({
-                        error:
-                            error?.response?.data?.detail ||
-                            "Failed to synchronize cart.",
-                    });
-
-                    throw error;
-                } finally {
-                    set({
-                        isSyncing: false,
-                    });
+                    console.error("Cart sync failed", error);
                 }
             },
 
 
-            /* =========================================================
-             * ADD ITEM
-             * ========================================================= */
+            addItem: async (product) => {
+                const productId = Number(product.id);
+                const existing = get().findItem(productId);
+                const previousQuantity = existing ? Number(existing.quantity) : 0;
+                const nextQuantity = previousQuantity + 1;
 
-            incrementItem: async (
-                product,
-                quantity = 1
-            ) => {
-                if (quantity <= 0) {
-                    return;
-                }
+                get().updateQuantity(productId, nextQuantity, product);
 
-                const {
-                    items,
-                    findItem,
-                    setItemPending,
-                } = get();
+                if (isAuthenticated()) {
+                    try {
+                        if (existing) {
+                            await updateCartItem({productId, quantity: nextQuantity});
+                        } else {
+                            await addItemToCart({id: productId, quantity: nextQuantity});
+                        }
 
-                const productId =
-                    Number(product.id);
-
-                const existingItem =
-                    findItem(productId);
-
-                const previousItems = items;
-
-                let optimisticItems;
-
-                if (existingItem) {
-                    optimisticItems =
-                        items.map(
-                            (item) =>
-                                Number(
-                                    item.product.id
-                                ) === productId
-                                    ? {
-                                        ...item,
-                                        quantity:
-                                            Number(
-                                                item.quantity
-                                            ) +
-                                            quantity,
-                                    }
-                                    : item
-                        );
-                } else {
-                    optimisticItems = [
-                        ...items,
-                        {
-                            id: null,
-
-                            product: {
-                                id: product.id,
-                                name: product.name,
-                                slug: product.slug,
-                                primary_image:
-                                product.primary_image,
-                                product_type:
-                                product.product_type,
-                                available_stock:
-                                product.available_stock,
-
-                                base_price:
-                                    Number(
-                                        product.base_price
-                                    ).toFixed(2),
-
-                                store_price:
-                                    Number(
-                                        product.store_price
-                                    ).toFixed(2),
-
-                                discount_percentage:
-                                    Number(
-                                        product.discount_percentage
-                                    ),
-                            },
-
-                            quantity,
-                        },
-                    ];
-                }
-
-                /*
-                 * Update UI immediately.
-                 */
-                set({
-                    items: optimisticItems,
-                    isAdding: true,
-                    error: null,
-                });
-
-                /*
-                 * Mark this product as busy.
-                 */
-                setItemPending(productId, true);
-
-                /*
-                 * Guest cart stays local.
-                 */
-                if (!isAuthenticated()) {
-                    setItemPending(
-                        productId,
-                        false
-                    );
-
-                    set({
-                        isAdding: false,
-                    });
-
-                    return;
-                }
-
-                try {
-                    const data =
-                        await addItemToCart({
-                            product_id: productId,
-                            quantity,
-                        });
-
-                    const cart =
-                        normalizeServerCart(data);
-
-                    set({
-                        cartId: cart.id,
-                        items: cart.items,
-                        error: null,
-                    });
-                } catch (error) {
-                    console.error(
-                        "Failed to add item to cart:",
-                        error
-                    );
-
-                    set({
-                        items: previousItems,
-                        error:
-                            error?.response?.data
-                                ?.detail ||
-                            "Failed to add item to cart",
-                    });
-
-                    throw error;
-                } finally {
-                    setItemPending(
-                        productId,
-                        false
-                    );
-
-                    set({
-                        isAdding: false,
-                    });
+                        // Force a background refresh to ensure sync status is perfect
+                        get().loadCart();
+                    } catch (error) {
+                        if (existing) get().updateQuantity(productId, previousQuantity);
+                        else get().removeItem(productId, true);
+                        throw error;
+                    }
                 }
             },
 
-
-            /* =========================================================
-             * DECREMENT
-             * ========================================================= */
-
-            decrementItem: async (productId) => {
-                const {
-                    findItem,
-                    isItemPending,
-                } = get();
-
-                if (isItemPending(productId)) {
-                    return;
-                }
-
-                const item =
-                    findItem(productId);
-
-                if (!item) {
-                    return;
-                }
-
-                if (
-                    Number(item.quantity) <= 1
-                ) {
-                    await get().removeItem(
-                        productId
-                    );
-
-                    return;
-                }
-
-                await get().updateQuantity(
-                    productId,
-                    Number(item.quantity) - 1
-                );
-            },
-
-
-            /* =========================================================
-             * UPDATE QUANTITY
-             * ========================================================= */
-
-            updateQuantity: async (
-                productId,
-                quantity
-            ) => {
+            updateQuantity: (productId, newQuantity, productObj = null) => {
                 productId = Number(productId);
-                quantity = Number(quantity);
+                newQuantity = Number(newQuantity);
 
-                if (quantity <= 0) {
-                    await get().removeItem(
-                        productId
-                    );
+                if (newQuantity <= 0) return get().removeItem(productId);
 
-                    return;
-                }
+                set((state) => {
+                    const exists = state.items.find(i => Number(i.product.id) === productId);
 
-                const {
-                    items,
-                    findItem,
-                    setItemPending,
-                    isItemPending,
-                } = get();
-
-                /*
-                 * Prevent multiple simultaneous requests
-                 * for the same cart item.
-                 */
-                if (isItemPending(productId)) {
-                    return;
-                }
-
-                const item =
-                    findItem(productId);
-
-                if (!item) {
-                    return;
-                }
-
-                const previousItems = items;
-
-                const newItems =
-                    items.map(
-                        (cartItem) =>
-                            Number(
-                                cartItem.product.id
-                            ) === productId
-                                ? {
-                                    ...cartItem,
-                                    quantity,
+                    if (exists) {
+                        return {
+                            items: state.items.map((i) =>
+                                Number(i.product.id) === productId
+                                    // FLAG: Mark as synced if the user is authenticated (because we instantly push to API)
+                                    ? {...i, quantity: newQuantity, is_synced: isAuthenticated()}
+                                    : i
+                            ),
+                        };
+                    } else if (productObj) {
+                        return {
+                            items: [
+                                ...state.items,
+                                {
+                                    product: {...productObj},
+                                    quantity: newQuantity,
+                                    is_synced: isAuthenticated() // FLAG
                                 }
-                                : cartItem
-                    );
-
-                /*
-                 * Optimistic UI.
-                 */
-                set({
-                    items: newItems,
-                    isUpdating: true,
-                    error: null,
-                });
-
-                setItemPending(
-                    productId,
-                    true
-                );
-
-
-                /*
-                 * Guest cart.
-                 */
-                if (!isAuthenticated()) {
-                    setItemPending(
-                        productId,
-                        false
-                    );
-
-                    set({
-                        isUpdating: false,
-                    });
-
-                    return;
-                }
-
-
-                try {
-                    /*
-                     * item.id is ShoppingCartItem.id.
-                     */
-                    const data =
-                        await updateCartItem({
-                            id: item.id,
-                            quantity,
-                        });
-
-                    const cart =
-                        normalizeServerCart(data);
-
-                    set({
-                        cartId: cart.id,
-                        items: cart.items,
-                        error: null,
-                    });
-                } catch (error) {
-                    console.error(
-                        "Failed to update cart item:",
-                        error
-                    );
-
-                    set({
-                        items: previousItems,
-                        error:
-                            error?.response?.data
-                                ?.detail ||
-                            "Failed to update cart item",
-                    });
-
-                    throw error;
-                } finally {
-                    setItemPending(
-                        productId,
-                        false
-                    );
-
-                    set({
-                        isUpdating: false,
-                    });
-                }
-            },
-
-
-            /* =========================================================
-             * REMOVE ITEM
-             * ========================================================= */
-
-            removeItem: async (productId) => {
-                productId = Number(productId);
-
-                const {
-                    items,
-                    findItem,
-                    setItemPending,
-                    isItemPending,
-                } = get();
-
-                if (isItemPending(productId)) {
-                    return;
-                }
-
-                const item =
-                    findItem(productId);
-
-                if (!item) {
-                    return;
-                }
-
-                const previousItems = items;
-
-                const newItems =
-                    items.filter(
-                        (cartItem) =>
-                            Number(
-                                cartItem.product.id
-                            ) !== productId
-                    );
-
-                /*
-                 * Optimistic UI.
-                 */
-                set({
-                    items: newItems,
-                    isRemoving: true,
-                    error: null,
-                });
-
-                setItemPending(
-                    productId,
-                    true
-                );
-
-
-                /*
-                 * Guest cart.
-                 */
-                if (!isAuthenticated()) {
-                    setItemPending(
-                        productId,
-                        false
-                    );
-
-                    set({
-                        isRemoving: false,
-                    });
-
-                    return;
-                }
-
-
-                try {
-                    /*
-                     * A guest item can have id=null.
-                     *
-                     * Normally this won't happen because
-                     * syncGuestCart() runs after login.
-                     *
-                     * This guard prevents a bad request
-                     * if something happens during auth transition.
-                     */
-                    if (!item.id) {
-                        await get().syncGuestCart();
-
-                        return;
+                            ]
+                        };
                     }
-
-                    const data =
-                        await deleteCartItem(
-                            item.id
-                        );
-
-                    const cart =
-                        normalizeServerCart(data);
-
-                    set({
-                        cartId: cart.id,
-                        items: cart.items,
-                        error: null,
-                    });
-                } catch (error) {
-                    console.error(
-                        "Failed to remove cart item:",
-                        error
-                    );
-
-                    set({
-                        items: previousItems,
-                        error:
-                            error?.response?.data
-                                ?.detail ||
-                            "Failed to remove cart item",
-                    });
-
-                    throw error;
-                } finally {
-                    setItemPending(
-                        productId,
-                        false
-                    );
-
-                    set({
-                        isRemoving: false,
-                    });
-                }
-            },
-
-
-            /* =========================================================
-             * CLEAR CART
-             * ========================================================= */
-
-            clearCart: async () => {
-                const previousItems =
-                    get().items;
-
-                set({
-                    items: [],
-                    error: null,
-                    isClearing: true,
-                });
-
-                if (!isAuthenticated()) {
-                    set({
-                        isClearing: false,
-                    });
-
-                    return;
-                }
-
-                try {
-                    await deleteCart();
-
-                    set({
-                        items: [],
-                        cartId: null,
-                        error: null,
-                    });
-                } catch (error) {
-                    console.error(
-                        "Failed to clear cart:",
-                        error
-                    );
-
-                    set({
-                        items: previousItems,
-                        error:
-                            error?.response?.data
-                                ?.detail ||
-                            "Failed to clear cart",
-                    });
-
-                    throw error;
-                } finally {
-                    set({
-                        isClearing: false,
-                    });
-                }
-            },
-
-
-            /* =========================================================
-             * RESET
-             * ========================================================= */
-
-            resetLocalCart: () => {
-                set({
-                    items: [],
-                    cartId: null,
-                    pendingItems: {},
-                    error: null,
+                    return state;
                 });
             },
 
             incrementQuantity: async (productId) => {
-                productId = Number(productId);
+                const item = get().findItem(productId);
+                if (!item) return;
 
-                const {
-                    findItem,
-                    isItemPending,
-                } = get();
+                const previousQuantity = Number(item.quantity);
+                const nextQuantity = previousQuantity + 1;
 
-                if (isItemPending(productId)) {
-                    return;
+                get().updateQuantity(productId, nextQuantity);
+
+                if (isAuthenticated()) {
+                    try {
+                        await updateCartItem({productId, quantity: nextQuantity});
+                    } catch (error) {
+                        get().updateQuantity(productId, previousQuantity);
+                        throw error;
+                    }
                 }
-
-                const item = findItem(productId);
-
-                if (!item) {
-                    return;
-                }
-
-                const currentQuantity = Number(item.quantity);
-                const stock = Number(item.product?.available_stock ?? 0);
-
-                if (
-                    stock > 0 &&
-                    currentQuantity >= stock
-                ) {
-                    return;
-                }
-
-                await get().updateQuantity(
-                    productId,
-                    currentQuantity + 1
-                );
             },
-
 
             decrementQuantity: async (productId) => {
-                productId = Number(productId);
+                const item = get().findItem(productId);
+                if (!item) return;
 
-                const {
-                    findItem,
-                    isItemPending,
-                } = get();
+                const previousQuantity = Number(item.quantity);
+                if (previousQuantity <= 1) return;
+                const nextQuantity = previousQuantity - 1;
 
-                if (isItemPending(productId)) {
-                    return;
+                get().updateQuantity(productId, nextQuantity);
+
+                if (isAuthenticated()) {
+                    try {
+                        await updateCartItem({productId, quantity: nextQuantity});
+                    } catch (error) {
+                        get().updateQuantity(productId, previousQuantity);
+                        throw error;
+                    }
                 }
-
-                const item = findItem(productId);
-
-                if (!item) {
-                    return;
-                }
-
-                const currentQuantity = Number(item.quantity);
-
-                if (currentQuantity <= 1) {
-                    await get().removeItem(productId);
-                    return;
-                }
-
-                await get().updateQuantity(
-                    productId,
-                    currentQuantity - 1
-                );
             },
+
+            removeItem: async (productId, skipServer = false) => {
+                const item = get().findItem(productId);
+                if (!item) return;
+
+                const previousItems = get().items;
+
+                set({items: previousItems.filter((i) => Number(i.product.id) !== Number(productId))});
+
+                if (isAuthenticated() && !skipServer) {
+                    try {
+                        await deleteCartItem(productId);
+                    } catch (error) {
+                        set({items: previousItems});
+                        throw error;
+                    }
+                }
+            },
+
+            clearCart: async () => {
+                const previousItems = get().items;
+                if (previousItems.length === 0) return;
+
+                set({items: []});
+
+                if (isAuthenticated()) {
+                    try {
+                        await deleteCart();
+                    } catch (error) {
+                        set({items: previousItems});
+                        throw error;
+                    }
+                }
+            },
+
+            // Helper to clear the local cart when a user logs out
+            resetLocalCart: () => {
+                set({items: []});
+            }
         }),
         {
             name: "fog_cart",
-
-            partialize: (state) => ({
-                items: state.items,
-            }),
+            partialize: (state) => ({items: state.items}),
         }
     )
 );

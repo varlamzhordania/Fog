@@ -1,27 +1,23 @@
 import logging
 
+from django.http import Http404
+from drf_spectacular.utils import extend_schema
+from rest_framework import status
 from rest_framework.generics import ListAPIView
 from rest_framework.permissions import IsAuthenticated
-from rest_framework.viewsets import ReadOnlyModelViewSet
-from rest_framework.views import APIView
-from rest_framework.response import Response
 from rest_framework.request import Request
-from rest_framework import status
-from drf_spectacular.utils import extend_schema
-from django.http import Http404
+from rest_framework.response import Response
+from rest_framework.views import APIView
+from rest_framework.viewsets import ReadOnlyModelViewSet
 
-
-from checkout.models import (
-    PaymentMethod,
-    Order,
-)
-
+from checkout.models import Order, PaymentMethod
 from checkout.services import CartService
 
 from .serializers import (
-    ShoppingCartSerializer,
+    OrderSerializer,
     PaymentMethodSerializer,
-    OrderSerializer, ShoppingCartInputSerializer,
+    ShoppingCartInputSerializer,
+    ShoppingCartSerializer, ShoppingCartItemUpdateSerializer,
 )
 
 logger = logging.getLogger("fog")
@@ -41,9 +37,7 @@ class UserOrderView(ReadOnlyModelViewSet):
     serializer_class = OrderSerializer
 
     def get_queryset(self):
-        user = self.request.user
-        queryset = Order.objects.filter(user=user)
-        return queryset
+        return Order.objects.filter(user=self.request.user)
 
 
 @extend_schema(tags=["Checkout"])
@@ -53,22 +47,35 @@ class ShoppingCartAPIView(APIView):
     def get(self, request: Request) -> Response:
         try:
             cart = CartService.get_or_create_cart(request.user)
-            serializer = ShoppingCartSerializer(cart)
-            return Response(serializer.data, status=status.HTTP_200_OK)
-        except Exception as e:
             return Response(
-                {"detail": str(e)},
-                status=status.HTTP_400_BAD_REQUEST
+                ShoppingCartSerializer(
+                    cart,
+                    context={"request": request}
+                ).data,
+                status=status.HTTP_200_OK,
+            )
+        except Exception as exc:
+            logger.exception(
+                "Failed to load cart for user %s",
+                request.user.id
+            )
+            return Response(
+                {"detail": str(exc)},
+                status=status.HTTP_400_BAD_REQUEST,
             )
 
     def delete(self, request: Request) -> Response:
         try:
             CartService.clear_cart(request.user)
             return Response(status=status.HTTP_204_NO_CONTENT)
-        except Exception as e:
+        except Exception as exc:
+            logger.exception(
+                "Failed to clear cart for user %s",
+                request.user.id
+            )
             return Response(
-                {"detail": str(e)},
-                status=status.HTTP_400_BAD_REQUEST
+                {"detail": str(exc)},
+                status=status.HTTP_400_BAD_REQUEST,
             )
 
 
@@ -84,66 +91,60 @@ class ShoppingCartItemAPIView(APIView):
             cart = CartService.add_to_cart(
                 user=request.user,
                 product_id=serializer.validated_data["product_id"],
-                quantity=serializer.validated_data["quantity"]
+                quantity=serializer.validated_data["quantity"],
             )
             return Response(
-                ShoppingCartSerializer(cart).data,
-                status=status.HTTP_201_CREATED
+                ShoppingCartSerializer(
+                    cart,
+                    context={"request": request}
+                ).data,
+                status=status.HTTP_201_CREATED,
             )
         except Http404:
             return Response(
                 {"detail": "Product not found or inactive."},
-                status=status.HTTP_404_NOT_FOUND
-            )
-        except Exception as e:
-            return Response(
-                {"detail": str(e)},
-                status=status.HTTP_400_BAD_REQUEST
+                status=status.HTTP_404_NOT_FOUND,
             )
 
-    def patch(self, request: Request, pk: int) -> Response:
+    def patch(self, request: Request, product_id: int) -> Response:
+        serializer = ShoppingCartItemUpdateSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
         try:
-            quantity = int(request.data.get('quantity', 0))
-
             cart = CartService.update_item_quantity(
-                request.user,
-                pk,
-                quantity
+                user=request.user,
+                product_id=product_id,
+                quantity=serializer.validated_data["quantity"],
+                action=serializer.validated_data["action"],
             )
             return Response(
-                ShoppingCartSerializer(cart).data,
-                status=status.HTTP_200_OK
+                ShoppingCartSerializer(
+                    cart,
+                    context={"request": request}
+                ).data,
+                status=status.HTTP_200_OK,
             )
         except Http404:
             return Response(
-                {"detail": "Cart item not found in your cart."},
+                {"detail": "Cart item not found."},
                 status=status.HTTP_404_NOT_FOUND
-            )
-        except ValueError:
-            return Response(
-                {"detail": "Invalid quantity format."},
-                status=status.HTTP_400_BAD_REQUEST
-            )
-        except Exception as e:
-            return Response(
-                {"detail": str(e)},
-                status=status.HTTP_400_BAD_REQUEST
             )
 
-    def delete(self, request: Request, pk: int) -> Response:
+    def delete(self, request: Request, product_id: int) -> Response:
         try:
-            cart = CartService.remove_item(request.user, pk)
+            cart = CartService.remove_item(
+                user=request.user,
+                product_id=product_id
+            )
             return Response(
-                ShoppingCartSerializer(cart).data,
-                status=status.HTTP_200_OK
+                ShoppingCartSerializer(
+                    cart,
+                    context={"request": request}
+                ).data,
+                status=status.HTTP_200_OK,
             )
         except Http404:
             return Response(
-                {"detail": "Cart item not found in your cart."},
+                {"detail": "Cart item not found."},
                 status=status.HTTP_404_NOT_FOUND
-            )
-        except Exception as e:
-            return Response(
-                {"detail": str(e)},
-                status=status.HTTP_400_BAD_REQUEST
             )

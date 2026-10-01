@@ -10,6 +10,7 @@ import {
     Trash2,
 } from "lucide-react";
 import {
+    toast,
     Button,
     Card,
     Separator,
@@ -17,6 +18,7 @@ import {
 } from "@heroui/react";
 import {notFoundImage} from "@/lib/config";
 import Image from "@/components/Image";
+import {useCartActions} from "@/hooks/useCartActions";
 
 
 const formatPrice = (value) =>
@@ -33,19 +35,34 @@ export default function CartPage() {
         items,
         getTotalQuantity,
         getTotalPrice,
-        removeItem,
         clearCart,
     } = useCartStore();
 
     const totalQuantity = getTotalQuantity();
     const totalPrice = getTotalPrice();
 
+    const handleClearCart = async () => {
+        try {
+            await clearCart();
+            toast.success("Cart cleared successfully.");
+        } catch (error) {
+            console.log(error)
+            const errorMessage =
+                error?.response?.data?.detail ||
+                "Failed to clear cart.";
+
+            toast.danger(errorMessage);
+        }
+    };
+
     if (totalQuantity === 0) {
         return (
-            <div className="container min-h-[70vh] flex items-center justify-center px-4 py-12 sm:px-6">
+            <div
+                className="container min-h-[70vh] flex items-center justify-center px-4 py-12 sm:px-6">
                 <div className="flex w-full max-w-md flex-col items-center text-center">
 
-                    <div className="mb-5 flex size-16 items-center justify-center rounded-full border sm:mb-6 sm:size-20">
+                    <div
+                        className="mb-5 flex size-16 items-center justify-center rounded-full border sm:mb-6 sm:size-20">
                         <Icon
                             icon={ShoppingCart}
                             className="size-8 text-muted sm:size-10"
@@ -88,7 +105,8 @@ export default function CartPage() {
 
             {/* Header */}
             <header className="container pb-6 pt-6 sm:pb-8 sm:pt-8">
-                <div className="flex flex-col gap-5 border-b pb-5 sm:flex-row sm:items-end sm:justify-between sm:pb-6">
+                <div
+                    className="flex flex-col gap-5 border-b pb-5 sm:flex-row sm:items-end sm:justify-between sm:pb-6">
 
                     <div className="min-w-0">
                         <Typography
@@ -110,13 +128,10 @@ export default function CartPage() {
                     <Button
                         variant="ghost"
                         size="sm"
-                        onPress={clearCart}
+                        onPress={handleClearCart}
                         className="w-fit shrink-0 text-muted hover:text-danger"
                     >
-                        <Icon
-                            icon={Trash2}
-                            className="size-4"
-                        />
+                        <Icon icon={Trash2}/>
                         Clear Cart
                     </Button>
                 </div>
@@ -132,7 +147,6 @@ export default function CartPage() {
                             <ProductItem
                                 key={item.product.id}
                                 data={item}
-                                onRemove={() => removeItem(item.product.id)}
                             />
                         ))}
                     </div>
@@ -152,9 +166,11 @@ export default function CartPage() {
 }
 
 
-function ProductItem({data, onRemove}) {
+function ProductItem({data}) {
     const product = data.product;
     const quantity = Number(data.quantity);
+
+    const { handleRemove } = useCartActions(product);
 
     const image =
         product.primary_image?.file ||
@@ -169,9 +185,7 @@ function ProductItem({data, onRemove}) {
 
     return (
         <article className="w-full border-b py-5 first:pt-0 sm:py-6">
-
             <div className="flex min-w-0 gap-3 sm:gap-5">
-
                 {/* Product Image */}
                 <Link
                     href={`/products/${product.slug}`}
@@ -189,12 +203,9 @@ function ProductItem({data, onRemove}) {
 
                 {/* Product Content */}
                 <div className="flex min-w-0 flex-1 flex-col">
-
                     {/* Header */}
                     <div className="flex min-w-0 items-start justify-between gap-2 sm:gap-4">
-
                         <div className="min-w-0 flex-1">
-
                             <Typography
                                 type="small"
                                 className="mb-0.5 text-[10px] text-muted uppercase tracking-wider sm:mb-1 sm:text-xs"
@@ -216,19 +227,12 @@ function ProductItem({data, onRemove}) {
 
                             {/* Pricing */}
                             <div className="mt-1.5 flex flex-wrap items-center gap-1.5 sm:mt-2 sm:gap-2">
-
-                                <Typography
-                                    type="body-sm"
-                                    className="font-medium"
-                                >
+                                <Typography type="body-sm" className="font-medium">
                                     {formatPrice(storePrice)}
                                 </Typography>
 
                                 {discount > 0 && basePrice > storePrice && (
-                                    <Typography
-                                        type="small"
-                                        className="text-muted line-through"
-                                    >
+                                    <Typography type="small" className="text-muted line-through">
                                         {formatPrice(basePrice)}
                                     </Typography>
                                 )}
@@ -241,59 +245,41 @@ function ProductItem({data, onRemove}) {
                             </div>
                         </div>
 
-                        {/* Remove */}
+                        {/* Remove Button */}
                         <Button
                             isIconOnly
                             variant="ghost"
                             size="sm"
-                            onPress={onRemove}
+                            onPress={() => handleRemove()}
                             aria-label={`Remove ${product.name} from cart`}
                             className="size-8 shrink-0 text-muted hover:text-danger sm:size-9"
                         >
-                            <Icon
-                                icon={Trash2}
-                                className="size-4"
-                            />
+                            <Icon icon={Trash2} className="size-4" />
                         </Button>
-
                     </div>
 
                     {/* Bottom */}
                     <div className="mt-5 flex items-center justify-between gap-3 sm:mt-6">
-
                         <CartQuantityControl
                             product={product}
                             showAddButton={false}
                             showRemoveButton={false}
                             size="sm"
                         />
-
                         <div className="min-w-0 text-right">
-
-                            <Typography
-                                type="body-xs"
-                                className="text-muted"
-                            >
+                            <Typography type="body-xs" className="text-muted">
                                 Subtotal
                             </Typography>
-
-                            <Typography
-                                type="body"
-                                className="font-medium"
-                            >
+                            <Typography type="body" className="font-medium">
                                 {formatPrice(lineTotal)}
                             </Typography>
-
                         </div>
-
                     </div>
-
                 </div>
             </div>
         </article>
     );
 }
-
 
 function OrderSummary({totalQuantity, totalPrice}) {
     return (

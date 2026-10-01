@@ -5,6 +5,8 @@ from django.db import models
 from django.utils.translation import gettext_lazy as _
 from django.contrib.auth import get_user_model
 from django.utils import timezone
+from django.core.exceptions import ObjectDoesNotExist
+from rest_framework.exceptions import ValidationError
 
 from core.models import BaseModel, UploadPath
 
@@ -79,7 +81,10 @@ class ShoppingCart(BaseModel):
 
     @property
     def total_price(self):
-        return sum(item.total_price for item in self.items.filter(is_active=True))
+        return sum(
+            item.total_price for item in self.items.filter(is_active=True)
+        )
+
 
 class ShoppingCartItem(BaseModel):
     cart = models.ForeignKey(
@@ -121,6 +126,57 @@ class ShoppingCartItem(BaseModel):
     @property
     def total_price(self):
         return self.product.final_price * self.quantity
+
+    @property
+    def available_stock(self) -> int:
+        try:
+            return self.product.product_stock.available_quantity
+        except ObjectDoesNotExist:
+            return 0
+
+    def increment(self, amount=1):
+        available = self.available_stock
+        target = self.quantity + amount
+
+        if target > available:
+            raise ValidationError(
+                {
+                    "detail": f"Cannot add more. Only {available} items available in stock."
+                }
+            )
+
+        self.quantity = target
+        self.save(update_fields=['quantity'])
+
+    def decrement(self, amount=1):
+        available = self.available_stock
+        target = max(1, self.quantity - amount)
+
+        # If stock dropped behind the scenes, clamp down to what is actually available.
+        if target > available:
+            target = max(1, available)
+
+        self.quantity = target
+        self.save(update_fields=['quantity'])
+
+    def set_quantity(self, amount=1):
+        available = self.available_stock
+
+        if amount > available:
+            if amount > self.quantity:
+                # The user explicitly asked for MORE than they had AND more than available
+                raise ValidationError(
+                    {
+                        "detail": f"Only {available} items available in stock."
+                    }
+                )
+            else:
+                # The user is decreasing, but stock dropped in the background.
+                # Clamp it to the available stock (minimum 1 so the item doesn't break).
+                amount = max(1, available)
+
+        self.quantity = max(1, amount)
+        self.save(update_fields=['quantity'])
 
 
 class Order(BaseModel):
@@ -299,7 +355,7 @@ class OrderShipment(BaseModel):
             tracking_number: str = None,
             carrier: str = None,
             notes: str = None
-            ):
+    ):
         self.status = self.StatusChoices.IN_TRANSIT
         self.shipped_at = timezone.now()
         if tracking_number:
@@ -311,7 +367,7 @@ class OrderShipment(BaseModel):
         self.save(
             update_fields=['status', 'shipped_at', 'tracking_number',
                            'carrier', 'notes']
-            )
+        )
 
     def mark_delivered(self, notes: str = None):
         self.status = self.StatusChoices.DELIVERED

@@ -23,7 +23,7 @@ urlpatterns = [
         name='cart_item_add'
     ),
     path(
-        'cart/items/<int:pk>/',
+        'cart/items/<int:product_id>/',
         ShoppingCartItemAPIView.as_view(),
         name='cart_item_modify'
     ),

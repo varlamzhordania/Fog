@@ -13,9 +13,9 @@ import {useCartStore} from "@/stores/cart";
 export default function AppInitializer({children}) {
     const [mounted, setMounted] = useState(false);
 
-    const {setAuth, clearAuth} = useAuthStore(
-        (state) => state
-    );
+    const {setAuth, clearAuth, logged_in} = useAuthStore();
+
+    const { syncGuestCart } = useCartStore();
 
     const {
         isLoading,
@@ -34,12 +34,12 @@ export default function AppInitializer({children}) {
         setMounted(true);
     }, []);
 
+    // Existing Auth Synchronization Effect
     useEffect(() => {
         if (!data) {
             if (userIsError) {
                 clearAuth();
             }
-
             return;
         }
 
@@ -50,11 +50,6 @@ export default function AppInitializer({children}) {
                         user: data.user,
                         access_token: data.access_token,
                     });
-
-                    await useCartStore
-                        .getState()
-                        .syncGuestCart();
-
                     return;
                 }
 
@@ -63,7 +58,7 @@ export default function AppInitializer({children}) {
                 });
             } catch (error) {
                 console.error(
-                    "Failed to synchronize cart:",
+                    "Failed to initialize auth:",
                     error
                 );
             }
@@ -76,6 +71,12 @@ export default function AppInitializer({children}) {
         setAuth,
         clearAuth,
     ]);
+
+    useEffect(() => {
+        if (logged_in) {
+            syncGuestCart();
+        }
+    }, [logged_in, syncGuestCart]);
 
     if (!mounted || isLoading) {
         return (
