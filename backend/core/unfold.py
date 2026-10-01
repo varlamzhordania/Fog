@@ -35,8 +35,10 @@ def can_view(model):
     return check
 
 
-def nav_item(title, icon, model, permission=None, badge=None,
-             badge_variant="warning"):
+def nav_item(
+        title, icon, model, permission=None, badge=None,
+        badge_variant="warning"
+):
     """Sidebar link to a model changelist, hidden without view permission."""
     item = {
         "title": title,
@@ -46,12 +48,14 @@ def nav_item(title, icon, model, permission=None, badge=None,
     }
 
     if badge:
-        item.update({
-            "badge": badge,
-            "badge_variant": badge_variant,
-            "badge_style": "solid",
-            "badge_class": "ml-auto text-xs font-semibold !rounded-full",
-        })
+        item.update(
+            {
+                "badge": badge,
+                "badge_variant": badge_variant,
+                "badge_style": "solid",
+                "badge_class": "ml-auto text-xs font-semibold !rounded-full",
+            }
+        )
 
     return item
 
@@ -89,16 +93,17 @@ def status_tabs(model, choices, param="status__exact"):
         ],
     ]
 
+
 UNFOLD_SETTINGS = {
     # --------------------------------------------------------------------------
     # Branding & Header Information
     # --------------------------------------------------------------------------
-    "SITE_TITLE": "FOG Operations Portal",
-    "SITE_HEADER": "FOG Research Lab",
-    "SITE_SUBHEADER": "Mycology Genetics & Anonymous Crypto E-Commerce",
+    "SITE_TITLE": "FOG DIRECT Portal",
+    "SITE_HEADER": "FOG DIRECT Panel",
+    "SITE_SUBHEADER": "Mycology E-Commerce",
     "SITE_VERSION": "1.0.0",
     "SITE_URL": "/",
-    "SITE_SYMBOL": "science",
+    "SITE_SYMBOL": "local_mall",
     # Material Symbol representing mycology lab operations
 
     # --------------------------------------------------------------------------
@@ -150,6 +155,14 @@ UNFOLD_SETTINGS = {
     # --------------------------------------------------------------------------
     # Visual Assets & Favicons
     # --------------------------------------------------------------------------
+    # "SITE_ICON": {
+    #     "light": lambda request: static("imgs/logo_black_2.png"),
+    #     "dark": lambda request: static("imgs/logo_white.png"),
+    # },
+    # "SITE_LOGO": {
+    #     "light": lambda request: static("imgs/logo_black_2.png"),
+    #     "dark": lambda request: static("imgs/logo_white.png"),
+    # },
     "SITE_FAVICONS": [
         {
             "rel": "icon",
@@ -168,37 +181,48 @@ UNFOLD_SETTINGS = {
     "SHOW_BACK_BUTTON": True,
     "SHOW_UI_WARNINGS": False,
     # "THEME": "auto",  # High-contrast dark theme by default
-
+    "LOGIN": {
+        "image": lambda request: static("imgs/bg-login.jpg"),
+        # "redirect_after": lambda request: reverse_lazy(
+        #     "admin:APP_MODEL_changelist"
+        # ),
+        # # Inherits from `unfold.forms.AuthenticationForm`
+        # "form": "app.forms.CustomLoginForm",
+    },
     # --------------------------------------------------------------------------
-    # Color Palette: Mycology Emerald & Neutral Slate (OKLCH)
+    # Color Palette
     # --------------------------------------------------------------------------
     "BORDER_RADIUS": "8px",
     "COLORS": {
-        # Neutral Base Scale (Anchored by #FFFFFF, #E3E3E3, #A4ACB0, #000000)
+        # Neutral Base Scale (Anchored by your frontend slate/blue-black theme)
         "base": {
             "50": "oklch(100% 0 0)",  # #FFFFFF (Pure White)
-            "100": "oklch(96.8% 0.003 230)",  # #F4F6F7
-            "200": "oklch(91.3% 0.003 230)",
-            # #E3E3E3 (Client Neutral Light)
-            "300": "oklch(82.5% 0.006 230)",  # #C5CBCE
-            "400": "oklch(73.5% 0.010 230)",
-            # #A4ACB0 (Client Slate Midtone)
-            "500": "oklch(58.0% 0.014 230)",  # #788288
-            "600": "oklch(44.0% 0.015 230)",  # #535C62
-            "700": "oklch(33.0% 0.014 230)",  # #373E43
-            "800": "oklch(22.0% 0.012 230)",  # #202528
-            "900": "oklch(12.0% 0.008 230)",  # #101315
-            "950": "oklch(0% 0 0)",  # #000000 (Pure Black Canvas)
+            "100": "oklch(94.6% 0.009 232)",
+            # #E8EEF2 (Frontend Foreground)
+            "200": "oklch(91.3% 0.011 232)",
+            # #DCE4E9 (Frontend Default Foreground)
+            "300": "oklch(81.0% 0.015 233)",  # #C6D0D7 (Smooth step)
+            "400": "oklch(71.0% 0.019 233)",  # #9EAAB3 (Smooth step)
+            "500": "oklch(62.8% 0.022 233)",
+            # #81909B (Frontend Muted / Placeholder)
+            "600": "oklch(45.0% 0.020 234)",  # #4D5E6A (Smooth step)
+            "700": "oklch(31.8% 0.017 234)",  # #27323A (Frontend Border)
+            "800": "oklch(23.2% 0.015 235)",
+            # #171F26 (Frontend Surface Secondary)
+            "900": "oklch(18.4% 0.013 235)",  # #11171C (Frontend Surface)
+            "950": "oklch(14.3% 0.012 236)",
+            # #0B1014 (Frontend Background - Replaces Pure Black)
         },
 
-        # Primary Accent Scale (Anchored by #0C6E99 Ocean Blue)
+        # Primary Accent Scale (Anchored by #0C6E99 / #1687B8)
         "primary": {
             "50": "oklch(96.5% 0.020 230)",  # #E8F4F9
             "100": "oklch(91.5% 0.045 230)",  # #CCE8F3
             "200": "oklch(82.5% 0.080 230)",  # #9CD2E8
             "300": "oklch(72.5% 0.115 230)",  # #5BB5D9
             "400": "oklch(62.5% 0.135 230)",  # #2698C5
-            "500": "oklch(55.0% 0.130 230)",  # #0F82B4
+            "500": "oklch(56.5% 0.120 235)",
+            # #1687B8 (Frontend Brand Accent)
             "600": "oklch(49.8% 0.125 230)",
             # #0C6E99 (Authoritative Client Primary)
             "700": "oklch(41.5% 0.105 230)",  # #0A577B
@@ -210,17 +234,17 @@ UNFOLD_SETTINGS = {
         # Typography & Text Tokens
         "font": {
             "subtle-light": "var(--color-base-500)",
-            # text-base-500 (#788288)
+            # text-base-500 (#81909B - Frontend Muted)
             "subtle-dark": "var(--color-base-400)",
-            # text-base-400 (#A4ACB0)
-            "default-light": "var(--color-base-600)",
-            # text-base-600 (#535C62)
+            # text-base-400 (#9EAAB3)
+            "default-light": "var(--color-base-700)",
+            # text-base-700 (#27323A)
             "default-dark": "var(--color-base-200)",
-            # text-base-200 (#E3E3E3)
+            # text-base-200 (#DCE4E9 - Frontend Default Foreground)
             "important-light": "var(--color-base-950)",
-            # text-base-950 (#000000)
+            # text-base-950 (#0B1014 - Deep slate, not harsh black)
             "important-dark": "var(--color-base-50)",
-            # text-base-50 (#FFFFFF)
+            # text-base-50 (#FFFFFF - Pure White)
         },
     },
 
@@ -302,11 +326,21 @@ UNFOLD_SETTINGS = {
                 "separator": True,
                 "collapsible": True,
                 "items": [
-                    nav_item(_("Products"), "inventory_2", "inventory.product"),
-                    nav_item(_("Categories"), "category", "inventory.category"),
+                    nav_item(
+                        _("Products"),
+                        "inventory_2",
+                        "inventory.product"
+                    ),
+                    nav_item(
+                        _("Categories"),
+                        "category",
+                        "inventory.category"
+                    ),
                     nav_item(_("Tags"), "sell", "inventory.tag"),
                     nav_item(
-                        _("General Media"), "perm_media", "inventory.media",
+                        _("General Media"),
+                        "perm_media",
+                        "inventory.media",
                         permission=superuser_only,
                     ),
                 ],
@@ -338,7 +372,11 @@ UNFOLD_SETTINGS = {
                 "collapsible": True,
                 "items": [
                     nav_item(_("Users"), "people", "account.user"),
-                    nav_item(_("Addresses"), "location_on", "account.address"),
+                    nav_item(
+                        _("Addresses"),
+                        "location_on",
+                        "account.address"
+                    ),
                     nav_item(
                         _("Groups & Permissions"), "shield_person",
                         "auth.group",
@@ -385,31 +423,37 @@ UNFOLD_SETTINGS = {
     "TABS": [
         {
             "models": ["checkout.order"],
-            "items": status_tabs("checkout.order", [
-                (_("Awaiting Payment"), "payment"),
-                (_("Pending"), "pending"),
-                (_("Processing"), "processing"),
-                (_("Shipped"), "shipped"),
-                (_("Delivered"), "delivered"),
-                (_("Cancelled"), "cancelled"),
-            ]),
+            "items": status_tabs(
+                "checkout.order", [
+                    (_("Awaiting Payment"), "payment"),
+                    (_("Pending"), "pending"),
+                    (_("Processing"), "processing"),
+                    (_("Shipped"), "shipped"),
+                    (_("Delivered"), "delivered"),
+                    (_("Cancelled"), "cancelled"),
+                ]
+            ),
         },
         {
             "models": ["checkout.orderpayment"],
-            "items": status_tabs("checkout.orderpayment", [
-                (_("Pending"), "PENDING"),
-                (_("Completed"), "COMPLETED"),
-                (_("Failed"), "FAILED"),
-                (_("Refunded"), "REFUNDED"),
-            ]),
+            "items": status_tabs(
+                "checkout.orderpayment", [
+                    (_("Pending"), "PENDING"),
+                    (_("Completed"), "COMPLETED"),
+                    (_("Failed"), "FAILED"),
+                    (_("Refunded"), "REFUNDED"),
+                ]
+            ),
         },
         {
             "models": ["checkout.ordershipment"],
-            "items": status_tabs("checkout.ordershipment", [
-                (_("Pending"), "pending"),
-                (_("In Transit"), "in_transit"),
-                (_("Delivered"), "delivered"),
-            ]),
+            "items": status_tabs(
+                "checkout.ordershipment", [
+                    (_("Pending"), "pending"),
+                    (_("In Transit"), "in_transit"),
+                    (_("Delivered"), "delivered"),
+                ]
+            ),
         },
         {
             "models": [
@@ -423,7 +467,9 @@ UNFOLD_SETTINGS = {
                 model_tab(_("Categories"), "inventory.category"),
                 model_tab(_("Tags"), "inventory.tag"),
                 model_tab(
-                    _("Media"), "inventory.media", permission=superuser_only
+                    _("Media"),
+                    "inventory.media",
+                    permission=superuser_only
                 ),
             ],
         },
@@ -453,7 +499,6 @@ UNFOLD_SETTINGS = {
         },
     ],
 }
-
 
 CUSTOM_UNFOLD_CONSTANCE_ADDITIONAL_FIELDS = {
     **UNFOLD_CONSTANCE_ADDITIONAL_FIELDS,

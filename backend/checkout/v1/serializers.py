@@ -16,9 +16,12 @@ from account.v1.serializers import ListAddressSerializer
 
 
 class CartProductSerializer(serializers.ModelSerializer):
-    """Delivers only the product fields needed for the frontend cart UI."""
     primary_image = serializers.SerializerMethodField()
-    available_stock = serializers.IntegerField(read_only=True)
+    available_stock = serializers.IntegerField(
+        source="product_stock.available_quantity",
+        read_only=True,
+        default=0,
+    )
     discount_percentage = serializers.IntegerField(read_only=True)
 
     class Meta:
@@ -29,14 +32,24 @@ class CartProductSerializer(serializers.ModelSerializer):
             'available_stock', 'discount_percentage'
         ]
 
+
     def get_primary_image(self, obj):
         image = obj.primary_image
-        # Adjust this based on your Media model setup
-        return image.file.url if image and hasattr(image, 'file') else None
+
+        if image and hasattr(image, 'file') and image.file:
+
+            relative_url = image.file.url
+
+            request = self.context.get("request")
+
+            if request:
+                return request.build_absolute_uri(relative_url)
+            return relative_url
+
+        return None
 
 
 class ShoppingCartItemSerializer(serializers.ModelSerializer):
-    # Use the nested product serializer
     product = CartProductSerializer(read_only=True)
 
     total_price = serializers.DecimalField(
@@ -45,7 +58,6 @@ class ShoppingCartItemSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = ShoppingCartItem
-        # Removed 'id' and 'product_id' -> The full product object is enough
         fields = ['product', 'quantity', 'total_price']
 
 
@@ -93,7 +105,6 @@ class ShoppingCartItemUpdateSerializer(serializers.Serializer):
             "invalid_choice": "Invalid action. Use 'increment', 'decrement', or 'set'."
         }
     )
-
 
 
 class PaymentMethodSerializer(serializers.ModelSerializer):

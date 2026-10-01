@@ -173,7 +173,7 @@ function ProductItem({data}) {
     const { handleRemove } = useCartActions(product);
 
     const image =
-        product.primary_image?.file ||
+        product.primary_image ||
         product.image ||
         notFoundImage;
 

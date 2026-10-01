@@ -20,7 +20,10 @@ from .models import (
     StockReservation,
     StockTransactionLog,
 )
-from .resources import ProductResource
+from .resources import (
+    ProductResource, ProductStockResource, TagResource,
+    CategoryResource,
+)
 
 
 class ProductMediaInline(
@@ -215,6 +218,7 @@ class MediaAdmin(admin.ModelAdmin):
 @django_admin.register(Category)
 class CategoryAdmin(UnfoldImportExportHistoryAdmin, TreeAdmin):
     form = movenodeform_factory(Category)
+    resource_classes = [CategoryResource]
     list_display = ["name", "slug", "is_featured", "is_filterable",
                     "is_active", "created_at"]
     list_filter = ["is_active", "is_filterable", "is_featured"]
@@ -232,6 +236,7 @@ class CategoryAdmin(UnfoldImportExportHistoryAdmin, TreeAdmin):
 
 @django_admin.register(Tag)
 class TagAdmin(UnfoldImportExportHistoryAdmin):
+    resource_classes = [TagResource]
     list_display = ["name", "slug", "is_filterable",
                     "is_active", "created_at"]
     list_filter = ["is_active", "is_filterable", ]
@@ -335,7 +340,7 @@ class ProductAdmin(
 
         if discount <= 0:
             return format_html(
-                '<span class="text-xs text-gray-400">—</span>',{}
+                '<span class="text-xs text-gray-400">—</span>', {}
             )
 
         return format_html(
@@ -392,8 +397,9 @@ class ProductAdmin(
 
 
 @django_admin.register(ProductStock)
-class ProductStockAdmin(SimpleHistoryAdmin, admin.ModelAdmin):
+class ProductStockAdmin(UnfoldImportExportHistoryAdmin):
     inlines = [StockReservationInline]
+    resource_classes = [ProductStockResource]
     list_display = [
         "product",
         "quantity",

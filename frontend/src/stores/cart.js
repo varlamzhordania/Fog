@@ -27,7 +27,6 @@ export const useCartStore = create(
 
             findItem: (productId) => get().items.find((i) => Number(i.product?.id) === Number(productId)),
 
-
             loadCart: async () => {
                 if (!isAuthenticated()) return;
                 try {
@@ -99,7 +98,6 @@ export const useCartStore = create(
                     console.error("Cart sync failed", error);
                 }
             },
-
 
             addItem: async (product) => {
                 const productId = Number(product.id);
@@ -234,7 +232,6 @@ export const useCartStore = create(
                 }
             },
 
-            // Helper to clear the local cart when a user logs out
             resetLocalCart: () => {
                 set({items: []});
             }
