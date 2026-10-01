@@ -60,177 +60,180 @@ const Footer = () => {
     ]
 
     return (
-        <footer className="container container-space border-t pb-0">
-            <div
-                className="grid grid-cols-1 gap-12 pb-14 sm:grid-cols-2 lg:grid-cols-[1.8fr_1fr_1fr_1fr] lg:gap-10">
+        <footer className="container">
+            <div className={"border-t container-space pb-0"}>
+                <div
+                    className="grid grid-cols-1 gap-12 pb-14 sm:grid-cols-2 lg:grid-cols-[1.8fr_1fr_1fr_1fr] lg:gap-10">
 
-                <div className="flex max-w-sm flex-col gap-5">
-                    <Link href="/" className="w-fit">
-                        {logo && <Image unoptimized={true} src={logo} width={64} height={64}
-                                        alt={"FOG LOGO"}
-                                        className={"object-cover"}/>}
+                    <div className="flex max-w-sm flex-col gap-5">
+                        <Link href="/" className="w-fit">
+                            {logo && <Image unoptimized={true} src={logo} width={64} height={64}
+                                            alt={"FOG LOGO"}
+                                            className={"object-cover"}/>}
+                            <Typography
+                                type="h2"
+                                className="text-3xl font-atomic font-bold uppercase tracking-tight"
+                            >
+                                fog direct
+                            </Typography>
+                        </Link>
+
                         <Typography
-                            type="h2"
-                            className="text-3xl font-atomic font-bold uppercase tracking-tight"
+                            className="max-w-xs text-sm leading-6 opacity-65"
                         >
-                            fog direct
+                            {config?.WEBSITE_TAGLINE ||
+                                "Premium mycology research & laboratory supplies."}
                         </Typography>
-                    </Link>
 
-                    <Typography
-                        className="max-w-xs text-sm leading-6 opacity-65"
-                    >
-                        {config?.WEBSITE_TAGLINE ||
-                            "Premium mycology research & laboratory supplies."}
+                        <Typography
+                            className="max-w-sm text-sm leading-6 opacity-50"
+                        >
+                            Independent research, documentation, and carefully
+                            selected supplies for mycology enthusiasts and
+                            researchers.
+                        </Typography>
+
+                        {/* Social */}
+                        <div className="mt-2 flex flex-wrap items-center gap-5">
+                            {config?.COMMUNITY_TELEGRAM_URL && (
+                                <a
+                                    href={config.COMMUNITY_TELEGRAM_URL}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="text-sm font-medium uppercase tracking-wide opacity-60 transition-opacity hover:opacity-100"
+                                >
+                                    Telegram
+                                </a>
+                            )}
+
+                            {config?.COMMUNITY_DISCORD_URL && (
+                                <a
+                                    href={config.COMMUNITY_DISCORD_URL}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="text-sm font-medium uppercase tracking-wide opacity-60 transition-opacity hover:opacity-100"
+                                >
+                                    Discord
+                                </a>
+                            )}
+
+                            {config?.COMMUNITY_TWITTER_URL && (
+                                <a
+                                    href={config.COMMUNITY_TWITTER_URL}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="text-sm font-medium uppercase tracking-wide opacity-60 transition-opacity hover:opacity-100"
+                                >
+                                    X
+                                </a>
+                            )}
+                        </div>
+                    </div>
+
+                    {/* Shop */}
+                    <FooterColumn title="Shop">
+                        {shopLinks.map((item) => (
+                            <FooterLink
+                                key={item.href}
+                                href={item.href}
+                            >
+                                {item.label}
+                            </FooterLink>
+                        ))}
+                    </FooterColumn>
+
+                    {/* Discover */}
+                    <FooterColumn title="Discover">
+                        {discoverLinks.map((item) => (
+                            <FooterLink
+                                key={item.href}
+                                href={item.href}
+                            >
+                                {item.label}
+                            </FooterLink>
+                        ))}
+                    </FooterColumn>
+
+                    {/* Support */}
+                    <FooterColumn title="Support">
+                        {supportLinks.map((item) => (
+                            <FooterLink
+                                key={item.href}
+                                href={item.href}
+                            >
+                                {item.label}
+                            </FooterLink>
+                        ))}
+
+                        {config?.SUPPORT_EMAIL && (
+                            <li className="mt-2">
+                                <a
+                                    href={`mailto:${config.SUPPORT_EMAIL}`}
+                                    className="text-sm font-thin break-all opacity-60 transition-opacity hover:opacity-100"
+                                >
+                                    {config.SUPPORT_EMAIL}
+                                </a>
+                            </li>
+                        )}
+                    </FooterColumn>
+
+                </div>
+
+                {/* Research disclaimer */}
+                {config?.LEGAL_RESEARCH_DISCLAIMER && (
+                    <div className="border-t border-default-200 py-8">
+                        <div className="max-w-5xl">
+                            <Typography
+                                className="mb-2 text-xs font-semibold uppercase tracking-[0.15em] opacity-50"
+                            >
+                                Research Disclaimer
+                            </Typography>
+
+                            <Typography
+                                className="text-xs leading-5 opacity-45"
+                            >
+                                {config.LEGAL_RESEARCH_DISCLAIMER}
+                            </Typography>
+                        </div>
+                    </div>
+                )}
+
+                {/* Bottom bar */}
+                <div
+                    className="flex flex-col gap-5 border-t border-default-200 py-7 sm:flex-row sm:items-center sm:justify-between">
+
+                    <Typography className="text-xs opacity-50">
+                        {config?.FOOTER_COPYRIGHT_TEXT ||
+                            "© 2026 FOG Mycology Research Lab. All rights reserved."}
                     </Typography>
 
-                    <Typography
-                        className="max-w-sm text-sm leading-6 opacity-50"
-                    >
-                        Independent research, documentation, and carefully
-                        selected supplies for mycology enthusiasts and
-                        researchers.
-                    </Typography>
+                    <div className="flex flex-wrap items-center gap-x-6 gap-y-2">
+                        <Link
+                            href="/privacy"
+                            className="text-xs opacity-50 transition-opacity hover:opacity-100"
+                        >
+                            Privacy
+                        </Link>
 
-                    {/* Social */}
-                    <div className="mt-2 flex flex-wrap items-center gap-5">
-                        {config?.COMMUNITY_TELEGRAM_URL && (
-                            <a
-                                href={config.COMMUNITY_TELEGRAM_URL}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="text-sm font-medium uppercase tracking-wide opacity-60 transition-opacity hover:opacity-100"
-                            >
-                                Telegram
-                            </a>
-                        )}
+                        <Link
+                            href="/terms"
+                            className="text-xs opacity-50 transition-opacity hover:opacity-100"
+                        >
+                            Terms
+                        </Link>
 
-                        {config?.COMMUNITY_DISCORD_URL && (
-                            <a
-                                href={config.COMMUNITY_DISCORD_URL}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="text-sm font-medium uppercase tracking-wide opacity-60 transition-opacity hover:opacity-100"
-                            >
-                                Discord
-                            </a>
-                        )}
-
-                        {config?.COMMUNITY_TWITTER_URL && (
-                            <a
-                                href={config.COMMUNITY_TWITTER_URL}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="text-sm font-medium uppercase tracking-wide opacity-60 transition-opacity hover:opacity-100"
-                            >
-                                X
-                            </a>
-                        )}
+                        <Link
+                            href="/research-policy"
+                            className="text-xs opacity-50 transition-opacity hover:opacity-100"
+                        >
+                            Research Policy
+                        </Link>
                     </div>
+
                 </div>
 
-                {/* Shop */}
-                <FooterColumn title="Shop">
-                    {shopLinks.map((item) => (
-                        <FooterLink
-                            key={item.href}
-                            href={item.href}
-                        >
-                            {item.label}
-                        </FooterLink>
-                    ))}
-                </FooterColumn>
-
-                {/* Discover */}
-                <FooterColumn title="Discover">
-                    {discoverLinks.map((item) => (
-                        <FooterLink
-                            key={item.href}
-                            href={item.href}
-                        >
-                            {item.label}
-                        </FooterLink>
-                    ))}
-                </FooterColumn>
-
-                {/* Support */}
-                <FooterColumn title="Support">
-                    {supportLinks.map((item) => (
-                        <FooterLink
-                            key={item.href}
-                            href={item.href}
-                        >
-                            {item.label}
-                        </FooterLink>
-                    ))}
-
-                    {config?.SUPPORT_EMAIL && (
-                        <li className="mt-2">
-                            <a
-                                href={`mailto:${config.SUPPORT_EMAIL}`}
-                                className="text-sm font-thin break-all opacity-60 transition-opacity hover:opacity-100"
-                            >
-                                {config.SUPPORT_EMAIL}
-                            </a>
-                        </li>
-                    )}
-                </FooterColumn>
 
             </div>
-
-            {/* Research disclaimer */}
-            {config?.LEGAL_RESEARCH_DISCLAIMER && (
-                <div className="border-t border-default-200 py-8">
-                    <div className="max-w-5xl">
-                        <Typography
-                            className="mb-2 text-xs font-semibold uppercase tracking-[0.15em] opacity-50"
-                        >
-                            Research Disclaimer
-                        </Typography>
-
-                        <Typography
-                            className="text-xs leading-5 opacity-45"
-                        >
-                            {config.LEGAL_RESEARCH_DISCLAIMER}
-                        </Typography>
-                    </div>
-                </div>
-            )}
-
-            {/* Bottom bar */}
-            <div
-                className="flex flex-col gap-5 border-t border-default-200 py-7 sm:flex-row sm:items-center sm:justify-between">
-
-                <Typography className="text-xs opacity-50">
-                    {config?.FOOTER_COPYRIGHT_TEXT ||
-                        "© 2026 FOG Mycology Research Lab. All rights reserved."}
-                </Typography>
-
-                <div className="flex flex-wrap items-center gap-x-6 gap-y-2">
-                    <Link
-                        href="/privacy"
-                        className="text-xs opacity-50 transition-opacity hover:opacity-100"
-                    >
-                        Privacy
-                    </Link>
-
-                    <Link
-                        href="/terms"
-                        className="text-xs opacity-50 transition-opacity hover:opacity-100"
-                    >
-                        Terms
-                    </Link>
-
-                    <Link
-                        href="/research-policy"
-                        className="text-xs opacity-50 transition-opacity hover:opacity-100"
-                    >
-                        Research Policy
-                    </Link>
-                </div>
-
-            </div>
-
         </footer>
     )
 }

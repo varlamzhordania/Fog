@@ -13,17 +13,21 @@ import Image from "@/components/Image";
 import {useAuthStore} from "@/stores/auth";
 import {useRouter} from "next/navigation";
 import {useLogout} from "@/queries/auth";
+import {useCartStore} from "@/stores/cart";
 
 
 const Navbar = () => {
     const {theme, toggleTheme} = useThemeStore(state => state)
     const {user, logged_in} = useAuthStore(state => state)
+    const cartItems = useCartStore((state) => state.items);
     const {data: config} = useConfig()
     const [sidebarOpen, setSidebarOpen] = useState(false)
     const [dropdownOpen, setDropdownOpen] = useState(false)
     const router = useRouter()
     const logout = useLogout()
     const logo = theme === 'dark' ? config.WEBSITE_SECONDARY_ICON : config.WEBSITE_PRIMARY_ICON
+    const totalQuantity = cartItems.reduce((total, item) => total + Number(item.quantity), 0);
+
 
     const navigation = [{
         title: "Home", href: "/",
@@ -49,7 +53,7 @@ const Navbar = () => {
                 </Button>
 
 
-                <Link href="/public" replace={true}
+                <Link href="/" replace={true}
                       className={"flex flex-row gap-2 justify-start items-center"}>
                     {logo && <Image src={logo} width={64} height={64} alt={"FOG LOGO"}
                                     className={"object-cover"}/>}
@@ -70,8 +74,7 @@ const Navbar = () => {
                     <Icon icon={Search}/>
                 </Button>
 
-                {logged_in && user ?
-                    <Dropdown isOpen={dropdownOpen} onOpenChange={setDropdownOpen}>
+                {logged_in && user ? <Dropdown isOpen={dropdownOpen} onOpenChange={setDropdownOpen}>
                         <Button isIconOnly variant={"ghost"}>
                             <Icon icon={UserRound}/>
                         </Button>
@@ -129,20 +132,23 @@ const Navbar = () => {
                     </Dropdown> :
                     <Button isIconOnly variant="ghost" onPress={() => router.push("/login")}>
                         <Icon icon={UserRound}/>
-                    </Button>
-                }
+                    </Button>}
 
-                <Button isIconOnly variant={"ghost"}>
-                    <Icon icon={ShoppingCart}/>
-                    <div
-                        className={"fixed -top-1 -right-1 flex justify-center items-center bg-foreground ring-2 ring-background rounded-full w-[20px] h-[20px]"}>
-                        <Typography
-                            type={"small"}
-                            className={"text-background"}>
-                            4
-                        </Typography>
-                    </div>
-                </Button>
+                <Link href={"/cart"}>
+                    <Button isIconOnly variant={"ghost"}>
+                        <Icon icon={ShoppingCart}/>
+                        {totalQuantity > 0 && (<div
+                            className="absolute -right-1 -top-1 flex h-[20px] w-[20px] items-center justify-center rounded-full bg-foreground ring-2 ring-background">
+                            <Typography
+                                type="small"
+                                className="text-background"
+                            >
+                                {totalQuantity}
+                            </Typography>
+                        </div>)}
+                    </Button>
+                </Link>
+
 
                 <Button isIconOnly variant={"ghost"} onPress={() => toggleTheme()}>
                     {theme === 'dark' ? <Icon icon={Sun}/> : <Icon icon={Moon}/>}

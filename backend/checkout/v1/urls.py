@@ -3,9 +3,7 @@ from rest_framework.routers import SimpleRouter
 
 from .views import (
     PaymentMethodListView,
-    ShoppingCartView,
-    ShoppingCartItemView,
-    UserOrderView,
+    UserOrderView, ShoppingCartAPIView, ShoppingCartItemAPIView,
 )
 
 router = SimpleRouter()
@@ -18,16 +16,18 @@ urlpatterns = [
         PaymentMethodListView.as_view(),
         name='payment_methods'
     ),
+    path('cart/', ShoppingCartAPIView.as_view(), name='cart_detail'),
     path(
-        'cart/',
-        ShoppingCartView.as_view(),
-        name='shopping_cart'
+        'cart/items/',
+        ShoppingCartItemAPIView.as_view(),
+        name='cart_item_add'
     ),
     path(
-        'cart/items/<int:product>/',
-        ShoppingCartItemView.as_view(),
-        name='shopping_cart_item'
+        'cart/items/<int:pk>/',
+        ShoppingCartItemAPIView.as_view(),
+        name='cart_item_modify'
     ),
+
 ]
 
 urlpatterns += router.urls

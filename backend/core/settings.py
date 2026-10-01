@@ -413,7 +413,7 @@ CONSTANCE_CONFIG = OrderedDict([
     (
         "WEBSITE_FAVICON",
         (
-            static("/imgs/logo_black_2.png"),
+            "/imgs/logo_black_2.png",
             "Browser favicon (.ico or .png).",
             "image_field",
         ),
@@ -421,7 +421,7 @@ CONSTANCE_CONFIG = OrderedDict([
     (
         "WEBSITE_PRIMARY_ICON",
         (
-            static("/imgs/logo_black_2.png"),
+            "/imgs/logo_black_2.png",
             "Primary brand logo used on default/light backgrounds.",
             "image_field",
         ),
@@ -429,7 +429,7 @@ CONSTANCE_CONFIG = OrderedDict([
     (
         "WEBSITE_SECONDARY_ICON",
         (
-            static("/imgs/logo_white.png"),
+            "/imgs/logo_white.png",
             "Secondary brand logo used on dark or contrasting backgrounds.",
             "image_field",
         ),

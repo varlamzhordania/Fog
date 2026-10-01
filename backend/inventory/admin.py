@@ -28,9 +28,55 @@ class ProductMediaInline(
     nested_admin.NestedTabularInline
 ):
     model = ProductMedia
-    extra = 1
-    fields = ["media", "is_featured", "display_order"]
+    extra = 0
+    fields = [
+        "media",
+        "preview",
+        "is_featured",
+        "display_order",
+    ]
+    readonly_fields = ["preview"]
     classes = ["collapse"]
+
+    @admin.display(description="Preview")
+    def preview(self, obj):
+        if not obj.pk or not obj.media or not obj.media.file:
+            return "—"
+
+        media = obj.media
+        url = media.file.url
+
+        if media.media_type == Media.TypeChoices.IMAGE:
+            return format_html(
+                '<a href="{}" target="_blank">'
+                '<img src="{}" '
+                'style="width:120px;height:90px;object-fit:cover;'
+                'border-radius:8px;border:1px solid #ddd;" />'
+                "</a>",
+                url,
+                url,
+            )
+
+        if media.media_type == Media.TypeChoices.VIDEO:
+            return format_html(
+                '<video controls '
+                'style="width:180px;max-height:120px;border-radius:8px;">'
+                '<source src="{}">'
+                "Your browser does not support video."
+                "</video>",
+                url,
+            )
+
+        if media.media_type == Media.TypeChoices.DOCUMENT:
+            return format_html(
+                '<a href="{}" target="_blank">📄 Open document</a>',
+                url,
+            )
+
+        return format_html(
+            '<a href="{}" target="_blank">🔗 Open file</a>',
+            url,
+        )
 
 
 class MediaInline(admin.StackedInline):
@@ -195,7 +241,7 @@ class TagAdmin(UnfoldImportExportHistoryAdmin):
 @django_admin.register(Product)
 class ProductAdmin(
     UnfoldImportExportHistoryAdmin,
-    nested_admin.NestedModelAdmin
+    nested_admin.NestedModelAdmin,
 ):
     resource_classes = [ProductResource]
     inlines = [ProductStockInline, ProductMediaInline]
@@ -206,12 +252,26 @@ class ProductAdmin(
         "category",
         "product_type",
         "base_price",
+        "store_price",
+        "discount_display",
         "stock_status",
         "is_active",
         "is_featured",
     ]
-    list_filter = ["product_type", "is_active", "is_featured", "category"]
-    search_fields = ["name", "sku", "slug"]
+
+    list_filter = [
+        "product_type",
+        "is_active",
+        "is_featured",
+        "category",
+    ]
+
+    search_fields = [
+        "name",
+        "sku",
+        "slug",
+    ]
+
     ordering = ["-created_at"]
 
     fieldsets = [
@@ -225,48 +285,109 @@ class ProductAdmin(
                     "category",
                     "tags",
                     "product_type",
-                    "base_price",
-                )
+                ),
+            },
+        ),
+        (
+            _("Pricing"),
+            {
+                "fields": (
+                    ("base_price", "store_price"),
+                ),
+                "description": _(
+                    "Set the original product price and the current selling price. "
+                    "The discount percentage is calculated automatically."
+                ),
             },
         ),
         (
             _("Descriptions"),
             {
-                "fields": ("short_description", "description"),
+                "fields": (
+                    "short_description",
+                    "description",
+                ),
             },
         ),
         (
             _("Store Visibility"),
             {
-                "fields": (("is_active", "is_featured"),),
+                "fields": (
+                    ("is_active", "is_featured"),
+                ),
             },
         ),
     ]
-    readonly_fields = ["id", "slug", "created_at", "updated_at"]
+
+    readonly_fields = [
+        "id",
+        "slug",
+        "created_at",
+        "updated_at",
+    ]
+
+    @django_admin.display(
+        description=_("Discount"),
+        ordering="store_price",
+    )
+    def discount_display(self, obj):
+        discount = obj.discount_percentage
+
+        if discount <= 0:
+            return format_html(
+                '<span class="text-xs text-gray-400">—</span>',{}
+            )
+
+        return format_html(
+            '<span class="inline-flex items-center px-2 py-0.5 '
+            'rounded text-xs font-semibold '
+            'bg-red-50 text-red-700 '
+            'dark:bg-red-950 dark:text-red-300">'
+            '{}% OFF'
+            '</span>',
+            discount,
+        )
 
     @django_admin.display(description=_("Inventory on Hand (Avail / Res)"))
     def stock_status(self, obj):
         try:
             stock = obj.product_stock
+
             if not stock.is_available or stock.available_quantity <= 0:
-                badge_class = "bg-red-50 text-red-700 dark:bg-red-950 dark:text-red-300"
+                badge_class = (
+                    "bg-red-50 text-red-700 "
+                    "dark:bg-red-950 dark:text-red-300"
+                )
             elif stock.is_below_threshold():
-                badge_class = "bg-amber-50 text-amber-700 dark:bg-amber-950 dark:text-amber-300"
+                badge_class = (
+                    "bg-amber-50 text-amber-700 "
+                    "dark:bg-amber-950 dark:text-amber-300"
+                )
             else:
-                badge_class = "bg-emerald-50 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300"
+                badge_class = (
+                    "bg-emerald-50 text-emerald-700 "
+                    "dark:bg-emerald-950 dark:text-emerald-300"
+                )
 
             return format_html(
-                '<span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold {}">'
-                '{} avail <span class="ml-1 opacity-70">({} res / {} tot)</span>'
+                '<span class="inline-flex items-center px-2 py-0.5 '
+                'rounded text-xs font-semibold {}">'
+                '{} avail '
+                '<span class="ml-1 opacity-70">'
+                '({} res / {} tot)'
+                '</span>'
                 '</span>',
                 badge_class,
                 stock.available_quantity,
                 stock.reserved_quantity,
                 stock.quantity,
             )
+
         except ProductStock.DoesNotExist:
             return format_html(
-                '<span class="text-xs text-gray-400">No stock record</span>'
+                '<span class="text-xs text-gray-400">'
+                'No stock record'
+                '</span>', {}
             )
 
 

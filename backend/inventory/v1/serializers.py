@@ -87,17 +87,21 @@ class ProductSerializer(serializers.ModelSerializer):
     category = CategoryMinimalSerializer(read_only=True)
     tags = TagMinimalSerializer(many=True, read_only=True)
     primary_image = MediaSerializer(read_only=True)
+
     gallery = ProductMediaSerializer(
         source="product_media_items",
         many=True,
-        read_only=True
+        read_only=True,
     )
 
-    # Extract calculated available stock (quantity - reserved_quantity)
     available_stock = serializers.IntegerField(
         source="product_stock.available_quantity",
         read_only=True,
-        default=0
+        default=0,
+    )
+
+    discount_percentage = serializers.IntegerField(
+        read_only=True,
     )
 
     class Meta:
@@ -110,13 +114,20 @@ class ProductSerializer(serializers.ModelSerializer):
             "product_type",
             "short_description",
             "description",
+
             "base_price",
+            "store_price",
+            "discount_percentage",
+
+            "is_active",
             "is_featured",
+
             "category",
             "tags",
             "primary_image",
             "gallery",
             "available_stock",
+
             "created_at",
             "updated_at",
         ]

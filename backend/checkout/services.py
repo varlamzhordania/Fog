@@ -1,68 +1,60 @@
-from django.db import transaction
-from django.utils import timezone
-
+from django.shortcuts import get_object_or_404
 from checkout.models import ShoppingCart, ShoppingCartItem
-
-# Upper bound for a single line, whatever the stock level is.
-MAX_ITEM_QUANTITY = 99
+from inventory.models import Product
 
 
-def purchasable_quantity(product) -> int:
-    """
-    Units of a product a customer may hold in the cart: the stock that is free
-    (on hand minus reserved), capped at MAX_ITEM_QUANTITY.
-    Products without a stock record, or flagged unavailable, cannot be bought.
-    """
-    stock = getattr(product, "product_stock", None)
+class CartService:
+    @staticmethod
+    def get_or_create_cart(user) -> ShoppingCart:
+        cart, _ = ShoppingCart.objects.get_or_create(user=user)
+        return cart
 
-    if stock is None or not stock.is_available:
-        return 0
+    @staticmethod
+    def clear_cart(user) -> None:
+        cart = CartService.get_or_create_cart(user)
+        cart.items.all().delete()
 
-    return min(stock.available_quantity, MAX_ITEM_QUANTITY)
+    @staticmethod
+    def add_to_cart(
+            user,
+            product_id: int,
+            quantity: int = 1
+    ) -> ShoppingCart:
+        cart = CartService.get_or_create_cart(user)
+        product = get_object_or_404(Product, id=product_id, is_active=True)
 
-
-def clamp_quantity(product, quantity: int) -> int:
-    return max(0, min(int(quantity), purchasable_quantity(product)))
-
-
-def touch_cart(cart: ShoppingCart) -> None:
-    ShoppingCart.objects.filter(pk=cart.pk).update(updated_at=timezone.now())
-
-
-@transaction.atomic
-def set_item_quantity(cart: ShoppingCart, product, quantity: int) -> int:
-    """
-    Sets the absolute quantity of a product in the cart and returns the stored
-    quantity. The request is clamped to what is in stock; a result of 0 removes
-    the line.
-    """
-    quantity = clamp_quantity(product, quantity)
-
-    if quantity == 0:
-        cart.items.filter(product=product).delete()
-    else:
-        ShoppingCartItem.objects.update_or_create(
+        cart_item, created = ShoppingCartItem.objects.get_or_create(
             cart=cart,
             product=product,
-            defaults={"quantity": quantity},
+            defaults={'quantity': quantity}
         )
+        if not created:
+            cart_item.quantity += quantity
+            cart_item.save(update_fields=['quantity'])
 
-    touch_cart(cart)
-    return quantity
+        return cart
 
+    @staticmethod
+    def update_item_quantity(
+            user,
+            item_id: int,
+            quantity: int
+    ) -> ShoppingCart:
+        cart = CartService.get_or_create_cart(user)
+        item = get_object_or_404(ShoppingCartItem, id=item_id, cart=cart)
 
-@transaction.atomic
-def set_items(cart: ShoppingCart, lines) -> None:
-    """Applies several (product, quantity) pairs. Later duplicates win."""
-    final = {}
-    for product, quantity in lines:
-        final[product.pk] = (product, quantity)
+        if quantity <= 0:
+            item.delete()
+        else:
+            item.quantity = quantity
+            item.save(update_fields=["quantity"])
 
-    for product, quantity in final.values():
-        set_item_quantity(cart, product, quantity)
+        return cart
 
+    @staticmethod
+    def remove_item(user, item_id: int) -> ShoppingCart:
+        cart = CartService.get_or_create_cart(user)
+        item = get_object_or_404(ShoppingCartItem, id=item_id, cart=cart)
+        item.delete()
 
-@transaction.atomic
-def clear_cart(cart: ShoppingCart) -> None:
-    cart.items.all().delete()
-    touch_cart(cart)
+        return cart

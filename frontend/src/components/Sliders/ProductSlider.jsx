@@ -33,7 +33,7 @@ const ProductSlider = ({
     };
 
     return (
-        <section className="relative container container-space">
+        <div className="relative">
             {/* Header */}
             <div className="mb-6 flex flex-row items-center justify-between gap-4">
                 {isLoading ? (
@@ -141,7 +141,7 @@ const ProductSlider = ({
                     ))}
                 </Swiper>
             )}
-        </section>
+        </div>
     );
 };
 

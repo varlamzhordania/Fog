@@ -12,8 +12,12 @@ export default function Home() {
         <HeroSection/>
         <CategoriesShowCase/>
         <WhyFOG/>
-        <ProductSlider title={"Featured Products"} productData={products} featured cardDepth/>
-        <ProductSlider title={"FOG Products"} productData={products}/>
+        <section className={"container container-space"}>
+            <ProductSlider title={"Featured Products"} productData={products} featured cardDepth/>
+        </section>
+        <section className={"container container-space"}>
+            <ProductSlider title={"FOG Products"} productData={products}/>
+        </section>
     </>);
 }
 

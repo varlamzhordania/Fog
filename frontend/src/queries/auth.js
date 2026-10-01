@@ -99,7 +99,6 @@ export function useLogout() {
     });
 }
 
-// ─── Password Reset ───────────────────────────────────────────────────────────
 
 export function useRequestPasswordReset() {
     return useMutation({

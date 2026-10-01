@@ -14,6 +14,7 @@ from .views import set_language
 urlpatterns = [
     path('api/v1/account/', include('account.v1.urls', namespace='account-v1')),
     path('api/v1/inventory/', include('inventory.v1.urls', namespace='inventory-v1')),
+    path('api/v1/checkout/', include('checkout.v1.urls', namespace='checkout-v1')),
     path('api/v1/settings/', include('settings.v1.urls', namespace='settings-v1')),
     path('admin/', admin.site.urls),
 

@@ -1,68 +1,34 @@
-import {API_ENDPOINTS} from "$lib/config.js";
-import {fetchWithAuth} from "$lib/api/index.svelte.js";
+import apiClient from "@/lib/api/client";
+import {API_ENDPOINTS} from "@/lib/config";
 
-export async function fetchCurrencies() {
-    const res = await fetch(API_ENDPOINTS.checkout.currencies);
-
-    if (!res.ok) {
-        let errDetail = `Failed to fetch available currencies`;
-        try {
-            const data = await res.json();
-            if (data.detail) errDetail = data.detail;
-        } catch (_) {
-            // Fallback to default message if response isn't JSON
-        }
-
-        const err = new Error(errDetail);
-        err.status = res.status;
-        throw err;
-    }
-
-    return await res.json();
+export async function fetchPaymentMethods() {
+    const response = await apiClient.get(API_ENDPOINTS.checkout.paymentMethods);
+    return response.data
 }
 
-export async function fetchPaymentMethods(currency = 'usd') {
-    return await fetchWithAuth(API_ENDPOINTS.checkout.paymentMethods(currency), {method: "GET"});
+export async function fetchCart() {
+    const response = await apiClient.get(API_ENDPOINTS.checkout.cart)
+    return response.data
 }
 
-
-export async function fetchBasketPricesUpdate(priceIds, currency) {
-    const idsParam = Array.isArray(priceIds) ? priceIds.join(',') : priceIds;
-    const res = await fetch(API_ENDPOINTS.checkout.basketPricesUpdate(idsParam, currency));
-
-    if (!res.ok) {
-        let errDetail = `Failed to update basket prices`;
-        try {
-            const data = await res.json();
-            if (data.detail) errDetail = data.detail;
-        } catch (_) {
-            // fallback to default message
-        }
-
-        const err = new Error(errDetail);
-        err.status = res.status;
-        throw err;
-    }
-
-    return await res.json();
+export async function deleteCart() {
+    const response = await apiClient.delete(API_ENDPOINTS.checkout.cart)
+    return response.status
 }
 
-export async function postBasketData(data) {
-    return await fetchWithAuth(API_ENDPOINTS.checkout.basket, {
-        method: "POST", body: data,
-    })
+export async function addItemToCart(data) {
+    const response = await apiClient.post(API_ENDPOINTS.checkout.cartItem, data)
+    return response.data
 }
 
-export async function fetchBasketData(currency) {
-    return await fetchWithAuth(API_ENDPOINTS.checkout.basketWithCurrency(currency), {
-        method: "GET"
-    })
+export async function updateCartItem({id, quantity}) {
+    const response = await apiClient.post(API_ENDPOINTS.checkout.cartItemDetail(id), {quantity})
+    return response.data
 }
 
-export async function deleteBasketItem(item) {
-    return await fetchWithAuth(API_ENDPOINTS.checkout.basket, {
-        method: "DELETE", body: item
-    })
+export async function deleteCartItem(id) {
+    const response = await apiClient.delete(API_ENDPOINTS.checkout.cartItemDetail(id), )
+    return response.status
 }
 
 export async function postOrder(data) {

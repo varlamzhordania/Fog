@@ -75,8 +75,11 @@ class ShoppingCart(BaseModel):
         ]
 
     def __str__(self):
-        return f"Cart for {self.user.get_full_name()}"
+        return f"Cart - User : {self.user.get_full_name()}"
 
+    @property
+    def total_price(self):
+        return sum(item.total_price for item in self.items.filter(is_active=True))
 
 class ShoppingCartItem(BaseModel):
     cart = models.ForeignKey(
@@ -107,13 +110,17 @@ class ShoppingCartItem(BaseModel):
             models.Index(fields=['cart']),
             models.Index(fields=['product']),
             models.Index(
-                fields=['cart', 'product',]
+                fields=['cart', 'product', ]
             ),
             models.Index(fields=['created_at']),
         ]
 
     def __str__(self):
-        return f"{self.product} x {self.quantity}"
+        return f"{self.quantity}x {self.product.name}"
+
+    @property
+    def total_price(self):
+        return self.product.final_price * self.quantity
 
 
 class Order(BaseModel):
@@ -280,13 +287,19 @@ class OrderShipment(BaseModel):
 
     @property
     def is_shipped(self) -> bool:
-        return self.status in [self.StatusChoices.IN_TRANSIT, self.StatusChoices.DELIVERED]
+        return self.status in [self.StatusChoices.IN_TRANSIT,
+                               self.StatusChoices.DELIVERED]
 
     @property
     def is_delivered(self) -> bool:
         return self.status == self.StatusChoices.DELIVERED
 
-    def mark_shipped(self, tracking_number: str = None, carrier: str = None, notes: str = None):
+    def mark_shipped(
+            self,
+            tracking_number: str = None,
+            carrier: str = None,
+            notes: str = None
+            ):
         self.status = self.StatusChoices.IN_TRANSIT
         self.shipped_at = timezone.now()
         if tracking_number:
@@ -295,7 +308,10 @@ class OrderShipment(BaseModel):
             self.carrier = carrier
         if notes:
             self.notes = notes
-        self.save(update_fields=['status', 'shipped_at', 'tracking_number', 'carrier', 'notes'])
+        self.save(
+            update_fields=['status', 'shipped_at', 'tracking_number',
+                           'carrier', 'notes']
+            )
 
     def mark_delivered(self, notes: str = None):
         self.status = self.StatusChoices.DELIVERED
@@ -303,7 +319,6 @@ class OrderShipment(BaseModel):
         if notes:
             self.notes = notes
         self.save(update_fields=['status', 'delivered_at', 'notes'])
-
 
 
 class OrderPayment(BaseModel):

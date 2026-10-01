@@ -52,7 +52,10 @@ export const API_ENDPOINTS = {
     },
 
     checkout: {
+        paymentMethods: `${API_BASE}/checkout/payment-methods/`,
         cart: `${API_BASE}/checkout/cart/`,
+        cartItem: `${API_BASE}/checkout/cart/items/`,
+        cartItemDetail: (id) => `${API_BASE}/checkout/cart/items/${id}/`,
         orderCreate:
             `${API_BASE}/checkout/orders/create/`,
         orderList: (page, pageSize) =>

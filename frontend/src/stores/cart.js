@@ -1,285 +1,205 @@
-import { create } from 'zustand';
+import {create} from "zustand";
+import {persist} from "zustand/middleware";
 import {
-  fetchBasketData,
-  postBasketData,
-} from '@/lib/api/checkout';
-import { useAuthStore } from '@/stores/auth';
-import { useConfigStore } from '@/stores/config';
+    fetchCart, // deleteCart,
+    // addItemToCart,
+    // updateCartItem,
+    // deleteCartItem,
+} from "@/lib/api/checkout";
+import {useAuthStore} from "@/stores/auth";
 
-const LOCAL_NAME = 'cart';
 
-export const useCartStore = create((set, get) => ({
-  items: [],
-  taxRate: 0.18,
+const calculateTotal = (items) => {
+    return items.reduce((sum, item) => sum + Number(item.product_store_price) * Number(item.quantity), 0).toFixed(2);
+};
 
-  init: async () => {
-    await get().load();
-  },
 
-  add: async (product, quantity = 1) => {
-    const { items } = get();
+export const useCartStore = create(persist((set, get) => ({
+    items: [], isLoading: false, error: null,
 
-    const existing = items.find(
-      (item) => item.product.id === product.id
-    );
+    getTotalPrice: () => {
+        return calculateTotal(get().items);
+    },
 
-    let newItems;
-
-    if (existing) {
-      newItems = items.map((item) =>
-        item.product.id === product.id
-          ? {
-              ...item,
-              quantity: item.quantity + quantity,
-            }
-          : item
-      );
-    } else {
-      newItems = [
-        ...items,
-        {
-          product,
-          quantity,
-        },
-      ];
-    }
-
-    set({ items: newItems });
-
-    await get().save();
-  },
-
-  increment: async (productId, quantity = 1) => {
-    const { items } = get();
-
-    const existing = items.find(
-      (item) => item.product.id === productId
-    );
-
-    if (!existing) return;
-
-    const newItems = items.map((item) =>
-      item.product.id === productId
-        ? {
-            ...item,
-            quantity: item.quantity + quantity,
-          }
-        : item
-    );
-
-    set({ items: newItems });
-
-    await get().save();
-  },
-
-  decrement: async (productId, quantity = 1) => {
-    const { items } = get();
-
-    const existing = items.find(
-      (item) => item.product.id === productId
-    );
-
-    if (!existing) return;
-
-    const newQuantity = existing.quantity - quantity;
-
-    if (newQuantity <= 0) {
-      await get().remove(productId);
-      return;
-    }
-
-    const newItems = items.map((item) =>
-      item.product.id === productId
-        ? {
-            ...item,
-            quantity: newQuantity,
-          }
-        : item
-    );
-
-    set({ items: newItems });
-
-    await get().save();
-  },
-
-  updateQuantity: async (productId, quantity) => {
-    if (quantity <= 0) {
-      await get().remove(productId);
-      return;
-    }
-
-    const newItems = get().items.map((item) =>
-      item.product.id === productId
-        ? {
-            ...item,
-            quantity,
-          }
-        : item
-    );
-
-    set({ items: newItems });
-
-    await get().save();
-  },
-
-  remove: async (productId) => {
-    const newItems = get().items.filter(
-      (item) => item.product.id !== productId
-    );
-
-    set({ items: newItems });
-
-    await get().save(false);
-  },
-
-  clear: async () => {
-    set({ items: [] });
-
-    await get().save();
-  },
-
-  save: async (forceDB = true) => {
-    const { items } = get();
-
-    if (typeof window !== 'undefined') {
-      localStorage.setItem(
-        LOCAL_NAME,
-        JSON.stringify(items)
-      );
-    }
-
-    const loggedIn =
-      useAuthStore.getState().logged_in;
-
-    if (loggedIn && forceDB) {
-      try {
-        await get().saveDB();
-      } catch (error) {
-        console.error(
-          'Failed to save cart to DB:',
-          error
-        );
-      }
-    }
-  },
-
-  load: async (forceDB = false) => {
-    if (typeof window !== 'undefined') {
-      try {
-        const storedItems =
-          localStorage.getItem(LOCAL_NAME);
-
-        const localItems = storedItems
-          ? JSON.parse(storedItems)
-          : [];
-
-        set({ items: localItems });
-      } catch (error) {
-        console.error(
-          'Failed to load cart from localStorage:',
-          error
-        );
-
-        set({ items: [] });
-      }
-    }
-
-    const loggedIn =
-      useAuthStore.getState().logged_in;
-
-    if (loggedIn || forceDB) {
-      await get().loadDB();
-    }
-  },
-
-  saveDB: async () => {
-    await postBasketData(get().items);
-  },
-
-  loadDB: async () => {
-    try {
-      const currency =
-        useConfigStore
-          .getState()
-          .get('currency');
-
-      const data = await fetchBasketData(currency);
-
-      if (data?.items) {
-        const parsedItems = data.items.map((item) => ({
-          ...item,
-          quantity: Number(item.quantity),
-        }));
-
-        set({
-          items: parsedItems,
-        });
-
-        await get().save(false);
-      }
-    } catch (error) {
-      console.error(
-        'Failed to load cart from DB:',
-        error
-      );
-    }
-  },
-
-  // Number of different products in cart
-  getItemCount: () => {
-    return get().items.length;
-  },
-
-  // Total number of units
-  getQuantity: () => {
-    return get().items.reduce(
-      (total, item) =>
-        total + Number(item.quantity),
-      0
-    );
-  },
-
-  getSubtotal: () => {
-    return get().items.reduce(
-      (total, item) => {
-        const price = Number(
-          item.product.price ??
-            item.product.base_price ??
+    getTotalQuantity: () => {
+        return get().items.reduce(
+            (total, item) => total + Number(item.quantity),
             0
         );
+    },
 
-        const quantity = Number(
-          item.quantity
-        );
+    loadCart: async () => {
+        const isAuthenticated = useAuthStore.getState().logged_in;
 
-        if (
-          Number.isNaN(price) ||
-          Number.isNaN(quantity)
-        ) {
-          return total;
+        if (!isAuthenticated) return;
+
+        set({
+            isLoading: true, error: null,
+        });
+
+        try {
+            const data = await fetchCart();
+
+            set({
+                items: data.items || [],
+            });
+        } catch (error) {
+            console.error("Failed to load server cart:", error);
+
+            set({
+                error: error?.response?.data?.detail || "Failed to load cart",
+            });
+        } finally {
+            set({
+                isLoading: false,
+            });
+        }
+    },
+
+    findItem: (productId) => {
+        const {items} = get();
+
+        return items.find((item) => item.product_id === productId);
+    },
+
+    incrementItem: async (product, quantity = 1) => {
+        const {items, findItem} = get();
+
+        const existingItem = findItem(product.id);
+
+        const basePrice = Number(product.base_price).toFixed(2);
+        const storePrice = Number(product.store_price).toFixed(2);
+        const discountPercentage = Number(product.discount_percentage);
+
+        let newItems;
+
+        if (existingItem) {
+            newItems = items.map((item) => item.product_id === product.id ? {
+                ...item, quantity: Number(item.quantity) + quantity,
+            } : item);
+        } else {
+            newItems = [...items, {
+                id: product.id,
+                product_id: product.id,
+                product_name: product.name,
+                product_slug: product.slug,
+                product_base_price: basePrice,
+                product_store_price: storePrice,
+                product_discount_percentage: discountPercentage,
+                quantity,
+            },];
         }
 
-        return total + price * quantity;
-      },
-      0
-    );
-  },
+        set({
+            items: newItems, error: null,
+        });
 
-  getTax: () => {
-    return get().taxRate;
-  },
+        /*
+         * SERVER POST
+         * Will be moved to useMutation.
+         *
+         * if (useAuthStore.getState().logged_in) {
+         *     await addItemToCart({
+         *         product_id: product.id,
+         *         quantity,
+         *     });
+         * }
+         */
+    },
 
-  getTaxAmount: () => {
-    return (
-      get().getSubtotal() *
-      get().taxRate
-    );
-  },
+    decrementItem: (itemId) => {
+        const {items, removeItem} = get();
 
-  getTotal: () => {
-    return (
-      get().getSubtotal() +
-      get().getTaxAmount()
-    );
-  },
+        const item = items.find(
+            (item) => item.id === itemId
+        );
+
+        if (!item) return;
+
+        if (item.quantity <= 1) {
+            removeItem(itemId);
+            return;
+        }
+
+        set({
+            items: items.map((item) =>
+                item.id === itemId
+                    ? {
+                        ...item,
+                        quantity: Number(item.quantity) - 1,
+                    }
+                    : item
+            ),
+        });
+    },
+
+    updateQuantity: async (itemId, quantity) => {
+        if (quantity <= 0) {
+            get().removeItem(itemId);
+            return;
+        }
+
+        const {items} = get();
+
+        const newItems = items.map((item) => item.id === itemId ? {
+            ...item, quantity,
+        } : item);
+
+        set({
+            items: newItems, error: null,
+        });
+
+        /*
+         * SERVER UPDATE
+         * Will be moved to useMutation.
+         *
+         * if (useAuthStore.getState().logged_in) {
+         *     await updateCartItem({
+         *         id: itemId,
+         *         quantity,
+         *     });
+         * }
+         */
+    },
+
+
+    removeItem: async (itemId) => {
+        const {items} = get();
+
+        const newItems = items.filter((item) => item.id !== itemId);
+
+        set({
+            items: newItems, error: null,
+        });
+
+        /*
+         * SERVER DELETE
+         * Will be moved to useMutation.
+         *
+         * if (useAuthStore.getState().logged_in) {
+         *     await deleteCartItem(itemId);
+         * }
+         */
+    },
+
+    clearCart: async () => {
+        set({
+            items: [], error: null,
+        });
+
+        /*
+         * SERVER DELETE
+         * Will be moved to useMutation.
+         *
+         * if (useAuthStore.getState().logged_in) {
+         *     await deleteCart();
+         * }
+         */
+    },
+}), {
+    name: "fog_cart",
+
+    partialize: (state) => ({
+        items: state.items,
+    }),
 }));

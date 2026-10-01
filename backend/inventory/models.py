@@ -1,5 +1,5 @@
 import uuid
-from decimal import Decimal
+from decimal import Decimal,ROUND_HALF_UP
 from datetime import timedelta
 
 from django.db import models, transaction
@@ -193,14 +193,29 @@ class Product(BaseModel):
         blank=True,
         related_name="products",
         verbose_name=_("Category"),
+        help_text=_(
+            "The category this product belongs to. Used for storefront navigation and filtering."
+        ),
     )
+
     tags = models.ManyToManyField(
         Tag,
         blank=True,
         related_name="products",
         verbose_name=_("Tags"),
+        help_text=_(
+            "Add relevant tags to help customers discover and filter this product."
+        ),
     )
-    name = models.CharField(max_length=255, verbose_name=_("Product Name"))
+
+    name = models.CharField(
+        max_length=255,
+        verbose_name=_("Product Name"),
+        help_text=_(
+            "The product name displayed throughout the storefront, cart, and checkout."
+        ),
+    )
+
     slug = AutoSlugField(
         populate_from="name",
         max_length=255,
@@ -210,58 +225,97 @@ class Product(BaseModel):
         editable=False,
         always_update=False,
         verbose_name=_("Slug"),
+        help_text=_(
+            "Automatically generated URL-friendly identifier based on the product name."
+        ),
     )
+
     sku = models.CharField(
         max_length=64,
         unique=True,
         verbose_name=_("SKU"),
+        help_text=_(
+            "Unique internal identifier used to identify and manage this product."
+        ),
     )
+
     product_type = models.CharField(
         max_length=30,
         choices=ProductType.choices,
         default=ProductType.PHYSICAL,
         verbose_name=_("Product Type"),
+        help_text=_(
+            "Defines how this product is delivered and handled by the store."
+        ),
     )
+
     short_description = models.CharField(
         max_length=500,
         blank=True,
         null=True,
         verbose_name=_("Short Summary"),
+        help_text=_(
+            "Brief product summary shown in product cards, listings, and other compact storefront areas."
+        ),
     )
+
     description = CKEditor5Field(
         config_name="admin",
         blank=True,
         null=True,
         verbose_name=_("Full Description"),
+        help_text=_(
+            "Detailed product description displayed on the product detail page."
+        ),
     )
+
     base_price = models.DecimalField(
         max_digits=12,
         decimal_places=2,
         validators=[MinValueValidator(Decimal("0.00"))],
         verbose_name=_("Base Price (USD)"),
         help_text=_(
-            "Authoritative baseline fiat price used during checkout conversion."
+            "Original/reference price of the product before any store discount. "
+            "Used to calculate the displayed discount."
         ),
     )
+
+    store_price = models.DecimalField(
+        max_digits=12,
+        decimal_places=2,
+        validators=[MinValueValidator(Decimal("0.00"))],
+        verbose_name=_("Store Price (USD)"),
+        help_text=_(
+            "Current selling price shown to customers and used as the product price during checkout."
+        ),
+    )
+
     media = models.ManyToManyField(
         Media,
         through="ProductMedia",
         related_name="products",
         blank=True,
         verbose_name=_("Product Media"),
+        help_text=_(
+            "Images and other media associated with this product. "
+            "The featured product image is used as the primary image."
+        ),
     )
+
     is_active = models.BooleanField(
         default=True,
         verbose_name=_("Active in Store"),
         help_text=_(
-            "Disabling hides this product from the storefront."
+            "When enabled, the product is available on the storefront. "
+            "Disabling it hides the product from customers."
         ),
     )
+
     is_featured = models.BooleanField(
         default=False,
         verbose_name=_("Featured Item"),
         help_text=_(
-            "Activating will show this product in the featured list on the storefront."
+            "When enabled, the product can appear in featured product sections on the storefront."
         ),
     )
 
@@ -295,6 +349,32 @@ class Product(BaseModel):
         ).select_related("media").first()
 
         return first.media if first else None
+
+    @property
+    def final_price(self) -> Decimal:
+        return self.store_price
+
+    @property
+    def discount_percentage(self) -> int:
+        if self.base_price <= 0 or self.store_price >= self.base_price:
+            return 0
+
+        discount = (
+                (self.base_price - self.store_price)
+                / self.base_price
+                * Decimal("100")
+        )
+
+        return int(discount.quantize(Decimal("1"), rounding=ROUND_HALF_UP))
+
+    @property
+    def discount_amount(self) -> Decimal:
+        if self.base_price <= self.store_price:
+            return Decimal("0.00")
+
+        return (self.base_price - self.store_price).quantize(
+            Decimal("0.01")
+        )
 
 
 class ProductMedia(BaseModel):
