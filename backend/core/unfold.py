@@ -37,7 +37,7 @@ def can_view(model):
 
 def nav_item(
         title, icon, model, permission=None, badge=None,
-        badge_variant="warning", extra_class=""
+        badge_variant="warning", badge_style="solid", extra_class=""
 ):
     """Sidebar link to a model changelist, with optional custom classes."""
     item = {
@@ -45,11 +45,6 @@ def nav_item(
         "icon": icon,
         "link": changelist(model),
         "permission": permission or can_view(model),
-        "link_attrs": {
-            # Add custom margins, padding, or borders here:
-            "class": f"my-1 px-3 {extra_class}".strip(),
-            "style": f"margin-top: 2px;margin-bottom: 2px;",
-        },
     }
 
     if badge:
@@ -57,8 +52,8 @@ def nav_item(
             {
                 "badge": badge,
                 "badge_variant": badge_variant,
-                "badge_style": "solid",
-                "badge_class": "ml-auto text-xs font-semibold !rounded-full",
+                "badge_style": badge_style,
+                # "badge_class": "ml-auto text-xs font-semibold !rounded-full",
             }
         )
 
@@ -301,7 +296,9 @@ UNFOLD_SETTINGS = {
                     {
                         "title": _("Analytics & Charts"),
                         "icon": "insights",
-                        "link": reverse_lazy("admin:checkout_order_analytics"),
+                        "link": reverse_lazy(
+                            "admin:checkout_order_analytics"
+                            ),
                     },
                 ],
             },
@@ -468,48 +465,48 @@ UNFOLD_SETTINGS = {
                 ]
             ),
         },
-        {
-            "models": [
-                "inventory.product",
-                "inventory.category",
-                "inventory.tag",
-                "inventory.media",
-            ],
-            "items": [
-                model_tab(_("Products"), "inventory.product"),
-                model_tab(_("Categories"), "inventory.category"),
-                model_tab(_("Tags"), "inventory.tag"),
-                model_tab(
-                    _("Media"),
-                    "inventory.media",
-                    permission=superuser_only
-                ),
-            ],
-        },
-        {
-            "models": [
-                "inventory.productstock",
-                "inventory.stockreservation",
-                "inventory.stocktransactionlog",
-            ],
-            "items": [
-                model_tab(_("Stock Levels"), "inventory.productstock"),
-                model_tab(_("Reservations"), "inventory.stockreservation"),
-                model_tab(_("Stock Log"), "inventory.stocktransactionlog"),
-            ],
-        },
-        {
-            "models": [
-                "account.user",
-                "account.address",
-                "auth.group",
-            ],
-            "items": [
-                model_tab(_("Users"), "account.user"),
-                model_tab(_("Addresses"), "account.address"),
-                model_tab(_("Groups"), "auth.group"),
-            ],
-        },
+        # {
+        #     "models": [
+        #         "inventory.product",
+        #         "inventory.category",
+        #         "inventory.tag",
+        #         "inventory.media",
+        #     ],
+        #     "items": [
+        #         model_tab(_("Products"), "inventory.product"),
+        #         model_tab(_("Categories"), "inventory.category"),
+        #         model_tab(_("Tags"), "inventory.tag"),
+        #         model_tab(
+        #             _("Media"),
+        #             "inventory.media",
+        #             permission=superuser_only
+        #         ),
+        #     ],
+        # },
+        # {
+        #     "models": [
+        #         "inventory.productstock",
+        #         "inventory.stockreservation",
+        #         "inventory.stocktransactionlog",
+        #     ],
+        #     "items": [
+        #         model_tab(_("Stock Levels"), "inventory.productstock"),
+        #         model_tab(_("Reservations"), "inventory.stockreservation"),
+        #         model_tab(_("Stock Log"), "inventory.stocktransactionlog"),
+        #     ],
+        # },
+        # {
+        #     "models": [
+        #         "account.user",
+        #         "account.address",
+        #         "auth.group",
+        #     ],
+        #     "items": [
+        #         model_tab(_("Users"), "account.user"),
+        #         model_tab(_("Addresses"), "account.address"),
+        #         model_tab(_("Groups"), "auth.group"),
+        #     ],
+        # },
     ],
 }
 

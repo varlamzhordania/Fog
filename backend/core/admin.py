@@ -10,5 +10,5 @@ class UnfoldImportExportHistoryAdmin(ModelAdmin, ImportExportModelAdmin,SimpleHi
     import_form_class = ImportForm
     # export_form_class = ExportForm
     export_form_class = SelectableFieldsExportForm
-    paginator = InfinitePaginator
+    # paginator = InfinitePaginator
     show_full_result_count = False

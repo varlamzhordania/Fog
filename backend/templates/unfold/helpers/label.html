@@ -1,0 +1,13 @@
+<{% if href %}a href="{{ href }}"{% else %}span{% endif %}
+    class="fog-status-wrap fog-status-{% if type == 'info' or variant == 'info' %}info{% elif type == 'danger' or variant == 'danger' %}danger{% elif type == 'warning' or variant == 'warning' %}warning{% elif type == 'success' or variant == 'success' %}success{% elif type == 'primary' or variant == 'primary' %}primary{% else %}neutral{% endif %}{% if class %} {{ class }}{% endif %}"
+    {% if label_title %}title="{{ label_title }}"{% endif %}
+>
+    {% if icon %}
+        <span class="material-symbols-outlined text-sm -ml-0.5 mr-0.5 align-[-3px]">
+            {{ icon }}
+        </span>
+    {% endif %}
+
+    <span class="fog-status-dot"></span>
+    {{ text }}
+</{% if href %}a{% else %}span{% endif %}>

@@ -224,6 +224,7 @@ class CategoryAdmin(UnfoldImportExportHistoryAdmin, TreeAdmin):
     list_filter = ["is_active", "is_filterable", "is_featured"]
     search_fields = ["name", "slug"]
     readonly_fields = ["slug"]
+    list_per_page = 100
 
     class Media:
         css = {
