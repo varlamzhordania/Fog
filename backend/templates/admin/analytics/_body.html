@@ -1,0 +1,434 @@
+{% load i18n l10n %}{% localize off %}
+
+{# ============================== Header ============================== #}
+<header class="fog-head">
+    <div>
+        <h1 class="fog-title">{% trans "Store performance" %}</h1>
+        <p class="fog-sub">{% blocktrans %}{{ range_label }}, compared with {{ prev_range_label }}{% endblocktrans %}</p>
+    </div>
+
+    <div class="fog-controls">
+        <nav class="fog-segmented" aria-label="{% trans 'Reporting period' %}"
+             hx-target="#fog-analytics" hx-swap="innerHTML" hx-push-url="true" hx-indicator="#fog-analytics">
+            {% for p in periods %}
+                <a href="{{ base_url }}?period={{ p.value }}"
+                   hx-get="{{ base_url }}?period={{ p.value }}"
+                   {% if p.active %}aria-current="true"{% endif %}>{{ p.label }}</a>
+            {% endfor %}
+        </nav>
+
+        <button type="button" class="fog-icon-btn"
+                hx-get="{{ base_url }}?period={{ period }}" hx-target="#fog-analytics"
+                hx-swap="innerHTML" hx-indicator="#fog-analytics"
+                title="{% trans 'Refresh' %}" aria-label="{% trans 'Refresh' %}">
+            <span class="material-symbols-outlined">refresh</span>
+        </button>
+    </div>
+</header>
+
+{# ============================ Attention ============================= #}
+{% if attention_items %}
+<section class="fog-attention" aria-label="{% trans 'Needs attention' %}">
+    <span class="fog-attention-title">{% trans "Needs attention" %}</span>
+    <ul>
+        {% for a in attention_items %}
+            <li>
+                <a href="{{ a.url }}" class="fog-chip fog-status-{{ a.tone }}">
+                    <strong>{{ a.value }}</strong> {{ a.label }}
+                </a>
+            </li>
+        {% endfor %}
+    </ul>
+</section>
+{% endif %}
+
+{# ========================== Revenue + KPIs ========================== #}
+<section class="fog-hero">
+
+    <article class="fog-card fog-revenue">
+        <div class="fog-chart"
+             x-data="{
+                pts: [], hover: null, prev: true,
+                init() { this.pts = JSON.parse(document.getElementById('fog-chart-points').textContent) },
+                move(e) {
+                    const r = this.$refs.plot.getBoundingClientRect();
+                    const ratio = Math.min(Math.max((e.clientX - r.left) / r.width, 0), 1);
+                    this.hover = Math.round(ratio * (this.pts.length - 1));
+                },
+                get cur() { return this.hover === null ? null : this.pts[this.hover] },
+                get left() { return this.hover === null ? '0%' : (this.hover / (this.pts.length - 1) * 100) + '%' },
+                money(v) { return new Intl.NumberFormat(undefined, { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(v) }
+             }">
+            {{ chart.points|json_script:"fog-chart-points" }}
+
+            <div class="fog-revenue-top">
+                <div>
+                    <p class="fog-card-title">{% trans "Revenue" %}</p>
+                    <p class="fog-figure">
+                        <span>{{ revenue.whole }}</span><span class="fog-figure-dec">.{{ revenue.cents }}</span>
+                    </p>
+                    <p class="fog-figure-note">
+                        <span class="fog-delta fog-delta-{{ revenue.delta.tone }}">{{ revenue.delta.text }}</span>
+                        {% blocktrans with previous=revenue.previous %}from {{ previous }} in the previous period{% endblocktrans %}
+                    </p>
+                </div>
+
+                <div class="fog-legend">
+                    <span class="fog-legend-item"><i class="fog-key"></i>{% trans "This period" %}</span>
+                    <button type="button" class="fog-legend-item fog-toggle" :aria-pressed="prev" @click="prev = !prev">
+                        <i class="fog-key fog-key-prev"></i>{% trans "Previous period" %}
+                    </button>
+                </div>
+            </div>
+
+            <div class="fog-plot-wrap">
+                <ul class="fog-yaxis" aria-hidden="true">
+                    {% for t in chart.ticks %}<li style="top:{{ t.pct }}%">{{ t.label }}</li>{% endfor %}
+                </ul>
+
+                <div class="fog-plot" x-ref="plot"
+                     @mousemove="move($event)" @mouseleave="hover = null"
+                     @touchmove.passive="move($event.touches[0])" @touchend="hover = null">
+                    {% for t in chart.ticks %}<i class="fog-gridline" style="top:{{ t.pct }}%"></i>{% endfor %}
+
+                    <svg class="fog-svg" viewBox="0 0 1000 300" preserveAspectRatio="none" role="img"
+                         aria-label="{% trans 'Daily revenue for the selected period' %}">
+                        <defs>
+                            <linearGradient id="fog-area-fill" x1="0" x2="0" y1="0" y2="1">
+                                <stop offset="0" stop-color="currentColor" stop-opacity=".22"/>
+                                <stop offset="1" stop-color="currentColor" stop-opacity="0"/>
+                            </linearGradient>
+                        </defs>
+                        <path class="fog-line-prev" d="{{ chart.prev_line }}" x-show="prev"/>
+                        <g class="fog-reveal">
+                            <path class="fog-area" d="{{ chart.area }}" fill="url(#fog-area-fill)"/>
+                            <path class="fog-line" d="{{ chart.line }}"/>
+                        </g>
+                    </svg>
+
+                    <div class="fog-cursor" x-cloak x-show="cur" :style="'left:' + left"></div>
+                    <span class="fog-dot fog-dot-prev" x-cloak x-show="cur && prev" :style="'left:' + left + ';top:' + (cur ? cur.py : 0) + '%'"></span>
+                    <span class="fog-dot" x-cloak x-show="cur" :style="'left:' + left + ';top:' + (cur ? cur.y : 0) + '%'"></span>
+
+                    <div class="fog-tip" x-cloak x-show="cur"
+                         :class="hover > pts.length * 0.6 ? 'fog-tip-left' : ''"
+                         :style="'left:' + left">
+                        <p class="fog-tip-day" x-text="cur?.label"></p>
+                        <p class="fog-tip-main" x-text="cur ? money(cur.rev) : ''"></p>
+                        <p x-text="cur ? cur.orders + (cur.orders === 1 ? ' order' : ' orders') : ''"></p>
+                        <p class="fog-tip-prev" x-show="prev">
+                            <span x-text="cur ? money(cur.prev) : ''"></span>
+                            <span x-text="cur ? 'on ' + cur.prev_label : ''"></span>
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <ol class="fog-xaxis" aria-hidden="true">
+                {% for l in chart.x_labels %}<li>{{ l }}</li>{% endfor %}
+            </ol>
+        </div>
+    </article>
+
+    <div class="fog-kpis">
+        {% for k in kpis %}
+            <article class="fog-card fog-kpi">
+                <div>
+                    <p class="fog-kpi-label">{{ k.label }}</p>
+                    <p class="fog-kpi-value">{{ k.value }}</p>
+                    <p class="fog-kpi-foot"><span class="fog-delta fog-delta-{{ k.delta.tone }}">{{ k.delta.text }}</span> {% trans "vs previous" %}</p>
+                </div>
+                <svg class="fog-spark" viewBox="0 0 96 32" preserveAspectRatio="none" aria-hidden="true">
+                    <path class="fog-spark-area" d="{{ k.spark.area }}"/>
+                    <path class="fog-spark-line" d="{{ k.spark.line }}"/>
+                </svg>
+            </article>
+        {% endfor %}
+    </div>
+</section>
+
+{# ============================ Operations ============================ #}
+<section class="fog-ops" aria-label="{% trans 'Operations' %}">
+    {% for o in operations %}
+        <div class="fog-op">
+            <p class="fog-op-label">{{ o.label }}</p>
+            <p class="fog-op-value">{{ o.value }}</p>
+            <p class="fog-op-note">{{ o.note }}</p>
+        </div>
+    {% endfor %}
+    <div class="fog-op">
+        <p class="fog-op-label">{% trans "Inventory health" %}</p>
+        <p class="fog-op-value">{{ stock_counts.healthy }}<span class="fog-op-of"> / {{ stock_counts.total }}</span></p>
+        <p class="fog-op-note">{{ stock_counts.out }} {% trans "out" %}, {{ stock_counts.low }} {% trans "running low" %}</p>
+    </div>
+</section>
+
+{# =================== Funnel / Categories / Payments ================== #}
+<section class="fog-split fog-split-3">
+
+    <article class="fog-card">
+        <header class="fog-card-head">
+            <div>
+                <h2 class="fog-card-title">{% trans "Path to purchase" %}</h2>
+                <p class="fog-card-note">{% trans "From basket to doorstep" %}</p>
+            </div>
+        </header>
+        <div class="fog-card-body">
+            <ol class="fog-steps">
+                {% for s in funnel %}
+                    <li class="fog-c{{ s.tone }}">
+                        <div class="fog-step-top">
+                            <span class="fog-step-name">{{ s.label }}</span>
+                            <span class="fog-step-val">{{ s.value }}{% if s.rate %} <small>{{ s.rate }}</small>{% endif %}</span>
+                        </div>
+                        <div class="fog-meter"><i style="width:{{ s.width }}%"></i></div>
+                    </li>
+                {% endfor %}
+            </ol>
+        </div>
+    </article>
+
+    <article class="fog-card" x-data="{ active: null }">
+        <header class="fog-card-head">
+            <div>
+                <h2 class="fog-card-title">{% trans "Revenue by category" %}</h2>
+                <p class="fog-card-note">{% trans "Share of paid revenue" %}</p>
+            </div>
+        </header>
+        <div class="fog-card-body">
+            {% if categories.segments %}
+                <div class="fog-donut-wrap">
+                    <div class="fog-donut">
+                        <svg viewBox="0 0 42 42" aria-hidden="true">
+                            <circle class="fog-donut-track" cx="21" cy="21" r="15.9155"/>
+                            {% for s in categories.segments %}
+                                <circle class="fog-c{{ s.tone }}" cx="21" cy="21" r="15.9155"
+                                        stroke-dasharray="{{ s.dash }} {{ s.rest }}" stroke-dashoffset="{{ s.offset }}"
+                                        :class="active !== null && active !== {{ forloop.counter0 }} ? 'is-dim' : ''"/>
+                            {% endfor %}
+                        </svg>
+                        <div class="fog-donut-center">
+                            <strong>{{ categories.total }}</strong>
+                            <span>{% trans "total" %}</span>
+                        </div>
+                    </div>
+                    <ul class="fog-list">
+                        {% for s in categories.segments %}
+                            <li class="fog-li fog-c{{ s.tone }}" @mouseenter="active = {{ forloop.counter0 }}" @mouseleave="active = null">
+                                <i class="fog-swatch"></i>
+                                <span class="fog-li-name">{{ s.name }}</span>
+                                <span class="fog-li-val">{{ s.share }}</span>
+                            </li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            {% else %}
+                <p class="fog-empty">{% trans "No paid orders in this period yet." %}</p>
+            {% endif %}
+        </div>
+    </article>
+
+    <article class="fog-card">
+        <header class="fog-card-head">
+            <div>
+                <h2 class="fog-card-title">{% trans "Payment methods" %}</h2>
+                <p class="fog-card-note">{% trans "Completed payments by method" %}</p>
+            </div>
+        </header>
+        <div class="fog-card-body">
+            {% if payment_mix %}
+                <ul class="fog-bars">
+                    {% for p in payment_mix %}
+                        <li class="fog-c{{ p.tone }}">
+                            <div class="fog-step-top">
+                                <span class="fog-step-name">{{ p.name }} <small>{{ p.orders }}</small></span>
+                                <span class="fog-step-val">{{ p.revenue }}</span>
+                            </div>
+                            <div class="fog-meter"><i style="width:{{ p.share }}%"></i></div>
+                        </li>
+                    {% endfor %}
+                </ul>
+            {% else %}
+                <p class="fog-empty">{% trans "No completed payments in this period yet." %}</p>
+            {% endif %}
+        </div>
+    </article>
+</section>
+
+{# ================== Top products / Inventory watch ================== #}
+<section class="fog-split fog-split-wide">
+
+    <article class="fog-card">
+        <header class="fog-card-head">
+            <div>
+                <h2 class="fog-card-title">{% trans "Best sellers" %}</h2>
+                <p class="fog-card-note">{% trans "Ranked by revenue" %}</p>
+            </div>
+        </header>
+        {% if top_products %}
+            <div class="fog-table-scroll">
+                <table class="fog-table">
+                    <thead>
+                    <tr>
+                        <th class="fog-col-rank">#</th>
+                        <th>{% trans "Product" %}</th>
+                        <th class="num">{% trans "Units" %}</th>
+                        <th class="num">{% trans "Revenue" %}</th>
+                        <th class="fog-col-share"></th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    {% for p in top_products %}
+                        <tr>
+                            <td class="fog-col-rank">{{ p.rank }}</td>
+                            <td>
+                                <span class="fog-product"><strong>{{ p.name }}</strong><small>{{ p.sku }}</small></span>
+                            </td>
+                            <td class="num">{{ p.units }}</td>
+                            <td class="num fog-strong">{{ p.revenue }}</td>
+                            <td class="fog-col-share"><div class="fog-meter"><i style="width:{{ p.width }}%"></i></div></td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <p class="fog-empty">{% trans "No sales in this period yet." %}</p>
+        {% endif %}
+    </article>
+
+    <article class="fog-card">
+        <header class="fog-card-head">
+            <div>
+                <h2 class="fog-card-title">{% trans "Restock soon" %}</h2>
+                <p class="fog-card-note">{% trans "At or below each product's alert level" %}</p>
+            </div>
+            <a class="fog-link" href="{{ inventory_url }}">{% trans "Manage stock" %}</a>
+        </header>
+        <div class="fog-card-body">
+            {% if stock_watch %}
+                <ul class="fog-stock">
+                    {% for s in stock_watch %}
+                        <li>
+                            <div class="fog-step-top">
+                                <span class="fog-product"><strong>{{ s.name }}</strong><small>{{ s.sku }}</small></span>
+                                <span class="fog-status-wrap fog-status-{{ s.tone }}"><span class="fog-status-dot"></span>{{ s.status }}</span>
+                            </div>
+                            <div class="fog-stock-meter">
+                                <div class="fog-meter fog-meter-{{ s.tone }}"><i style="width:{{ s.fill }}%"></i></div>
+                                <span>{{ s.avail }} {% trans "left" %}</span>
+                            </div>
+                        </li>
+                    {% endfor %}
+                </ul>
+            {% else %}
+                <p class="fog-empty">{% trans "Every active product is above its alert level." %}</p>
+            {% endif %}
+        </div>
+    </article>
+</section>
+
+{# ================== Countries / Customers ================== #}
+<section class="fog-split fog-split-even">
+
+    <article class="fog-card">
+        <header class="fog-card-head">
+            <div>
+                <h2 class="fog-card-title">{% trans "Where orders ship" %}</h2>
+                <p class="fog-card-note">{% trans "Paid orders by delivery country" %}</p>
+            </div>
+        </header>
+        <div class="fog-card-body">
+            {% if countries %}
+                <ul class="fog-bars">
+                    {% for c in countries %}
+                        <li>
+                            <div class="fog-step-top">
+                                <span class="fog-step-name">{{ c.name }} <small>{{ c.orders }} {% trans "orders" %}</small></span>
+                                <span class="fog-step-val">{{ c.revenue }}</span>
+                            </div>
+                            <div class="fog-meter"><i style="width:{{ c.width }}%"></i></div>
+                        </li>
+                    {% endfor %}
+                </ul>
+            {% else %}
+                <p class="fog-empty">{% trans "No shipped destinations yet." %}</p>
+            {% endif %}
+        </div>
+    </article>
+
+    <article class="fog-card">
+        <header class="fog-card-head">
+            <div>
+                <h2 class="fog-card-title">{% trans "Customers" %}</h2>
+                <p class="fog-card-note">{% trans "New and returning buyers, plus your biggest spenders" %}</p>
+            </div>
+        </header>
+        <div class="fog-card-body">
+            {% if customers.total %}
+                <div class="fog-split-bar" role="img"
+                     aria-label="{{ customers.new }} {% trans 'new' %}, {{ customers.returning }} {% trans 'returning' %}">
+                    <i class="fog-c1" style="width:{{ customers.new_pct }}%"></i>
+                    <i class="fog-c3" style="width:{{ customers.returning_pct }}%"></i>
+                </div>
+                <div class="fog-split-legend">
+                    <span class="fog-c1"><i class="fog-swatch"></i>{{ customers.new }} {% trans "new" %}</span>
+                    <span class="fog-c3"><i class="fog-swatch"></i>{{ customers.returning }} {% trans "returning" %}</span>
+                </div>
+
+                <ul class="fog-people">
+                    {% for c in customers.top %}
+                        <li>
+                            <span class="fog-avatar">{{ c.initials }}</span>
+                            <span class="fog-person-text"><strong>{{ c.name }}</strong><small>{{ c.orders }}</small></span>
+                            <span class="fog-strong">{{ c.spent }}</span>
+                        </li>
+                    {% endfor %}
+                </ul>
+            {% else %}
+                <p class="fog-empty">{% trans "No paying customers in this period yet." %}</p>
+            {% endif %}
+        </div>
+    </article>
+</section>
+
+{# ============================ Recent orders ========================= #}
+<section class="fog-card fog-orders">
+    <form class="fog-orders-head" autocomplete="off"
+          hx-get="{{ base_url }}" hx-target="#fog-orders-results" hx-swap="innerHTML"
+          hx-trigger="input delay:250ms, submit" hx-push-url="false" hx-indicator="#fog-orders-results">
+        <div class="fog-orders-title">
+            <h2 class="fog-card-title">{% trans "Orders" %}</h2>
+            <a class="fog-link" href="{{ orders_url }}">{% trans "View all" %}</a>
+        </div>
+
+        <div class="fog-tabs" role="radiogroup" aria-label="{% trans 'Filter by status' %}">
+            {% for t in order_tabs %}
+                <label class="fog-tab">
+                    <input type="radio" name="status" value="{{ t.value }}" {% if t.value == active_status %}checked{% endif %}>
+                    <span>{{ t.label }} <b>{{ t.count }}</b></span>
+                </label>
+            {% endfor %}
+        </div>
+
+        <label class="fog-search">
+            <span class="material-symbols-outlined" aria-hidden="true">search</span>
+            <input type="search" name="q" value="{{ q }}" placeholder="{% trans 'Order number, name or email' %}"
+                   aria-label="{% trans 'Search orders' %}">
+        </label>
+
+        <input type="hidden" name="period" value="{{ period }}">
+        <input type="hidden" name="panel" value="orders">
+    </form>
+
+    <div id="fog-orders-results" class="fog-orders-results">
+        {% include "admin/analytics/_orders.html" %}
+    </div>
+</section>
+
+<footer class="fog-foot">
+    <span>{% blocktrans %}Showing {{ range_label }}{% endblocktrans %}</span>
+    <span>{% trans "Updated" %} {{ generated_at|date:"M j, H:i" }}</span>
+</footer>
+
+{% endlocalize %}

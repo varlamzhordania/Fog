@@ -1,37 +1,172 @@
-import json
+import math
 from datetime import datetime, time, timedelta
 from decimal import Decimal
 
 from django.db.models import (
+    CharField,
     Count,
     ExpressionWrapper,
     F,
     IntegerField,
+    Q,
     Sum,
     Value,
 )
 from django.db.models.functions import Coalesce, TruncDate
 from django.urls import reverse
 from django.utils import timezone
-from django.utils.html import format_html
+from django.utils.cache import patch_vary_headers
 from django.utils.translation import gettext_lazy as _
+from django.utils.translation import ngettext
 from django.views.generic import TemplateView
 
 from unfold.views import UnfoldModelAdminViewMixin
 
-from checkout.models import (
-    Order,
-    OrderItem,
-    OrderPayment,
-    OrderShipment,
-)
+from checkout.models import Order, OrderItem, OrderPayment, ShoppingCart
 from inventory.models import ProductStock
 
+COMPLETED = OrderPayment.StatusChoices.COMPLETED
 
-class AnalyticsDashboardView(
-    UnfoldModelAdminViewMixin,
-    TemplateView,
-):
+# SVG chart geometry (the SVG is stretched with preserveAspectRatio="none")
+CHART_W, CHART_H = 1000, 300
+CHART_TOP, CHART_BOTTOM = 14, 4
+
+
+# ----------------------------------------------------------------------
+# Formatting helpers
+# ----------------------------------------------------------------------
+
+def _dec(value):
+    return Decimal(str(value or 0))
+
+
+def _money(value, decimals=2):
+    return f"${float(value):,.{decimals}f}"
+
+
+def _compact(value):
+    value = float(value)
+    for limit, suffix in ((1e9, "B"), (1e6, "M"), (1e3, "k")):
+        if abs(value) >= limit:
+            return f"${value / limit:.1f}".rstrip("0").rstrip(".") + suffix
+    return f"${value:,.0f}"
+
+
+def _fmt_day(day):
+    return f"{day.strftime('%b')} {day.day}"
+
+
+def _local_start(day):
+    return timezone.make_aware(datetime.combine(day, time.min))
+
+
+def _initials(name, fallback=""):
+    parts = [p for p in (name or "").split() if p]
+    if len(parts) >= 2:
+        return (parts[0][0] + parts[-1][0]).upper()
+    if parts:
+        return parts[0][:2].upper()
+    return (fallback[:1] or "?").upper()
+
+
+def _delta(current, previous):
+    current, previous = _dec(current), _dec(previous)
+
+    if previous == 0:
+        if current == 0:
+            return {"text": "—", "tone": "flat"}
+        return {"text": str(_("New")), "tone": "up"}
+
+    pct = (current - previous) / previous * 100
+    return {
+        "text": f"{pct:+.1f}%",
+        "tone": "up" if pct > 0 else "down" if pct < 0 else "flat",
+    }
+
+
+def _ratio(part, whole):
+    return (part / whole * 100) if whole else 0
+
+
+# ----------------------------------------------------------------------
+# SVG helpers
+# ----------------------------------------------------------------------
+
+def _nice_ceiling(value):
+    if value <= 0:
+        return 1
+    base = 10 ** math.floor(math.log10(value))
+    for step in (1, 1.5, 2, 2.5, 3, 4, 5, 6, 8, 10):
+        if value <= step * base:
+            return step * base
+    return 10 * base
+
+
+def _smooth_path(points):
+    """Cubic path with horizontal tangents: smooth, never overshoots."""
+    if not points:
+        return ""
+    d = [f"M{points[0][0]:.2f} {points[0][1]:.2f}"]
+    for (x0, y0), (x1, y1) in zip(points, points[1:]):
+        mid = (x0 + x1) / 2
+        d.append(f"C{mid:.2f} {y0:.2f} {mid:.2f} {y1:.2f} {x1:.2f} {y1:.2f}")
+    return " ".join(d)
+
+
+def _chart_points(values, ceiling):
+    inner = CHART_H - CHART_TOP - CHART_BOTTOM
+    step = CHART_W / (len(values) - 1)
+    return [
+        (i * step, CHART_TOP + inner * (1 - (float(v) / ceiling)))
+        for i, v in enumerate(values)
+    ]
+
+
+def _sparkline(values, width=96, height=32, pad=3):
+    values = [float(v) for v in values]
+    low, high = min(values), max(values)
+    span = high - low
+    step = width / (len(values) - 1)
+    points = [
+        (
+            i * step,
+            height / 2 if not span else pad + (height - 2 * pad) * (1 - (v - low) / span),
+        )
+        for i, v in enumerate(values)
+    ]
+    line = _smooth_path(points)
+    return {"line": line, "area": f"{line} L{width} {height} L0 {height} Z"}
+
+
+# ----------------------------------------------------------------------
+# Query helpers
+# ----------------------------------------------------------------------
+
+def _payments(start, end):
+    return OrderPayment.objects.filter(
+        status=COMPLETED, paid_at__gte=start, paid_at__lt=end
+    )
+
+
+def _paid_items(w):
+    return OrderItem.objects.filter(
+        order__payment__status=COMPLETED,
+        order__payment__paid_at__gte=w["start"],
+        order__payment__paid_at__lt=w["end"],
+    )
+
+
+def _by_day(qs, field, **aggregates):
+    rows = (
+        qs.annotate(day=TruncDate(field))
+        .order_by()
+        .values("day")
+        .annotate(**aggregates)
+    )
+    return {row["day"]: row for row in rows}
+
+
+class AnalyticsDashboardView(UnfoldModelAdminViewMixin, TemplateView):
     title = _("Commerce Analytics")
     permission_required = ()
     template_name = "admin/analytics.html"
@@ -40,1168 +175,677 @@ class AnalyticsDashboardView(
         7: _("7 days"),
         30: _("30 days"),
         90: _("90 days"),
+        365: _("12 months"),
     }
 
     # ------------------------------------------------------------------
-    # Helpers
+    # HTMX plumbing
+    #
+    #   full page            -> admin/analytics.html
+    #   hx-get (period)      -> admin/analytics/_body.html
+    #   hx-get (panel=orders)-> admin/analytics/_orders.html
+    #
+    # History restores (back button after a cache miss) need the full page.
     # ------------------------------------------------------------------
 
-    @staticmethod
-    def _local_start(date_value):
-        return timezone.make_aware(
-            datetime.combine(date_value, time.min)
+    def _is_htmx(self):
+        headers = self.request.headers
+        return (
+            headers.get("HX-Request") == "true"
+            and headers.get("HX-History-Restore-Request") != "true"
         )
 
-    @staticmethod
-    def _money(value):
-        return Decimal(str(value or 0))
+    def _orders_only(self):
+        return self._is_htmx() and self.request.GET.get("panel") == "orders"
+
+    def get_template_names(self):
+        if self._orders_only():
+            return ["admin/analytics/_orders.html"]
+        if self._is_htmx():
+            return ["admin/analytics/_body.html"]
+        return [self.template_name]
+
+    def render_to_response(self, context, **response_kwargs):
+        response = super().render_to_response(context, **response_kwargs)
+        patch_vary_headers(response, ["HX-Request"])
+        return response
+
+    # ------------------------------------------------------------------
+    # Period window
+    # ------------------------------------------------------------------
+
+    def _period(self):
+        try:
+            period = int(self.request.GET.get("period", 30))
+        except (TypeError, ValueError):
+            return 30
+        return period if period in self.PERIODS else 30
 
     @staticmethod
-    def _delta(current, previous):
-        current = Decimal(str(current or 0))
-        previous = Decimal(str(previous or 0))
-
-        if previous == 0:
-            if current == 0:
-                return {
-                    "text": "—",
-                    "class": "fog-delta-neutral",
-                }
-
-            return {
-                "text": _("New"),
-                "class": "fog-delta-positive",
-            }
-
-        percentage = (
-            (current - previous)
-            / previous
-            * Decimal("100")
-        )
-
-        sign = "+" if percentage >= 0 else ""
+    def _window(period):
+        today = timezone.localdate()
+        start_date = today - timedelta(days=period - 1)
+        prev_start_date = start_date - timedelta(days=period)
+        start = _local_start(start_date)
 
         return {
-            "text": f"{sign}{percentage:.1f}%",
-            "class": (
-                "fog-delta-positive"
-                if percentage >= 0
-                else "fog-delta-negative"
+            "start": start,
+            "end": timezone.now(),
+            "prev_start": _local_start(prev_start_date),
+            "prev_end": start,
+            "days": [start_date + timedelta(days=i) for i in range(period)],
+            "prev_days": [prev_start_date + timedelta(days=i) for i in range(period)],
+            "range_label": f"{_fmt_day(start_date)} – {_fmt_day(today)}, {today.year}",
+            "prev_range_label": (
+                f"{_fmt_day(prev_start_date)} – "
+                f"{_fmt_day(start_date - timedelta(days=1))}"
             ),
         }
 
-    @staticmethod
-    def _stock_queryset():
-        """
-        available_quantity is a Python property.
-
-        Database fields:
-            quantity
-            reserved_quantity
-
-        Calculate actual availability in SQL.
-        """
-        return ProductStock.objects.annotate(
-            available_units=ExpressionWrapper(
-                F("quantity")
-                - Coalesce(
-                    F("reserved_quantity"),
-                    Value(0),
-                ),
-                output_field=IntegerField(),
-            )
-        )
-
     # ------------------------------------------------------------------
-    # Main dashboard
+    # Context
     # ------------------------------------------------------------------
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
 
-        # ==============================================================
-        # Period
-        # ==============================================================
+        period = self._period()
+        w = self._window(period)
 
-        try:
-            period = int(
-                self.request.GET.get("period", 30)
+        context.update(
+            title=self.title,
+            period=period,
+            base_url=self.request.path,
+            periods=[
+                {"value": value, "label": str(label), "active": value == period}
+                for value, label in self.PERIODS.items()
+            ],
+        )
+
+        if self._orders_only():
+            context.update(self._orders_rows(w))
+            return context
+
+        revenue, chart, kpis = self._revenue(w)
+        funnel, operations = self._funnel(w)
+        stock, stock_counts = self._inventory()
+
+        context.update(
+            range_label=w["range_label"],
+            prev_range_label=w["prev_range_label"],
+            revenue=revenue,
+            chart=chart,
+            kpis=kpis,
+            funnel=funnel,
+            operations=operations,
+            categories=self._categories(w),
+            payment_mix=self._payment_mix(w),
+            top_products=self._top_products(w),
+            stock_watch=stock,
+            stock_counts=stock_counts,
+            countries=self._countries(w),
+            customers=self._customers(w),
+            attention_items=self._attention(w, stock_counts),
+            generated_at=timezone.localtime(),
+            inventory_url=reverse("admin:inventory_productstock_changelist"),
+            orders_url=reverse("admin:checkout_order_changelist"),
+        )
+        context.update(self._orders_rows(w, tabs=True))
+        return context
+
+    # ------------------------------------------------------------------
+    # Revenue hero, chart and KPI stack
+    # ------------------------------------------------------------------
+
+    def _revenue(self, w):
+        cur = _payments(w["start"], w["end"])
+        prev = _payments(w["prev_start"], w["prev_end"])
+
+        cur_days = _by_day(
+            cur,
+            "paid_at",
+            revenue=Sum("amount"),
+            orders=Count("id"),
+            customers=Count("order__user_id", distinct=True),
+        )
+        prev_days = _by_day(prev, "paid_at", revenue=Sum("amount"))
+
+        days, prev_day_list = w["days"], w["prev_days"]
+        revenue = [_dec(cur_days.get(d, {}).get("revenue")) for d in days]
+        orders = [cur_days.get(d, {}).get("orders", 0) for d in days]
+        customers = [cur_days.get(d, {}).get("customers", 0) for d in days]
+        prev_revenue = [_dec(prev_days.get(d, {}).get("revenue")) for d in prev_day_list]
+        aov = [r / o if o else Decimal("0") for r, o in zip(revenue, orders)]
+
+        total = sum(revenue, Decimal("0"))
+        prev_total = sum(prev_revenue, Decimal("0"))
+        n_orders, prev_orders = sum(orders), prev.count()
+        n_customers = cur.order_by().values("order__user_id").distinct().count()
+        prev_customers = prev.order_by().values("order__user_id").distinct().count()
+        total_aov = total / n_orders if n_orders else Decimal("0")
+        prev_aov = prev_total / prev_orders if prev_orders else Decimal("0")
+
+        # --- chart ---
+        ceiling = _nice_ceiling(float(max(max(revenue), max(prev_revenue))))
+        cur_pts = _chart_points(revenue, ceiling)
+        prev_pts = _chart_points(prev_revenue, ceiling)
+        line = _smooth_path(cur_pts)
+
+        inner = CHART_H - CHART_TOP - CHART_BOTTOM
+        ticks = []
+        for i in range(5):
+            frac = i / 4
+            y = CHART_TOP + inner * (1 - frac)
+            ticks.append(
+                {"pct": f"{y / CHART_H * 100:.2f}", "label": _compact(ceiling * frac)}
             )
-        except (TypeError, ValueError):
-            period = 30
 
-        if period not in self.PERIODS:
-            period = 30
+        n = len(days)
+        label_idx = sorted({round(i * (n - 1) / 5) for i in range(6)})
 
-        today = timezone.localdate()
-
-        current_start_date = (
-            today - timedelta(days=period - 1)
-        )
-
-        current_start = self._local_start(
-            current_start_date
-        )
-
-        current_end = timezone.now()
-
-        previous_start = (
-            current_start
-            - timedelta(days=period)
-        )
-
-        previous_end = current_start
-
-        period_label = self.PERIODS[period]
-
-        # ==============================================================
-        # Querysets
-        # ==============================================================
-
-        current_orders = Order.objects.filter(
-            created_at__gte=current_start,
-            created_at__lt=current_end,
-        )
-
-        previous_orders = Order.objects.filter(
-            created_at__gte=previous_start,
-            created_at__lt=previous_end,
-        )
-
-        current_payments = OrderPayment.objects.filter(
-            paid_at__gte=current_start,
-            paid_at__lt=current_end,
-            status=OrderPayment.StatusChoices.COMPLETED,
-        )
-
-        previous_payments = OrderPayment.objects.filter(
-            paid_at__gte=previous_start,
-            paid_at__lt=previous_end,
-            status=OrderPayment.StatusChoices.COMPLETED,
-        )
-
-        # ==============================================================
-        # Revenue
-        # ==============================================================
-
-        current_revenue = self._money(
-            current_payments.aggregate(
-                total=Sum("amount")
-            )["total"]
-        )
-
-        previous_revenue = self._money(
-            previous_payments.aggregate(
-                total=Sum("amount")
-            )["total"]
-        )
-
-        # ==============================================================
-        # Paid orders
-        # ==============================================================
-
-        current_paid_orders = current_payments.count()
-        previous_paid_orders = previous_payments.count()
-
-        # ==============================================================
-        # Average order value
-        # ==============================================================
-
-        current_aov = (
-            current_revenue / current_paid_orders
-            if current_paid_orders
-            else Decimal("0.00")
-        )
-
-        previous_aov = (
-            previous_revenue / previous_paid_orders
-            if previous_paid_orders
-            else Decimal("0.00")
-        )
-
-        # ==============================================================
-        # Customers
-        # ==============================================================
-
-        current_customers = (
-            current_payments
-            .values("order__user_id")
-            .distinct()
-            .count()
-        )
-
-        previous_customers = (
-            previous_payments
-            .values("order__user_id")
-            .distinct()
-            .count()
-        )
-
-        # ==============================================================
-        # Order metrics
-        # ==============================================================
-
-        current_total_orders = current_orders.count()
-
-        current_paid_rate = (
-            current_paid_orders
-            / current_total_orders
-            * 100
-            if current_total_orders
-            else 0
-        )
-
-        # ==============================================================
-        # Fulfilment
-        # ==============================================================
-
-        paid_orders_in_period = Order.objects.filter(
-            payment__status=OrderPayment.StatusChoices.COMPLETED,
-            payment__paid_at__gte=current_start,
-            payment__paid_at__lt=current_end,
-        )
-
-        pending_fulfilment = (
-            paid_orders_in_period
-            .filter(
-                status__in=[
-                    Order.StatusChoices.PENDING,
-                    Order.StatusChoices.PROCESSING,
-                ],
-            )
-            .count()
-        )
-
-        delivered_orders = paid_orders_in_period.filter(
-            status=Order.StatusChoices.DELIVERED
-        ).count()
-
-        delivered_rate = (
-            delivered_orders
-            / current_paid_orders
-            * 100
-            if current_paid_orders
-            else 0
-        )
-
-        # ==============================================================
-        # Failed payments
-        # ==============================================================
-
-        failed_payments = OrderPayment.objects.filter(
-            created_at__gte=current_start,
-            created_at__lt=current_end,
-            status=OrderPayment.StatusChoices.FAILED,
-        ).count()
-
-        # ==============================================================
-        # Refunds
-        # ==============================================================
-
-        refunded_payments = OrderPayment.objects.filter(
-            created_at__gte=current_start,
-            created_at__lt=current_end,
-            status=OrderPayment.StatusChoices.REFUNDED,
-        )
-
-        refunded_amount = self._money(
-            refunded_payments.aggregate(
-                total=Sum("amount")
-            )["total"]
-        )
-
-        # ==============================================================
-        # Shipment metrics
-        # ==============================================================
-
-        current_shipments = OrderShipment.objects.filter(
-            order__created_at__gte=current_start,
-            order__created_at__lt=current_end,
-        )
-
-        shipment_status_rows = (
-            current_shipments
-            .values("status")
-            .annotate(count=Count("id"))
-        )
-
-        shipment_counts = {
-            row["status"]: row["count"]
-            for row in shipment_status_rows
-        }
-
-        shipment_pending = shipment_counts.get(
-            OrderShipment.StatusChoices.PENDING,
-            0,
-        )
-
-        shipment_in_transit = shipment_counts.get(
-            OrderShipment.StatusChoices.IN_TRANSIT,
-            0,
-        )
-
-        shipment_delivered = shipment_counts.get(
-            OrderShipment.StatusChoices.DELIVERED,
-            0,
-        )
-
-        # ==============================================================
-        # Revenue trend
-        # ==============================================================
-
-        # ==============================================================
-        # Revenue trend
-        # ==============================================================
-
-        days = [
-            current_start_date + timedelta(days=i)
-            for i in range(period)
-        ]
-
-        revenue_by_day = {
-            day: Decimal("0.00")
-            for day in days
-        }
-
-        paid_orders_by_day = {
-            day: 0
-            for day in days
-        }
-
-        revenue_rows = (
-            current_payments
-            .annotate(
-                day=TruncDate("paid_at")
-            )
-            .values("day")
-            .annotate(
-                revenue=Sum("amount"),
-                orders=Count("id"),
-            )
-            .order_by("day")
-        )
-
-        for row in revenue_rows:
-            day = row["day"]
-
-            if day in revenue_by_day:
-                revenue_by_day[day] = self._money(
-                    row["revenue"]
-                )
-
-                paid_orders_by_day[day] = row["orders"]
-
-        trend_labels = [
-            day.strftime("%b %d")
-            for day in days
-        ]
-
-        trend_revenue = [
-            float(revenue_by_day[day])
-            for day in days
-        ]
-
-        trend_orders = [
-            paid_orders_by_day[day]
-            for day in days
-        ]
-
-        revenue_chart = {
-            "labels": trend_labels,
-            "datasets": [
+        chart = {
+            "line": line,
+            "area": f"{line} L{CHART_W} {CHART_H} L0 {CHART_H} Z",
+            "prev_line": _smooth_path(prev_pts),
+            "ticks": ticks,
+            "x_labels": [_fmt_day(days[i]) for i in label_idx],
+            "points": [
                 {
-                    "label": str(_("Revenue")),
-                    "data": trend_revenue,
-
-                    "borderColor": "var(--color-primary-600)",
-                    "backgroundColor": "rgba(12, 110, 153, 0.10)",
-
-                    "borderWidth": 2.5,
-
-                    "pointRadius": 0,
-                    "pointHoverRadius": 5,
-
-                    "fill": True,
-                    "tension": 0.4,
-
-                    "maxTicksXLimit": (
-                        7 if period == 7 else 12
-                    ),
-
-                    "displayYAxis": True,
-                    "suffixYAxis": "$",
+                    "label": _fmt_day(days[i]),
+                    "rev": float(revenue[i]),
+                    "orders": orders[i],
+                    "prev": float(prev_revenue[i]),
+                    "prev_label": _fmt_day(prev_day_list[i]),
+                    "y": round(cur_pts[i][1] / CHART_H * 100, 2),
+                    "py": round(prev_pts[i][1] / CHART_H * 100, 2),
                 }
+                for i in range(n)
             ],
         }
 
-        # ==============================================================
-        # Payment method mix
-        # ==============================================================
-
-        payment_methods = (
-            current_payments
-            .values("method")
-            .annotate(
-                revenue=Sum("amount"),
-                orders=Count("id"),
-            )
-            .order_by("-revenue")
-        )
-
-        payment_labels = []
-        payment_values = []
-
-        for row in payment_methods:
-            method = (
-                row["method"]
-                or _("Unknown")
-            )
-
-            payment_labels.append(
-                method
-                .replace("_", " ")
-                .title()
-            )
-
-            payment_values.append(
-                float(row["revenue"] or 0)
-            )
-
-        payment_chart = {
-            "labels": (
-                payment_labels
-                or [str(_("No paid orders"))]
-            ),
-            "datasets": [
-                {
-                    "label": str(_("Revenue")),
-                    "data": (
-                        payment_values
-                        or [0]
-                    ),
-                    "backgroundColor": (
-                        "var(--color-primary-600)"
-                    ),
-                    "borderRadius": 6,
-                    "barThickness": 22,
-                    "displayYAxis": True,
-                    "suffixYAxis": "$",
-                }
-            ],
+        whole, _sep, cents = f"{total:,.2f}".partition(".")
+        hero = {
+            "whole": f"${whole}",
+            "cents": cents,
+            "delta": _delta(total, prev_total),
+            "previous": _money(prev_total, 0),
         }
-
-        payment_chart_options = {
-            "indexAxis": "y",
-            "plugins": {
-                "legend": {
-                    "display": False,
-                },
-            },
-            "scales": {
-                "x": {
-                    "beginAtZero": True,
-                },
-            },
-        }
-
-        # ==============================================================
-        # Order pipeline
-        # ==============================================================
-
-        status_rows = (
-            current_orders
-            .values("status")
-            .annotate(count=Count("id"))
-        )
-
-        status_counts = {
-            row["status"]: row["count"]
-            for row in status_rows
-        }
-
-        pipeline_labels = []
-        pipeline_values = []
-
-        for status, label in Order.StatusChoices.choices:
-            pipeline_labels.append(
-                str(label)
-            )
-
-            pipeline_values.append(
-                status_counts.get(
-                    status,
-                    0,
-                )
-            )
-
-        pipeline_chart = {
-            "labels": pipeline_labels,
-            "datasets": [
-                {
-                    "label": str(_("Orders")),
-                    "data": pipeline_values,
-                    "backgroundColor": (
-                        "var(--color-primary-600)"
-                    ),
-                    "borderRadius": 6,
-                    "barThickness": 22,
-                }
-            ],
-        }
-
-        pipeline_chart_options = {
-            "indexAxis": "y",
-            "plugins": {
-                "legend": {
-                    "display": False,
-                },
-            },
-            "scales": {
-                "x": {
-                    "beginAtZero": True,
-                    "ticks": {
-                        "precision": 0,
-                    },
-                },
-            },
-        }
-
-        # ==============================================================
-        # Top products
-        # ==============================================================
-
-        top_products = (
-            OrderItem.objects
-            .filter(
-                product__isnull=False,
-                order__payment__status=(
-                    OrderPayment.StatusChoices.COMPLETED
-                ),
-                order__payment__paid_at__gte=current_start,
-                order__payment__paid_at__lt=current_end,
-            )
-            .values(
-                "product_id",
-                "product__name",
-                "product__sku",
-            )
-            .annotate(
-                units=Sum("quantity"),
-                revenue=Sum("total_price"),
-            )
-            .order_by("-revenue")[:8]
-        )
-
-        product_rows = []
-
-        for product in top_products:
-            product_rows.append([
-                {
-                    "content": (
-                        product["product__name"]
-                        or _("Unknown product")
-                    ),
-                    "class": "fog-table-primary",
-                },
-                {
-                    "content": (
-                        product["product__sku"]
-                        or "—"
-                    ),
-                    "class": "fog-table-mono",
-                },
-                {
-                    "content": (
-                        f'{product["units"]:,}'
-                    ),
-                    "class": "fog-table-number",
-                },
-                {
-                    "content": (
-                        f'${float(product["revenue"] or 0):,.2f}'
-                    ),
-                    "class": (
-                        "fog-table-number "
-                        "fog-table-money"
-                    ),
-                },
-            ])
-
-        if not product_rows:
-            product_rows.append([
-                {
-                    "content": _("No sales data"),
-                    "class": "fog-empty",
-                },
-                {
-                    "content": "—",
-                    "class": "fog-empty",
-                },
-                {
-                    "content": "—",
-                    "class": "fog-empty",
-                },
-                {
-                    "content": "—",
-                    "class": "fog-empty",
-                },
-            ])
-
-        top_products_table = {
-            "headers": [
-                str(_("Product")),
-                str(_("SKU")),
-                str(_("Units")),
-                str(_("Revenue")),
-            ],
-            "rows": product_rows,
-        }
-
-        # ==============================================================
-        # Inventory
-        # ==============================================================
-
-        stock_qs = self._stock_queryset()
-
-        total_stock = (
-            stock_qs.aggregate(
-                total=Sum("available_units")
-            )["total"]
-            or 0
-        )
-
-        out_of_stock_count = (
-            stock_qs
-            .filter(
-                available_units__lte=0
-            )
-            .count()
-        )
-
-        critical_stock_count = (
-            stock_qs
-            .filter(
-                available_units__gt=0,
-                available_units__lte=5,
-            )
-            .count()
-        )
-
-        low_stock_count = (
-            stock_qs
-            .filter(
-                available_units__gt=5,
-                available_units__lte=20,
-            )
-            .count()
-        )
-
-        stock_items = (
-            stock_qs
-            .select_related("product")
-            .order_by(
-                "available_units",
-                "product__name",
-            )[:8]
-        )
-
-        inventory_rows = []
-
-        for item in stock_items:
-            product = item.product
-
-            quantity = (
-                item.available_units
-                if item.available_units is not None
-                else 0
-            )
-
-            if quantity <= 0:
-                status_label = _("Out of stock")
-                status_class = "fog-status-danger"
-
-            elif quantity <= 5:
-                status_label = _("Critical")
-                status_class = "fog-status-danger"
-
-            elif quantity <= 20:
-                status_label = _("Low")
-                status_class = "fog-status-warning"
-
-            else:
-                status_label = _("Healthy")
-                status_class = "fog-status-success"
-
-            inventory_rows.append([
-                {
-                    "content": (
-                        getattr(
-                            product,
-                            "name",
-                            _("Product"),
-                        )
-                    ),
-                    "class": "fog-table-primary",
-                },
-                {
-                    "content": (
-                        getattr(
-                            product,
-                            "sku",
-                            "—",
-                        )
-                        or "—"
-                    ),
-                    "class": "fog-table-mono",
-                },
-                {
-                    "content": f"{quantity:,}",
-                    "class": "fog-table-number",
-                },
-                {
-                    "content": format_html(
-                        '<span class="fog-status-wrap {}">'
-                        '<span class="fog-status-dot"></span>'
-                        '<span>{}</span>'
-                        '</span>',
-                        status_class,
-                        status_label,
-                    ),
-                    "class": "text-right",
-                },
-            ])
-
-        if not inventory_rows:
-            inventory_rows.append([
-                {
-                    "content": _("No inventory data"),
-                    "class": "fog-empty",
-                },
-                {
-                    "content": "—",
-                    "class": "fog-empty",
-                },
-                {
-                    "content": "—",
-                    "class": "fog-empty",
-                },
-                {
-                    "content": "—",
-                    "class": "fog-empty",
-                },
-            ])
-
-        inventory_table = {
-            "headers": [
-                str(_("Product")),
-                str(_("SKU")),
-                str(_("Available")),
-                str(_("Health")),
-            ],
-            "rows": inventory_rows,
-        }
-
-        # ==============================================================
-        # Recent orders
-        # ==============================================================
-
-        recent_orders = (
-            Order.objects
-            .select_related(
-                "user",
-                "payment",
-                "shipment",
-            )
-            .order_by("-created_at")[:10]
-        )
-
-        recent_order_rows = []
-
-        for order in recent_orders:
-            customer = (
-                order.user.get_full_name()
-                or order.user.get_username()
-            )
-
-            payment = getattr(
-                order,
-                "payment",
-                None,
-            )
-
-            shipment = getattr(
-                order,
-                "shipment",
-                None,
-            )
-
-            payment_status = (
-                payment.get_status_display()
-                if payment
-                else _("No payment")
-            )
-
-            shipment_status = (
-                shipment.get_status_display()
-                if shipment
-                else _("Not created")
-            )
-
-            order_status_class = {
-                Order.StatusChoices.PAYMENT:
-                    "fog-status-info",
-
-                Order.StatusChoices.PENDING:
-                    "fog-status-warning",
-
-                Order.StatusChoices.PROCESSING:
-                    "fog-status-warning",
-
-                Order.StatusChoices.SHIPPED:
-                    "fog-status-primary",
-
-                Order.StatusChoices.DELIVERED:
-                    "fog-status-success",
-
-                Order.StatusChoices.CANCELLED:
-                    "fog-status-danger",
-            }.get(
-                order.status,
-                "fog-status-neutral",
-            )
-
-            created_at = (
-                timezone.localtime(
-                    order.created_at
-                )
-                if order.created_at
-                else None
-            )
-
-            recent_order_rows.append([
-                {
-                    "content": format_html(
-                        '<a href="{}" class="fog-order-id hover:underline">#{}</a>',
-                        reverse(
-                            "admin:checkout_order_change",
-                            args=[order.id],
-                        ),
-                        order.id,
-                    ),
-                    "class": "fog-order-id",
-                },
-                {
-                    "content": customer,
-                    "class": "fog-table-primary",
-                },
-                {
-                    "content": (
-                        f"${order.total_price:,.2f}"
-                    ),
-                    "class": (
-                        "fog-table-number "
-                        "fog-table-money"
-                    ),
-                },
-                {
-                    "content": format_html(
-                        '<span class="fog-status-wrap {}">'
-                        '<span class="fog-status-dot"></span>'
-                        '<span>{}</span>'
-                        '</span>',
-                        order_status_class,
-                        order.get_status_display(),
-                    ),
-                    "class": "",
-                },
-                {
-                    "content": payment_status,
-                    "class": "fog-table-muted",
-                },
-                {
-                    "content": shipment_status,
-                    "class": "fog-table-muted",
-                },
-                {
-                    "content": (
-                        created_at.strftime(
-                            "%b %d, %H:%M"
-                        )
-                        if created_at
-                        else "—"
-                    ),
-                    "class": "fog-table-mono",
-                },
-            ])
-
-        if not recent_order_rows:
-            recent_order_rows.append([
-                {
-                    "content": _("No orders"),
-                    "class": "fog-empty",
-                },
-                {"content": "—", "class": "fog-empty"},
-                {"content": "—", "class": "fog-empty"},
-                {"content": "—", "class": "fog-empty"},
-                {"content": "—", "class": "fog-empty"},
-                {"content": "—", "class": "fog-empty"},
-                {"content": "—", "class": "fog-empty"},
-            ])
-
-        recent_orders_table = {
-            "headers": [
-                str(_("Order")),
-                str(_("Customer")),
-                str(_("Total")),
-                str(_("Status")),
-                str(_("Payment")),
-                str(_("Shipment")),
-                str(_("Created")),
-            ],
-            "rows": recent_order_rows,
-        }
-
-        # ==============================================================
-        # Attention
-        # ==============================================================
-
-        attention_items = []
-
-        if failed_payments:
-            attention_items.append({
-                "title": _("Failed payments"),
-                "value": failed_payments,
-                "description": _(
-                    "Payment records requiring attention"
-                ),
-                "class": "fog-alert-danger",
-                "icon": "error",
-            })
-
-        if pending_fulfilment:
-            attention_items.append({
-                "title": _("Pending fulfilment"),
-                "value": pending_fulfilment,
-                "description": _(
-                    "Paid orders waiting for fulfilment"
-                ),
-                "class": "fog-alert-warning",
-                "icon": "local_shipping",
-            })
-
-        if critical_stock_count:
-            attention_items.append({
-                "title": _("Critical inventory"),
-                "value": critical_stock_count,
-                "description": _(
-                    "Products with 5 or fewer available units"
-                ),
-                "class": "fog-alert-danger",
-                "icon": "inventory_2",
-            })
-
-        if refunded_amount > 0:
-            attention_items.append({
-                "title": _("Refunded volume"),
-                "value": (
-                    f"${refunded_amount:,.2f}"
-                ),
-                "description": _(
-                    "Refunded payment volume"
-                ),
-                "class": "fog-alert-neutral",
-                "icon": "undo",
-            })
-
-        # ==============================================================
-        # KPIs
-        # ==============================================================
 
         kpis = [
             {
-                "title": _("Revenue"),
-                "value": (
-                    f"${current_revenue:,.2f}"
-                ),
-                "description": _(
-                    "Completed payments"
-                ),
-                "delta": self._delta(
-                    current_revenue,
-                    previous_revenue,
-                ),
-                "icon": "payments",
+                "label": _("Paid orders"),
+                "value": f"{n_orders:,}",
+                "delta": _delta(n_orders, prev_orders),
+                "spark": _sparkline(orders),
             },
             {
-                "title": _("Paid orders"),
-                "value": (
-                    f"{current_paid_orders:,}"
-                ),
-                "description": _(
-                    "Successfully completed purchases"
-                ),
-                "delta": self._delta(
-                    current_paid_orders,
-                    previous_paid_orders,
-                ),
-                "icon": "shopping_bag",
+                "label": _("Average order value"),
+                "value": _money(total_aov),
+                "delta": _delta(total_aov, prev_aov),
+                "spark": _sparkline(aov),
             },
             {
-                "title": _("Average order value"),
-                "value": (
-                    f"${current_aov:,.2f}"
-                ),
-                "description": _(
-                    "Revenue per paid order"
-                ),
-                "delta": self._delta(
-                    current_aov,
-                    previous_aov,
-                ),
-                "icon": "receipt_long",
-            },
-            {
-                "title": _("Active customers"),
-                "value": (
-                    f"{current_customers:,}"
-                ),
-                "description": _(
-                    "Unique paying customers"
-                ),
-                "delta": self._delta(
-                    current_customers,
-                    previous_customers,
-                ),
-                "icon": "group",
+                "label": _("Paying customers"),
+                "value": f"{n_customers:,}",
+                "delta": _delta(n_customers, prev_customers),
+                "spark": _sparkline(customers),
             },
         ]
+        return hero, chart, kpis
 
-        # ==============================================================
-        # Operational metrics
-        # ==============================================================
+    # ------------------------------------------------------------------
+    # Funnel + operations strip
+    # ------------------------------------------------------------------
+
+    def _funnel(self, w):
+        created = Order.objects.filter(
+            created_at__gte=w["start"], created_at__lt=w["end"]
+        )
+        carts = (
+            ShoppingCart.objects.filter(
+                updated_at__gte=w["start"],
+                updated_at__lt=w["end"],
+                items__isnull=False,
+            )
+            .distinct()
+            .count()
+        )
+        placed = created.count()
+        paid_qs = created.filter(payment__status=COMPLETED)
+        paid = paid_qs.count()
+        delivered = paid_qs.filter(status=Order.StatusChoices.DELIVERED).count()
+
+        raw = [
+            (_("Carts with items"), carts),
+            (_("Orders placed"), placed),
+            (_("Orders paid"), paid),
+            (_("Orders delivered"), delivered),
+        ]
+        top = max(v for _label, v in raw) or 1
+
+        steps = []
+        for i, (label, value) in enumerate(raw):
+            rate = None
+            if i and raw[i - 1][1] and value <= raw[i - 1][1]:
+                rate = f"{_ratio(value, raw[i - 1][1]):.0f}%"
+            steps.append(
+                {
+                    "label": label,
+                    "value": f"{value:,}",
+                    "width": f"{_ratio(value, top):.1f}",
+                    "rate": rate,
+                    "tone": i + 1,
+                }
+            )
+
+        awaiting = Order.objects.filter(
+            payment__status=COMPLETED,
+            payment__paid_at__gte=w["start"],
+            payment__paid_at__lt=w["end"],
+            status__in=[Order.StatusChoices.PENDING, Order.StatusChoices.PROCESSING],
+        ).count()
 
         operations = [
             {
-                "title": _("Paid rate"),
-                "value": f"{current_paid_rate:.0f}%",
-                "description": _(
-                    f"{current_paid_orders:,} of "
-                    f"{current_total_orders:,} orders"
-                ),
-                "icon": "verified",
-                "class": "fog-stat-success",
+                "label": _("Payment rate"),
+                "value": f"{_ratio(paid, placed):.0f}%",
+                "note": f"{paid:,} of {placed:,} orders paid",
             },
             {
-                "title": _("Pending fulfilment"),
-                "value": f"{pending_fulfilment:,}",
-                "description": _(
-                    "Paid orders in pending/processing"
-                ),
-                "icon": "local_shipping",
-                "class": "fog-stat-warning",
+                "label": _("Awaiting fulfilment"),
+                "value": f"{awaiting:,}",
+                "note": _("Paid, not yet shipped"),
             },
             {
-                "title": _("Delivery rate"),
-                "value": f"{delivered_rate:.0f}%",
-                "description": _(
-                    f"{delivered_orders:,} delivered"
-                ),
-                "icon": "done_all",
-                "class": "fog-stat-success",
-            },
-            {
-                "title": _("Available inventory"),
-                "value": f"{total_stock:,}",
-                "description": _(
-                    f"{out_of_stock_count:,} out • "
-                    f"{critical_stock_count:,} critical"
-                ),
-                "icon": "inventory_2",
-                "class": "fog-stat-primary",
+                "label": _("Delivery rate"),
+                "value": f"{_ratio(delivered, paid):.0f}%",
+                "note": f"{delivered:,} delivered",
             },
         ]
+        return steps, operations
 
-        # ==============================================================
-        # IMPORTANT:
-        # Unfold's chart template puts data into a canvas data-value
-        # attribute. Pass JSON strings, not Python dictionaries.
-        # ==============================================================
+    # ------------------------------------------------------------------
+    # Category donut
+    # ------------------------------------------------------------------
 
-        context.update({
-            "title": self.title,
+    def _categories(self, w):
+        rows = list(
+            _paid_items(w)
+            .annotate(
+                cat=Coalesce(
+                    "product__category__name",
+                    Value(str(_("Uncategorised"))),
+                    output_field=CharField(),
+                )
+            )
+            .order_by()
+            .values("cat")
+            .annotate(revenue=Sum("total_price"), units=Sum("quantity"))
+            .order_by("-revenue")
+        )
 
-            "period": period,
-            "period_label": period_label,
-            "periods": self.PERIODS,
+        entries = [(r["cat"], _dec(r["revenue"])) for r in rows[:5]]
+        rest = sum((_dec(r["revenue"]) for r in rows[5:]), Decimal("0"))
+        if rest:
+            entries.append((str(_("Other")), rest))
 
-            "kpis": kpis,
-            "operations": operations,
+        total = sum((rev for _name, rev in entries), Decimal("0"))
+        segments, cumulative = [], 0.0
 
-            "attention_items": attention_items,
+        for i, (name, rev) in enumerate(entries):
+            share = float(rev / total * 100) if total else 0.0
+            dash = max(share - (0.8 if share > 3 else 0), 0)
+            segments.append(
+                {
+                    "name": name,
+                    "revenue": _money(rev, 0),
+                    "share": f"{share:.0f}%",
+                    "dash": f"{dash:.2f}",
+                    "rest": f"{100 - dash:.2f}",
+                    "offset": f"{-cumulative:.2f}",
+                    "tone": i + 1,
+                }
+            )
+            cumulative += share
 
-            "shipment_metrics": {
-                "pending": shipment_pending,
-                "in_transit": shipment_in_transit,
-                "delivered": shipment_delivered,
-            },
+        return {"segments": segments, "total": _compact(total)}
 
-            "critical_stock_count": (
-                critical_stock_count
-            ),
-            "low_stock_count": (
-                low_stock_count
-            ),
-            "out_of_stock_count": (
-                out_of_stock_count
-            ),
-            "total_stock": total_stock,
+    # ------------------------------------------------------------------
+    # Payment mix
+    # ------------------------------------------------------------------
 
-            # JSON STRINGS
-            "revenue_chart": json.dumps(
-                revenue_chart
-            ),
+    def _payment_mix(self, w):
+        rows = list(
+            _payments(w["start"], w["end"])
+            .order_by()
+            .values("method")
+            .annotate(revenue=Sum("amount"), orders=Count("id"))
+            .order_by("-revenue")
+        )
+        total = sum((_dec(r["revenue"]) for r in rows), Decimal("0"))
 
-            "payment_chart": json.dumps(
-                payment_chart
-            ),
+        return [
+            {
+                "name": (r["method"] or str(_("Unknown"))).replace("_", " ").title(),
+                "revenue": _money(r["revenue"], 0),
+                "orders": ngettext("%(n)d order", "%(n)d orders", r["orders"])
+                % {"n": r["orders"]},
+                "share": f"{_ratio(_dec(r['revenue']), total):.1f}",
+                "tone": min(i + 1, 6),
+            }
+            for i, r in enumerate(rows)
+        ]
 
-            "payment_chart_options": json.dumps(
-                payment_chart_options
-            ),
+    # ------------------------------------------------------------------
+    # Top products
+    # ------------------------------------------------------------------
 
-            "pipeline_chart": json.dumps(
-                pipeline_chart
-            ),
+    def _top_products(self, w):
+        rows = list(
+            _paid_items(w)
+            .filter(product__isnull=False)
+            .order_by()
+            .values("product__name", "product__sku")
+            .annotate(units=Sum("quantity"), revenue=Sum("total_price"))
+            .order_by("-revenue")[:6]
+        )
+        top = _dec(rows[0]["revenue"]) if rows else Decimal("0")
 
-            "pipeline_chart_options": json.dumps(
-                pipeline_chart_options
-            ),
+        return [
+            {
+                "rank": i + 1,
+                "name": r["product__name"],
+                "sku": r["product__sku"],
+                "units": f"{r['units']:,}",
+                "revenue": _money(r["revenue"]),
+                "width": f"{_ratio(_dec(r['revenue']), top):.1f}",
+            }
+            for i, r in enumerate(rows)
+        ]
 
-            "top_products_table": (
-                top_products_table
-            ),
+    # ------------------------------------------------------------------
+    # Inventory watch (uses each product's own low-stock threshold)
+    # ------------------------------------------------------------------
 
-            "inventory_table": (
-                inventory_table
-            ),
+    def _inventory(self):
+        stock = ProductStock.objects.filter(product__is_active=True).annotate(
+            avail=ExpressionWrapper(
+                F("quantity") - F("reserved_quantity"), output_field=IntegerField()
+            )
+        )
+        out_q = Q(avail__lte=0) | Q(is_available=False)
+        low_q = Q(is_available=True, avail__gt=0, avail__lte=F("low_stock_threshold"))
 
-            "recent_orders_table": (
-                recent_orders_table
-            ),
+        counts = stock.aggregate(
+            out=Count("id", filter=out_q),
+            low=Count("id", filter=low_q),
+            total=Count("id"),
+        )
+        counts["healthy"] = counts["total"] - counts["out"] - counts["low"]
 
-            "orders_url": reverse(
-                "admin:checkout_order_changelist"
-            ),
+        watch = []
+        for item in (
+            stock.filter(out_q | low_q)
+            .select_related("product")
+            .order_by("avail", "product__name")[:6]
+        ):
+            avail = max(item.avail, 0)
+            is_out = avail == 0 or not item.is_available
+            scale = max(item.low_stock_threshold * 2, 1)
+            watch.append(
+                {
+                    "name": item.product.name,
+                    "sku": item.product.sku,
+                    "avail": f"{avail:,}",
+                    "fill": f"{min(_ratio(avail, scale), 100):.0f}",
+                    "tone": "danger" if is_out else "warning",
+                    "status": _("Out of stock") if is_out else _("Running low"),
+                }
+            )
+        return watch, counts
 
-            "payments_url": reverse(
-                "admin:checkout_orderpayment_changelist"
-            ),
+    # ------------------------------------------------------------------
+    # Where orders ship
+    # ------------------------------------------------------------------
 
-            "inventory_url": reverse(
-                "admin:inventory_productstock_changelist"
-            ),
+    def _countries(self, w):
+        rows = list(
+            Order.objects.filter(
+                payment__status=COMPLETED,
+                payment__paid_at__gte=w["start"],
+                payment__paid_at__lt=w["end"],
+            )
+            .order_by()
+            .values("delivery_address__country")
+            .annotate(orders=Count("id"), revenue=Sum("total_price"))
+            .order_by("-revenue")[:6]
+        )
+        top = _dec(rows[0]["revenue"]) if rows else Decimal("0")
 
-            "generated_at": timezone.localtime(),
-        })
+        return [
+            {
+                "name": r["delivery_address__country"] or str(_("Unknown")),
+                "orders": f"{r['orders']:,}",
+                "revenue": _money(r["revenue"], 0),
+                "width": f"{_ratio(_dec(r['revenue']), top):.1f}",
+            }
+            for r in rows
+        ]
 
-        return context
+    # ------------------------------------------------------------------
+    # Customers: new vs returning, top spenders
+    # ------------------------------------------------------------------
+
+    def _customers(self, w):
+        cur = _payments(w["start"], w["end"])
+        ids = set(cur.order_by().values_list("order__user_id", flat=True))
+
+        returning = 0
+        if ids:
+            returning = (
+                OrderPayment.objects.filter(
+                    status=COMPLETED,
+                    paid_at__lt=w["start"],
+                    order__user_id__in=ids,
+                )
+                .order_by()
+                .values("order__user_id")
+                .distinct()
+                .count()
+            )
+        new = len(ids) - returning
+
+        spenders = (
+            cur.order_by()
+            .values(
+                "order__user_id",
+                "order__user__first_name",
+                "order__user__last_name",
+                "order__user__email",
+            )
+            .annotate(spent=Sum("amount"), orders=Count("id"))
+            .order_by("-spent")[:5]
+        )
+
+        top = []
+        for row in spenders:
+            name = f"{row['order__user__first_name']} {row['order__user__last_name']}".strip()
+            email = row["order__user__email"]
+            top.append(
+                {
+                    "name": name or email,
+                    "email": email,
+                    "initials": _initials(name, email),
+                    "orders": ngettext("%(n)d order", "%(n)d orders", row["orders"])
+                    % {"n": row["orders"]},
+                    "spent": _money(row["spent"]),
+                }
+            )
+
+        return {
+            "new": f"{new:,}",
+            "returning": f"{returning:,}",
+            "new_pct": f"{_ratio(new, len(ids)):.1f}",
+            "returning_pct": f"{_ratio(returning, len(ids)):.1f}",
+            "total": len(ids),
+            "top": top,
+        }
+
+    # ------------------------------------------------------------------
+    # Attention strip (every chip links to the filtered admin list)
+    # ------------------------------------------------------------------
+
+    def _attention(self, w, stock_counts):
+        items = []
+
+        failed = OrderPayment.objects.filter(
+            created_at__gte=w["start"],
+            created_at__lt=w["end"],
+            status=OrderPayment.StatusChoices.FAILED,
+        ).count()
+        if failed:
+            items.append(
+                {
+                    "value": failed,
+                    "label": ngettext("failed payment", "failed payments", failed),
+                    "tone": "danger",
+                    "url": reverse("admin:checkout_orderpayment_changelist")
+                    + "?status__exact=FAILED",
+                }
+            )
+
+        paid_pending = Order.objects.filter(
+            payment__status=COMPLETED,
+            payment__paid_at__gte=w["start"],
+            payment__paid_at__lt=w["end"],
+            status=Order.StatusChoices.PENDING,
+        ).count()
+        if paid_pending:
+            items.append(
+                {
+                    "value": paid_pending,
+                    "label": ngettext(
+                        "paid order to review", "paid orders to review", paid_pending
+                    ),
+                    "tone": "warning",
+                    "url": reverse("admin:checkout_order_changelist")
+                    + "?status__exact=pending",
+                }
+            )
+
+        if stock_counts["out"]:
+            items.append(
+                {
+                    "value": stock_counts["out"],
+                    "label": ngettext(
+                        "product out of stock", "products out of stock", stock_counts["out"]
+                    ),
+                    "tone": "danger",
+                    "url": reverse("admin:inventory_productstock_changelist"),
+                }
+            )
+
+        refunded = OrderPayment.objects.filter(
+            created_at__gte=w["start"],
+            created_at__lt=w["end"],
+            status=OrderPayment.StatusChoices.REFUNDED,
+        ).aggregate(total=Sum("amount"))["total"]
+        if refunded:
+            items.append(
+                {
+                    "value": _money(refunded, 0),
+                    "label": _("refunded"),
+                    "tone": "neutral",
+                    "url": reverse("admin:checkout_orderpayment_changelist")
+                    + "?status__exact=REFUNDED",
+                }
+            )
+        return items
+
+    # ------------------------------------------------------------------
+    # Recent orders panel (also served alone to HTMX filter requests)
+    # ------------------------------------------------------------------
+
+    def _orders_rows(self, w, tabs=False):
+        valid = {value for value, _label in Order.StatusChoices.choices}
+        status = self.request.GET.get("status", "")
+        status = status if status in valid else ""
+        query = self.request.GET.get("q", "").strip()
+
+        in_period = Order.objects.filter(
+            created_at__gte=w["start"], created_at__lt=w["end"]
+        )
+        qs = in_period
+        if status:
+            qs = qs.filter(status=status)
+        if query:
+            search = (
+                Q(user__email__icontains=query)
+                | Q(user__first_name__icontains=query)
+                | Q(user__last_name__icontains=query)
+            )
+            if query.lstrip("#").isdigit():
+                search |= Q(id=int(query.lstrip("#")))
+            qs = qs.filter(search)
+
+        order_tone = {
+            Order.StatusChoices.PAYMENT: "info",
+            Order.StatusChoices.PENDING: "warning",
+            Order.StatusChoices.PROCESSING: "warning",
+            Order.StatusChoices.SHIPPED: "primary",
+            Order.StatusChoices.DELIVERED: "success",
+            Order.StatusChoices.CANCELLED: "danger",
+        }
+        payment_tone = {
+            OrderPayment.StatusChoices.PENDING: "warning",
+            OrderPayment.StatusChoices.COMPLETED: "success",
+            OrderPayment.StatusChoices.FAILED: "danger",
+            OrderPayment.StatusChoices.REFUNDED: "info",
+        }
+
+        rows = []
+        for order in qs.select_related("user", "payment", "shipment").order_by(
+            "-created_at"
+        )[:10]:
+            payment = getattr(order, "payment", None)
+            shipment = getattr(order, "shipment", None)
+            name = order.user.get_full_name().strip()
+            rows.append(
+                {
+                    "id": order.id,
+                    "url": reverse("admin:checkout_order_change", args=[order.id]),
+                    "name": name if name != order.user.email else order.user.email,
+                    "email": order.user.email,
+                    "initials": _initials(name, order.user.email),
+                    "total": _money(order.total_price),
+                    "status": order.get_status_display(),
+                    "status_tone": order_tone.get(order.status, "neutral"),
+                    "payment": payment.get_status_display() if payment else _("No payment"),
+                    "payment_tone": payment_tone.get(payment.status, "neutral")
+                    if payment
+                    else "neutral",
+                    "shipment": shipment.get_status_display() if shipment else "—",
+                    "created": order.created_at,
+                }
+            )
+
+        data = {
+            "order_rows": rows,
+            "order_count": qs.count(),
+            "active_status": status,
+            "q": query,
+        }
+
+        if tabs:
+            counts = dict(
+                in_period.order_by()
+                .values_list("status")
+                .annotate(n=Count("id"))
+            )
+            data["order_tabs"] = [
+                {"value": "", "label": _("All"), "count": sum(counts.values())}
+            ] + [
+                {"value": value, "label": label, "count": counts.get(value, 0)}
+                for value, label in Order.StatusChoices.choices
+            ]
+        return data

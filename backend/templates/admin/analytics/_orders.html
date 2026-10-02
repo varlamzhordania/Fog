@@ -1,0 +1,50 @@
+{% load i18n l10n %}{% localize off %}
+{% if order_rows %}
+    <div class="fog-table-scroll">
+        <table class="fog-table">
+            <thead>
+            <tr>
+                <th>{% trans "Order" %}</th>
+                <th>{% trans "Customer" %}</th>
+                <th>{% trans "Status" %}</th>
+                <th>{% trans "Payment" %}</th>
+                <th>{% trans "Shipment" %}</th>
+                <th class="num">{% trans "Total" %}</th>
+                <th class="num">{% trans "Placed" %}</th>
+            </tr>
+            </thead>
+            <tbody>
+            {% for r in order_rows %}
+                <tr>
+                    <td><a class="fog-id" href="{{ r.url }}">#{{ r.id }}</a></td>
+                    <td>
+                        <span class="fog-person">
+                            <span class="fog-avatar">{{ r.initials }}</span>
+                            <span class="fog-person-text"><strong>{{ r.name }}</strong><small>{{ r.email }}</small></span>
+                        </span>
+                    </td>
+                    <td><span class="fog-status-wrap fog-status-{{ r.status_tone }}"><span class="fog-status-dot"></span>{{ r.status }}</span></td>
+                    <td><span class="fog-status-wrap fog-status-{{ r.payment_tone }}"><span class="fog-status-dot"></span>{{ r.payment }}</span></td>
+                    <td>{{ r.shipment }}</td>
+                    <td class="num fog-strong">{{ r.total }}</td>
+                    <td class="num">{{ r.created|date:"M j, H:i" }}</td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% if order_count > order_rows|length %}
+        <p class="fog-orders-more">
+            {% blocktrans with shown=order_rows|length %}Showing the latest {{ shown }} of {{ order_count }} matching orders.{% endblocktrans %}
+        </p>
+    {% endif %}
+{% else %}
+    <p class="fog-empty">
+        {% if q or active_status %}
+            {% trans "No orders match these filters. Try a different status or search." %}
+        {% else %}
+            {% trans "No orders were placed in this period." %}
+        {% endif %}
+    </p>
+{% endif %}
+{% endlocalize %}
