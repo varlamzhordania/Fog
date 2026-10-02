@@ -226,14 +226,6 @@ class CategoryAdmin(UnfoldImportExportHistoryAdmin, TreeAdmin):
     readonly_fields = ["slug"]
     list_per_page = 100
 
-    class Media:
-        css = {
-            "all": [
-                "treebeard/treebeard-admin.css",
-                "css/treebeard-unfold.css",
-            ]
-        }
-
 
 @django_admin.register(Tag)
 class TagAdmin(UnfoldImportExportHistoryAdmin):

@@ -7,12 +7,6 @@
     <link
         rel="stylesheet"
         type="text/css"
-        href="{% static 'treebeard/treebeard-admin.css' %}"
-    />
-
-    <link
-        rel="stylesheet"
-        type="text/css"
         href="{% static 'css/treebeard-unfold.css' %}"
     />
 {% endblock %}
@@ -23,10 +17,9 @@
     {% if treebeard_tree %}
         <script src="{% url 'admin:jsi18n' %}"></script>
 
-        <script
-            data-csrftoken="{{ csrf_token }}"
-            src="{% static 'treebeard/treebeard-admin.js' %}"
-        ></script>
+        <script data-csrftoken="{{ csrf_token }}" src="{% static 'js/treebeard-unfold.js' %}">
+
+        </script>
     {% endif %}
 {% endblock %}
 
