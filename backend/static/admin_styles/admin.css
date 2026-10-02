@@ -868,7 +868,7 @@
 
 /* ---------- Inventory watch ---------- */
 
-.fog-stock { display: grid; gap: 1.1rem;overflow-x: auto }
+.fog-stock { display: grid; gap: 1.1rem;overflow-x: auto; }
 
 .fog-stock-meter {
     display: flex;
