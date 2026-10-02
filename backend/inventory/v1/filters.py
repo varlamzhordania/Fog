@@ -27,11 +27,11 @@ class ProductFilter(django_filters.FilterSet):
         lookup_expr="in"
     )
     min_price = django_filters.NumberFilter(
-        field_name="base_price",
+        field_name="store_price",
         lookup_expr="gte"
     )
     max_price = django_filters.NumberFilter(
-        field_name="base_price",
+        field_name="store_price",
         lookup_expr="lte"
     )
     STOCK_CHOICES = (

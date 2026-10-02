@@ -1,7 +1,7 @@
 "use client";
 
-import { toast } from "@heroui/react";
-import { useCartStore } from "@/stores/cart";
+import {toast} from "@heroui/react";
+import {useCartStore} from "@/stores/cart";
 
 export function useCartActions(product) {
     const {
@@ -21,6 +21,7 @@ export function useCartActions(product) {
     const isInStock = stock > 0;
     const isInCart = Boolean(item);
     const isDownloadable = product?.product_type === "downloadable";
+    const isAvailableToPurchase = product?.is_available || false
 
 
     const handleAdd = async (onAddCallback) => {
@@ -34,7 +35,7 @@ export function useCartActions(product) {
         try {
             await addItem(product);
             toast.success(`${product.name} added to cart.`);
-            onAddCallback?.({ product });
+            onAddCallback?.({product});
         } catch (error) {
             toast.danger(error?.response?.data?.detail || "Failed to add item to cart.");
         }
@@ -73,7 +74,7 @@ export function useCartActions(product) {
         try {
             await removeItem(productId);
             toast.success(`${product.name} removed.`);
-            onRemoveCallback?.({ product, item });
+            onRemoveCallback?.({product, item});
         } catch (error) {
             toast.danger(error?.response?.data?.detail || "Failed to remove item.");
         }
@@ -86,6 +87,7 @@ export function useCartActions(product) {
         isInStock,
         isInCart,
         isDownloadable,
+        isAvailableToPurchase,
         handleAdd,
         handleIncrement,
         handleDecrement,

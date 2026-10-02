@@ -18,6 +18,6 @@ export const DEFAULT_ORDERING = "-created_at"
 export const ORDERING_OPTIONS = [
     {value: "-created_at", label: "Newest first"},
     {value: "created_at", label: "Oldest first"},
-    {value: "base_price", label: "Price: low to high"},
-    {value: "-base_price", label: "Price: high to low"},
+    {value: "store_price", label: "Price: low to high"},
+    {value: "-store_price", label: "Price: high to low"},
 ]

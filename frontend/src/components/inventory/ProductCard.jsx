@@ -1,5 +1,5 @@
 import {notFoundImage} from "@/lib/config";
-import { Card, Typography} from "@heroui/react";
+import {Card, Typography} from "@heroui/react";
 import Image from "@/components/Image";
 import Icon from "@/components/Icon/Icon";
 import {MoveRight} from "lucide-react";
@@ -27,35 +27,67 @@ const ProductCard = ({
     const formattedBasePrice = isNaN(Number(data.base_price)) ? data.base_price : Number(data.base_price).toFixed(2);
     const formattedPrice = isNaN(Number(data.store_price)) ? data.store_price : Number(data.store_price).toFixed(2);
     const isOnSale = data.discount_percentage > 0
+    const isAvailableToPurchase = data.is_available || false
     const outOfStock = typeof data.available_stock === "number" && data.available_stock <= 0;
     const productPage = `/products/${data.slug}/`
 
     return (<Card className={cn("h-full w-full", depth && "bg-transparent shadow-none border-0")}>
         <Link href={productPage}>
             <Card.Header
-                className={`p-0 overflow-hidden relative ${featured ? 'aspect-video' : 'aspect-square'}  w-full rounded-xl`}>
+                className={`p-0 overflow-hidden relative ${
+                    featured ? "aspect-video" : "aspect-square"
+                } w-full rounded-xl`}
+            >
                 <Image
                     src={image}
                     alt={imageAlt}
                     fill
                     sizes="(max-width: 640px) 80vw, (max-width: 1024px) 33vw, 20vw"
-                    className="object-cover rounded-xl transition-transform duration-300 hover:scale-105"
+                    className={`object-cover rounded-xl transition-transform duration-300 ${
+                        isAvailableToPurchase ? "hover:scale-105" : "grayscale"
+                    }`}
                 />
-                {featured && <div className={"absolute left-4 bottom-4 z-20"}>
-                    <Typography type="span" className="text-foreground text-lg font-bold ">
-                        ${formattedPrice}
-                    </Typography>
-                </div>}
-                {<div
-                    className={"absolute inset-0 bg-gradient-to-t from-background/40 via-background/10 to-transparent z-10"}></div>}
 
-                {isOnSale && (<div className={"absolute top-2 left-2 z-10"}>
-                    <Typography type={"body-sm"}
-                                className={"uppercase font-semibold px-2 py-0.5 bg-danger text-danger-foreground rounded-full"}>
-                        {data.discount_percentage}% Off
-                    </Typography>
-                </div>)}
+                {/* Image gradient */}
+                <div
+                    className="absolute inset-0 bg-gradient-to-t from-background/40 via-background/10 to-transparent z-10"/>
 
+                {/* Unavailable overlay */}
+                {!isAvailableToPurchase && (
+                    <div
+                        className="absolute inset-0 z-20 flex items-center justify-center bg-background/45 backdrop-blur-[1px]">
+                        <Typography
+                            type="body-sm"
+                            className="uppercase font-semibold tracking-wider px-3 py-1.5 rounded-full bg-background/90 text-foreground shadow-sm"
+                        >
+                            Unavailable
+                        </Typography>
+                    </div>
+                )}
+
+                {/* Sale badge */}
+                {isOnSale && isAvailableToPurchase && (
+                    <div className="absolute top-2 left-2 z-30">
+                        <Typography
+                            type="body-sm"
+                            className="uppercase font-semibold px-2 py-0.5 bg-danger text-danger-foreground rounded-full"
+                        >
+                            {data.discount_percentage}% Off
+                        </Typography>
+                    </div>
+                )}
+
+                {/* Featured price */}
+                {featured && (
+                    <div className="absolute left-4 bottom-4 z-30">
+                        <Typography
+                            type="span"
+                            className="text-foreground text-lg font-bold"
+                        >
+                            ${formattedPrice}
+                        </Typography>
+                    </div>
+                )}
             </Card.Header>
         </Link>
         <Card.Content className={"flex flex-col justify-between"}>
@@ -99,7 +131,7 @@ const ProductCard = ({
                 Show Now
                 <Icon icon={MoveRight}
                       className={"group-hover:translate-x-0.5 transition"}/>
-            </Link> : <CartQuantityControl product={data} limitWidth={false} /> }
+            </Link> : <CartQuantityControl product={data} limitWidth={false}/>}
 
         </Card.Footer>
     </Card>);

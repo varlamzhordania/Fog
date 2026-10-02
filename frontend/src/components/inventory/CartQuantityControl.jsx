@@ -1,26 +1,26 @@
 "use client";
 
-import { Button } from "@heroui/react";
-import { Download, ShoppingBag, Trash2, Plus, Minus } from "lucide-react";
+import {Button} from "@heroui/react";
+import {Download, ShoppingBag, Trash2, Plus, Minus} from "lucide-react";
 import Icon from "@/components/Icon/Icon";
-import { useCartActions } from "@/hooks/useCartActions";
+import {useCartActions} from "@/hooks/useCartActions";
 
 export default function CartQuantityControl({
-    product,
-    showAddButton = true,
-    showRemoveButton = true,
-    size = "md",
-    className = "",
-    onAdd,
-    onRemove,
-}) {
-    // 1. Grab everything from our reusable hook
+                                                product,
+                                                showAddButton = true,
+                                                showRemoveButton = true,
+                                                size = "md",
+                                                className = "",
+                                                onAdd,
+                                                onRemove,
+                                            }) {
     const {
         quantity,
         stock,
         isInStock,
         isInCart,
         isDownloadable,
+        isAvailableToPurchase,
         handleAdd,
         handleIncrement,
         handleDecrement,
@@ -34,12 +34,12 @@ export default function CartQuantityControl({
             <Button
                 size={size}
                 fullWidth
-                isDisabled={!isInStock}
-                onPress={() => handleAdd(onAdd)} // Pass the callback here!
+                isDisabled={!isInStock || !isAvailableToPurchase}
+                onPress={() => handleAdd(onAdd)}
                 className={className}
             >
-                <Icon icon={isDownloadable ? Download : ShoppingBag} />
-                {isInStock ? "Add to Cart" : "Out of Stock"}
+                <Icon icon={isDownloadable ? Download : ShoppingBag}/>
+                {isInStock && isAvailableToPurchase ? "Add to Cart" : "Out of Stock"}
             </Button>
         );
     }
@@ -51,11 +51,14 @@ export default function CartQuantityControl({
                     isIconOnly
                     size={size}
                     variant="tertiary"
-                    isDisabled={quantity <= 1}
+                    isDisabled={
+                        !isAvailableToPurchase ||
+                        quantity <= 1
+                    }
                     onPress={handleDecrement}
                     aria-label={`Decrease ${product.name} quantity`}
                 >
-                    <Icon icon={Minus} size={16} />
+                    <Icon icon={Minus} size={16}/>
                 </Button>
 
                 <div
@@ -70,11 +73,14 @@ export default function CartQuantityControl({
                     isIconOnly
                     size={size}
                     variant="tertiary"
-                    isDisabled={stock > 0 && quantity >= stock}
+                    isDisabled={
+                        !isAvailableToPurchase ||
+                        (stock > 0 && quantity >= stock)
+                    }
                     onPress={handleIncrement}
                     aria-label={`Increase ${product.name} quantity`}
                 >
-                    <Icon icon={Plus} size={16} />
+                    <Icon icon={Plus} size={16}/>
                 </Button>
             </div>
 
@@ -87,7 +93,7 @@ export default function CartQuantityControl({
                     aria-label={`Remove ${product.name} from cart`}
                     onPress={() => handleRemove(onRemove)}
                 >
-                    <Icon icon={Trash2} size={18} />
+                    <Icon icon={Trash2} size={18}/>
                 </Button>
             )}
         </div>

@@ -22,6 +22,11 @@ class CartProductSerializer(serializers.ModelSerializer):
         read_only=True,
         default=0,
     )
+    is_available = serializers.BooleanField(
+        source="product_stock.is_available",
+        read_only=True,
+        default=False,
+    )
     discount_percentage = serializers.IntegerField(read_only=True)
 
     class Meta:
@@ -29,9 +34,8 @@ class CartProductSerializer(serializers.ModelSerializer):
         fields = [
             'id', 'name', 'slug', 'sku', 'product_type',
             'base_price', 'store_price', 'primary_image',
-            'available_stock', 'discount_percentage'
+            'available_stock', 'is_available', 'discount_percentage'
         ]
-
 
     def get_primary_image(self, obj):
         image = obj.primary_image

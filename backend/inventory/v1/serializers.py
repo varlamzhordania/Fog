@@ -100,6 +100,12 @@ class ProductSerializer(serializers.ModelSerializer):
         default=0,
     )
 
+    is_available = serializers.BooleanField(
+        source="product_stock.is_available",
+        read_only=True,
+        default=False,
+    )
+
     discount_percentage = serializers.IntegerField(
         read_only=True,
     )
@@ -127,6 +133,7 @@ class ProductSerializer(serializers.ModelSerializer):
             "primary_image",
             "gallery",
             "available_stock",
+            "is_available",
 
             "created_at",
             "updated_at",

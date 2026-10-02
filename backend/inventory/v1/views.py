@@ -58,7 +58,7 @@ class ProductViewSet(
     filterset_class = ProductFilter
 
     search_fields = ["name", "sku", "short_description"]
-    ordering_fields = ["base_price", "created_at"]
+    ordering_fields = ["store_price", "created_at"]
     ordering = ["-created_at"]
 
     def get_queryset(self):
