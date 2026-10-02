@@ -1,396 +1,5 @@
-
-
-
-/* ==========================================================================
-   Tree rows
-   ========================================================================== */
-
 #result_list tbody tr.fog-tree-row {
     position: relative;
-}
-
-
-/* ==========================================================================
-   Drag handle
-   ========================================================================== */
-
-#result_list .drag-handler {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-
-    width: 1.125rem;
-    height: 1.5rem;
-
-    margin-right: .375rem;
-
-    flex: none;
-
-    color: var(--color-base-400);
-
-    cursor: grab;
-    user-select: none;
-
-    vertical-align: middle;
-
-    border-radius: .375rem;
-
-    transition:
-        color 150ms ease,
-        background-color 150ms ease,
-        opacity 150ms ease;
-}
-
-
-#result_list .drag-handler::before {
-    content: "drag_indicator";
-
-    font-family: "Material Symbols Outlined";
-    font-size: 1.125rem;
-    line-height: 1;
-}
-
-
-#result_list .drag-handler:hover {
-    color: var(--color-base-600);
-
-    background: color-mix(
-        in srgb,
-        var(--color-base-500) 8%,
-        transparent
-    );
-}
-
-
-.dark #result_list .drag-handler {
-    color: var(--color-base-500);
-}
-
-
-.dark #result_list .drag-handler:hover {
-    color: var(--color-base-300);
-
-    background: color-mix(
-        in srgb,
-        var(--color-base-400) 10%,
-        transparent
-    );
-}
-
-
-#result_list .drag-handler:active {
-    cursor: grabbing;
-}
-
-
-#result_list .drag-handler-disabled {
-    visibility: hidden;
-}
-
-
-/* ==========================================================================
-   Expand / collapse
-   ========================================================================== */
-
-#result_list a.treebeard-collapse {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-
-    width: 1.5rem;
-    height: 1.5rem;
-
-    margin-right: .25rem;
-
-    flex: none;
-
-    color: var(--color-base-500);
-
-    border-radius: .375rem;
-
-    text-decoration: none;
-
-    vertical-align: middle;
-
-    transition:
-        color 150ms ease,
-        background-color 150ms ease;
-}
-
-
-#result_list a.treebeard-collapse:hover {
-    color: var(--color-base-800);
-
-    background: color-mix(
-        in srgb,
-        var(--color-base-500) 8%,
-        transparent
-    );
-}
-
-
-.dark #result_list a.treebeard-collapse:hover {
-    color: var(--color-base-200);
-}
-
-
-/* --------------------------------------------------------------------------
-   Icons
-   -------------------------------------------------------------------------- */
-
-#result_list a.treebeard-collapse::before {
-    font-family: "Material Symbols Outlined";
-    font-size: 1.125rem;
-    line-height: 1;
-}
-
-
-#result_list a.treebeard-collapsed::before {
-    content: "chevron_right";
-}
-
-
-#result_list a.treebeard-expanded::before {
-    content: "expand_more";
-}
-
-
-#result_list a.treebeard-loading {
-    pointer-events: none;
-}
-
-
-#result_list a.treebeard-loading::before {
-    content: "progress_activity";
-
-    animation:
-        fog-tree-spin .8s linear infinite;
-}
-
-
-@keyframes fog-tree-spin {
-    to {
-        transform: rotate(360deg);
-    }
-}
-
-
-/* ==========================================================================
-   Tree object link
-   ========================================================================== */
-
-#result_list .fog-tree-row .field-name > a {
-    vertical-align: middle;
-}
-
-
-#result_list .fog-tree-row .field-name > a:hover {
-    color: var(--color-primary-600);
-}
-
-
-.dark #result_list .fog-tree-row .field-name > a:hover {
-    color: var(--color-primary-400);
-}
-
-
-/* ==========================================================================
-   Tree indentation
-   ========================================================================== */
-
-#result_list .tree-indent {
-    display: inline-block;
-
-    width: 1.5rem;
-    height: 1px;
-
-    flex: none;
-
-    vertical-align: middle;
-}
-
-
-/* ==========================================================================
-   Drag & Drop
-   ========================================================================== */
-
-
-/* --------------------------------------------------------------------------
-   Row being dragged
-   -------------------------------------------------------------------------- */
-
-#result_list tbody tr.tree-dragging {
-    opacity: .45;
-}
-
-
-/* --------------------------------------------------------------------------
-   Drop target background
-   -------------------------------------------------------------------------- */
-
-#result_list tbody tr.tree-drop-child > td,
-#result_list tbody tr.tree-drop-child > th {
-    background: color-mix(
-        in srgb,
-        var(--color-primary-500) 7%,
-        transparent
-    ) !important;
-}
-
-
-#result_list tbody tr.tree-drop-sibling > td,
-#result_list tbody tr.tree-drop-sibling > th {
-    background: color-mix(
-        in srgb,
-        var(--color-primary-500) 4%,
-        transparent
-    ) !important;
-}
-
-
-/* --------------------------------------------------------------------------
-   Drop indicator
-   --------------------------------------------------------------------------
-
-   IMPORTANT:
-   The indicator is attached to .field-name rather than <tr>.
-   Pseudo-elements on table rows are inconsistent across browsers,
-   while .field-name is a normal table cell.
-   -------------------------------------------------------------------------- */
-
-#result_list tbody tr.tree-drop-sibling .field-name,
-#result_list tbody tr.tree-drop-child .field-name {
-    position: relative;
-
-    box-shadow:
-        inset 3px 0 0 var(--color-primary-500);
-}
-
-
-/* Sibling = insert above the target row */
-
-#result_list tbody tr.tree-drop-sibling .field-name::before {
-    content: "";
-
-    position: absolute;
-
-    top: 0;
-    left: 0;
-    right: 0;
-
-    height: 2px;
-
-    background: var(--color-primary-500);
-
-    pointer-events: none;
-
-    z-index: 20;
-}
-
-
-/* Child = insert into the target row */
-
-#result_list tbody tr.tree-drop-child .field-name::after {
-    content: "";
-
-    position: absolute;
-
-    bottom: 0;
-    left: 0;
-    right: 0;
-
-    height: 2px;
-
-    background: var(--color-primary-500);
-
-    pointer-events: none;
-
-    z-index: 20;
-}
-
-
-/* ==========================================================================
-   Drag ghost
-   ========================================================================== */
-
-#fog-tree-ghost {
-    position: fixed;
-
-    top: -10000px;
-    left: -10000px;
-
-    width: max-content;
-    max-width: 320px;
-
-    pointer-events: none;
-
-    z-index: 99999;
-}
-
-
-.fog-tree-ghost-inner {
-    display: flex;
-    align-items: center;
-
-    gap: .5rem;
-
-    min-height: 42px;
-
-    padding: .5rem .75rem;
-
-    border: 1px solid var(--color-base-200);
-    border-radius: .625rem;
-
-    background: var(--color-base-50);
-    color: var(--color-base-900);
-
-    box-shadow:
-        0 10px 25px color-mix(
-            in srgb,
-            var(--color-base-950) 15%,
-            transparent
-        );
-}
-
-
-.fog-tree-ghost-inner .material-symbols-outlined {
-    flex: none;
-
-    font-size: 1.125rem;
-
-    color: var(--color-primary-500);
-}
-
-
-.fog-tree-ghost-name {
-    max-width: 280px;
-
-    overflow: hidden;
-
-    font-size: .875rem;
-    font-weight: 500;
-
-    text-overflow: ellipsis;
-    white-space: nowrap;
-}
-
-
-/* --------------------------------------------------------------------------
-   Dark mode
-   -------------------------------------------------------------------------- */
-
-.dark .fog-tree-ghost-inner {
-    border-color: var(--color-base-700);
-
-    background: var(--color-base-900);
-    color: var(--color-base-100);
-
-    box-shadow:
-        0 10px 25px color-mix(
-            in srgb,
-            var(--color-base-950) 45%,
-            transparent
-        );
 }
 
 
@@ -450,4 +59,277 @@
         var(--color-base-900) 65%,
         transparent
     );
+}
+
+
+/* ==========================================================================
+   Tree indentation
+   ========================================================================== */
+
+#result_list .tree-indent {
+    display: inline-block;
+    width: 1.5rem;
+    height: 1px;
+    flex: none;
+    vertical-align: middle;
+}
+
+
+/* ==========================================================================
+   Tree object link
+   ========================================================================== */
+
+#result_list .fog-tree-row .field-name > a {
+    vertical-align: middle;
+}
+
+#result_list .fog-tree-row .field-name > a:hover {
+    color: var(--color-primary-600);
+}
+
+.dark #result_list .fog-tree-row .field-name > a:hover {
+    color: var(--color-primary-400);
+}
+
+
+/* ==========================================================================
+   Drag handle
+   ========================================================================== */
+
+#result_list .drag-handler {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.125rem;
+    height: 1.5rem;
+    margin-right: .375rem;
+    flex: none;
+    color: var(--color-base-400);
+    cursor: grab;
+    user-select: none;
+    vertical-align: middle;
+    border-radius: .375rem;
+    transition:
+        color 150ms ease,
+        background-color 150ms ease,
+        opacity 150ms ease;
+}
+
+#result_list .drag-handler::before {
+    content: "drag_indicator";
+    font-family: "Material Symbols Outlined";
+    font-size: 1.125rem;
+    line-height: 1;
+}
+
+#result_list .drag-handler:hover {
+    color: var(--color-base-600);
+    background: color-mix(
+        in srgb,
+        var(--color-base-500) 8%,
+        transparent
+    );
+}
+
+.dark #result_list .drag-handler {
+    color: var(--color-base-500);
+}
+
+.dark #result_list .drag-handler:hover {
+    color: var(--color-base-300);
+    background: color-mix(
+        in srgb,
+        var(--color-base-400) 10%,
+        transparent
+    );
+}
+
+#result_list .drag-handler:active {
+    cursor: grabbing;
+}
+
+#result_list .drag-handler-disabled {
+    visibility: hidden;
+}
+
+
+/* ==========================================================================
+   Expand / collapse
+   ========================================================================== */
+
+#result_list a.treebeard-collapse {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.5rem;
+    height: 1.5rem;
+    margin-right: .25rem;
+    flex: none;
+    color: var(--color-base-500);
+    border-radius: .375rem;
+    text-decoration: none;
+    vertical-align: middle;
+    transition:
+        color 150ms ease,
+        background-color 150ms ease;
+}
+
+#result_list a.treebeard-collapse:hover {
+    color: var(--color-base-800);
+    background: color-mix(
+        in srgb,
+        var(--color-base-500) 8%,
+        transparent
+    );
+}
+
+.dark #result_list a.treebeard-collapse:hover {
+    color: var(--color-base-200);
+}
+
+#result_list a.treebeard-collapse::before {
+    font-family: "Material Symbols Outlined";
+    font-size: 1.125rem;
+    line-height: 1;
+}
+
+#result_list a.treebeard-collapsed::before {
+    content: "chevron_right";
+}
+
+#result_list a.treebeard-expanded::before {
+    content: "expand_more";
+}
+
+#result_list a.treebeard-loading {
+    pointer-events: none;
+}
+
+#result_list a.treebeard-loading::before {
+    content: "progress_activity";
+    animation: fog-tree-spin .8s linear infinite;
+}
+
+@keyframes fog-tree-spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+
+/* ==========================================================================
+   Drag & drop
+   ========================================================================== */
+
+#result_list tbody tr.tree-dragging {
+    opacity: .45;
+}
+
+#result_list tbody tr.tree-drop-child > td,
+#result_list tbody tr.tree-drop-child > th {
+    background: color-mix(
+        in srgb,
+        var(--color-primary-500) 7%,
+        transparent
+    ) !important;
+}
+
+#result_list tbody tr.tree-drop-sibling > td,
+#result_list tbody tr.tree-drop-sibling > th {
+    background: color-mix(
+        in srgb,
+        var(--color-primary-500) 4%,
+        transparent
+    ) !important;
+}
+
+#result_list tbody tr.tree-drop-sibling .field-name,
+#result_list tbody tr.tree-drop-child .field-name {
+    position: relative;
+    box-shadow:
+        inset 3px 0 0 var(--color-primary-500);
+}
+
+#result_list tbody tr.tree-drop-sibling .field-name::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: var(--color-primary-500);
+    pointer-events: none;
+    z-index: 20;
+}
+
+#result_list tbody tr.tree-drop-child .field-name::after {
+    content: "";
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: var(--color-primary-500);
+    pointer-events: none;
+    z-index: 20;
+}
+
+
+/* ==========================================================================
+   Drag ghost
+   ========================================================================== */
+
+#fog-tree-ghost {
+    position: fixed;
+    top: -10000px;
+    left: -10000px;
+    width: max-content;
+    max-width: 320px;
+    pointer-events: none;
+    z-index: 99999;
+}
+
+.fog-tree-ghost-inner {
+    display: flex;
+    align-items: center;
+    gap: .5rem;
+    min-height: 42px;
+    padding: .5rem .75rem;
+    border: 1px solid var(--color-base-200);
+    border-radius: .625rem;
+    background: var(--color-base-50);
+    color: var(--color-base-900);
+    box-shadow:
+        0 10px 25px color-mix(
+            in srgb,
+            var(--color-base-950) 15%,
+            transparent
+        );
+}
+
+.fog-tree-ghost-inner .material-symbols-outlined {
+    flex: none;
+    font-size: 1.125rem;
+    color: var(--color-primary-500);
+}
+
+.fog-tree-ghost-name {
+    max-width: 280px;
+    overflow: hidden;
+    font-size: .875rem;
+    font-weight: 500;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.dark .fog-tree-ghost-inner {
+    border-color: var(--color-base-700);
+    background: var(--color-base-900);
+    color: var(--color-base-100);
+    box-shadow:
+        0 10px 25px color-mix(
+            in srgb,
+            var(--color-base-950) 45%,
+            transparent
+        );
 }

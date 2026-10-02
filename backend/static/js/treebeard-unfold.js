@@ -4,10 +4,6 @@
     const MOVE_NODE_ENDPOINT = "move/";
     const GET_CHILDREN_ENDPOINT = "children/";
 
-    /*
-     * Prefer the CSRF token attached to this script.
-     * Fall back to Django's cookie when available.
-     */
     const getCsrfToken = () => {
         const script = document.currentScript;
 
@@ -24,10 +20,9 @@
 
     const CSRF_TOKEN = getCsrfToken();
 
-
-    /* ==========================================================================
-       Node
-       ========================================================================== */
+    const escapeHtml = (value) => {
+        return $("<div>").text(value).html();
+    };
 
     class Node {
         constructor(elem) {
@@ -58,17 +53,22 @@
             this.$elem
                 .find("a.treebeard-collapse")
                 .removeClass("treebeard-expanded")
-                .addClass("treebeard-collapsed");
+                .addClass("treebeard-collapsed")
+                .attr("aria-expanded", "false");
         }
 
         expand() {
+            const $toggle = this.$elem.find(
+                "a.treebeard-collapse"
+            );
+
             if (this.childrenLoaded) {
                 this.children().show();
 
-                this.$elem
-                    .find("a.treebeard-collapse")
+                $toggle
                     .removeClass("treebeard-collapsed")
-                    .addClass("treebeard-expanded");
+                    .addClass("treebeard-expanded")
+                    .attr("aria-expanded", "true");
 
                 return;
             }
@@ -99,9 +99,6 @@
 
             params.set("p", page);
 
-            /*
-             * Mark as loading only after the request starts.
-             */
             $toggle
                 .removeClass(
                     "treebeard-collapsed treebeard-expanded"
@@ -124,10 +121,6 @@
                         ...response.tree_context
                     );
 
-                    /*
-                     * Treebeard can paginate child results.
-                     * Continue loading until every page is received.
-                     */
                     if (
                         response.page <
                         response.num_pages
@@ -141,7 +134,8 @@
                         return;
                     }
 
-                    const $resultRows = $(resultList);
+                    const $resultRows =
+                        $(resultList);
 
                     setupData(
                         $resultRows,
@@ -165,13 +159,13 @@
                         )
                         .addClass(
                             "treebeard-expanded"
+                        )
+                        .attr(
+                            "aria-expanded",
+                            "true"
                         );
                 })
                 .fail(() => {
-                    /*
-                     * Don't leave the node permanently stuck
-                     * in a loading state if the request fails.
-                     */
                     this.childrenLoaded = false;
 
                     this.$elem.attr(
@@ -185,24 +179,16 @@
                         )
                         .addClass(
                             "treebeard-collapsed"
+                        )
+                        .attr(
+                            "aria-expanded",
+                            "false"
                         );
                 });
         }
     }
 
-
-    /* ==========================================================================
-       Unfold row normalization
-       ========================================================================== */
-
     const normalizeUnfoldRow = ($row) => {
-        /*
-         * AJAX-loaded Treebeard rows are rendered using Django's
-         * normal table classes rather than Unfold's classes.
-         *
-         * Use the first already-rendered Unfold row as the visual
-         * reference so this continues to follow the active Unfold theme.
-         */
         const $referenceRow = $(
             "#result_list tbody tr"
         ).first();
@@ -211,16 +197,10 @@
             return;
         }
 
-        /*
-         * Copy row classes.
-         */
         $row.addClass(
             $referenceRow.attr("class") || ""
         );
 
-        /*
-         * Copy exact cell classes.
-         */
         $row.children("td, th").each(function (index) {
             const $cell = $(this);
             const $referenceCell =
@@ -242,9 +222,6 @@
 
         $row.addClass("fog-tree-row");
 
-        /*
-         * Copy object-link styling from Unfold.
-         */
         const $referenceLink =
             $referenceRow
                 .find(".field-name a[href]")
@@ -300,38 +277,23 @@
                 return;
             }
 
-            /*
-             * Look for Unfold's boolean component.
-             */
-            const $referenceBoolean =
-                $referenceCell.find(
-                    "div[title='True'], div[title='False']"
-                ).first();
-
-            if (!$referenceBoolean.length) {
-                return;
-            }
-
-            /*
-             * Clone the exact Unfold boolean markup.
-             *
-             * This preserves:
-             * - colors
-             * - sizing
-             * - Material Symbol
-             * - dark mode classes
-             * - future theme changes
-             */
-            const $boolean =
-                $referenceBoolean.clone(true);
-
             const isTrue =
                 $booleanIcon.attr("alt") === "True";
 
-            /*
-             * Use the reference markup's icon,
-             * but make sure the state matches the AJAX value.
-             */
+            const $stateReference =
+                $referenceCell
+                    .find(
+                        `div[title='${isTrue ? "True" : "False"}']`
+                    )
+                    .first();
+
+            if (!$stateReference.length) {
+                return;
+            }
+
+            const $boolean =
+                $stateReference.clone(true);
+
             $boolean.attr(
                 "title",
                 isTrue ? "True" : "False"
@@ -350,44 +312,14 @@
                 );
             }
 
-            /*
-             * Unfold uses different classes for True/False,
-             * so copy the appropriate reference component.
-             *
-             * If the current row is True, find Unfold's True cell.
-             * If False, find Unfold's False cell.
-             */
-            const $stateReference =
-                $referenceRow
-                    .children("td, th")
-                    .eq(index)
-                    .find(
-                        `div[title='${isTrue ? "True" : "False"}']`
-                    )
-                    .first();
-
-            if ($stateReference.length) {
-                $boolean.attr(
-                    "class",
-                    $stateReference.attr("class") || ""
-                );
-            }
-
             $cell.html($boolean);
         });
     };
-
-    /* ==========================================================================
-       Row setup
-       ========================================================================== */
 
     const setupData = (
         $resultList,
         contextList
     ) => {
-        /*
-         * Apply Treebeard context data.
-         */
         $resultList.each((index, element) => {
             const context =
                 contextList[index];
@@ -408,9 +340,6 @@
             );
         });
 
-        /*
-         * Build the tree UI.
-         */
         $resultList.each((index, element) => {
             const $row = $(element);
 
@@ -427,50 +356,39 @@
                 return;
             }
 
-            /*
-             * Prevent duplicated tree controls if setupData()
-             * is ever called on an already prepared row.
-             */
             $firstCell
                 .find(
                     ".drag-handler, .tree-indent, .treebeard-collapse"
                 )
                 .remove();
 
-            const hasChildren =
-                Number(
-                    $row.data("has-children")
-                );
+            const hasChildren = Number(
+                $row.data("has-children")
+            );
 
-            const canChange =
-                Number(
-                    $row.data("can-change")
-                );
+            const canChange = Number(
+                $row.data("can-change")
+            );
 
-            const level =
-                Number(
-                    $row.data("level")
-                );
+            const level = Number(
+                $row.data("level")
+            );
 
             const elements = [];
 
-            /*
-             * Drag handle.
-             */
+            const nodeName =
+                $row
+                    .find(".field-name a[href]")
+                    .last()
+                    .text()
+                    .trim();
+
             elements.push(
                 canChange
                     ? `<span
                             class="drag-handler"
                             draggable="true"
-                            aria-label="Drag ${escapeHtml(
-                        $row
-                            .find(
-                                ".field-name a[href]"
-                            )
-                            .last()
-                            .text()
-                            .trim()
-                    )}"
+                            aria-label="Drag ${escapeHtml(nodeName)}"
                        ></span>`
                     : `<span
                             class="drag-handler drag-handler-disabled"
@@ -478,9 +396,6 @@
                        ></span>`
             );
 
-            /*
-             * Tree indentation.
-             */
             if (level > 1) {
                 elements.push(
                     "<span class='tree-indent' aria-hidden='true'></span>"
@@ -488,9 +403,6 @@
                 );
             }
 
-            /*
-             * Expand/collapse control.
-             */
             if (hasChildren) {
                 elements.push(
                     `<a
@@ -507,9 +419,6 @@
                 elements.join("")
             );
 
-            /*
-             * Ensure object link follows Unfold's important-link styling.
-             */
             const $objectLink =
                 $firstCell
                     .find("a[href]")
@@ -522,21 +431,6 @@
             }
         });
     };
-
-
-    /*
-     * Small HTML escape helper for the drag handle aria-label.
-     */
-    const escapeHtml = (value) => {
-        return $("<div>")
-            .text(value)
-            .html();
-    };
-
-
-    /* ==========================================================================
-       Drag & Drop
-       ========================================================================== */
 
     const setupDragHandler = () => {
         if (
@@ -552,21 +446,11 @@
         let targetNode = null;
         let relation = "child";
 
-
-        /* ----------------------------------------------------------------------
-           Drag ghost
-           ---------------------------------------------------------------------- */
-
         const $ghost = $("<div>", {
             id: "fog-tree-ghost",
         })
             .appendTo($body)
             .hide();
-
-
-        /* ----------------------------------------------------------------------
-           Helpers
-           ---------------------------------------------------------------------- */
 
         const updateDropIndicator = (
             $row,
@@ -581,13 +465,11 @@
                 );
         };
 
-
         const removeDropIndicator = ($row) => {
             $row.removeClass(
                 "tree-drop-child tree-drop-sibling"
             );
         };
-
 
         const clearTargetState = () => {
             if (!targetNode) {
@@ -600,7 +482,6 @@
 
             targetNode = null;
         };
-
 
         const clearDragState = () => {
             if (draggedNode) {
@@ -618,11 +499,6 @@
             relation = "child";
         };
 
-
-        /* ----------------------------------------------------------------------
-           Drag start
-           ---------------------------------------------------------------------- */
-
         $resultList.on(
             "dragstart",
             ".drag-handler[draggable='true']",
@@ -630,9 +506,8 @@
                 const originalEvent =
                     event.originalEvent;
 
-                const $row = $(this).closest(
-                    "tr"
-                );
+                const $row =
+                    $(this).closest("tr");
 
                 draggedNode =
                     new Node($row[0]);
@@ -650,9 +525,6 @@
                         .text()
                         .trim();
 
-                /*
-                 * Create a lightweight drag preview.
-                 */
                 $ghost
                     .html(`
                         <div class="fog-tree-ghost-inner">
@@ -681,11 +553,6 @@
             }
         );
 
-
-        /* ----------------------------------------------------------------------
-           Drag enter
-           ---------------------------------------------------------------------- */
-
         $resultList.on(
             "dragenter",
             "tbody tr",
@@ -697,9 +564,7 @@
                 const $row = $(this);
 
                 if (
-                    String(
-                        draggedNode.id
-                    ) ===
+                    String(draggedNode.id) ===
                     String(
                         $row.data("node-id")
                     )
@@ -707,24 +572,13 @@
                     return;
                 }
 
-                /*
-                 * Automatically expand a collapsed target
-                 * so the user can see where the item will go.
-                 */
-                const node = new Node(
-                    this
-                );
+                const node = new Node(this);
 
                 if (node.isCollapsed()) {
                     node.expand();
                 }
             }
         );
-
-
-        /* ----------------------------------------------------------------------
-           Drag over
-           ---------------------------------------------------------------------- */
 
         $resultList.on(
             "dragover",
@@ -737,13 +591,9 @@
                 event.preventDefault();
 
                 const $row = $(this);
-
                 const targetId =
                     $row.data("node-id");
 
-                /*
-                 * Never allow dropping onto itself.
-                 */
                 if (
                     String(targetId) ===
                     String(draggedNode.id)
@@ -757,9 +607,6 @@
                     return;
                 }
 
-                /*
-                 * Remove previous target indicator.
-                 */
                 if (
                     targetNode &&
                     targetNode.$elem[0] !==
@@ -776,13 +623,6 @@
                 const rect =
                     this.getBoundingClientRect();
 
-                /*
-                 * Mouse position inside row:
-                 *
-                 * 0.00 = top
-                 * 0.50 = center
-                 * 1.00 = bottom
-                 */
                 const relativeY =
                     rect.height > 0
                         ? (
@@ -793,10 +633,6 @@
                         rect.height
                         : 0.5;
 
-                /*
-                 * Top 45%  -> sibling
-                 * Bottom 55% -> child
-                 */
                 if (relativeY < 0.45) {
                     relation = "sibling";
 
@@ -819,11 +655,6 @@
             }
         );
 
-
-        /* ----------------------------------------------------------------------
-           Drop
-           ---------------------------------------------------------------------- */
-
         $resultList.on(
             "drop",
             "tbody tr",
@@ -839,12 +670,8 @@
                 }
 
                 if (
-                    String(
-                        targetNode.id
-                    ) ===
-                    String(
-                        draggedNode.id
-                    )
+                    String(targetNode.id) ===
+                    String(draggedNode.id)
                 ) {
                     clearDragState();
                     return;
@@ -859,52 +686,32 @@
                 const moveRelation =
                     relation;
 
-                /*
-                 * The current indicator remains visible while
-                 * the move request is being processed.
-                 */
                 $.post({
                     url: MOVE_NODE_ENDPOINT,
-
                     data: {
                         node: nodeId,
                         target: targetId,
                         relation: moveRelation,
                     },
-
                     headers: {
                         "X-CSRFToken":
-                        CSRF_TOKEN,
+                            CSRF_TOKEN,
                     },
                 })
                     .done(() => {
                         window.location.reload();
                     })
                     .fail(() => {
-                        /*
-                         * If the backend rejects the move,
-                         * restore the current UI rather than
-                         * pretending the move succeeded.
-                         */
                         clearDragState();
                     });
             }
         );
-
-
-        /* ----------------------------------------------------------------------
-           Drag end
-           ---------------------------------------------------------------------- */
 
         $body.on(
             "dragend",
             clearDragState
         );
 
-
-        /*
-         * Handles drops outside the result table.
-         */
         $body.on(
             "drop",
             function (event) {
@@ -919,11 +726,6 @@
         );
     };
 
-
-    /* ==========================================================================
-       Initialization
-       ========================================================================== */
-
     $(document).ready(function () {
         const $resultList =
             $("#result_list tbody tr");
@@ -933,10 +735,6 @@
                 "tree-context"
             );
 
-        /*
-         * Nothing to initialize if Treebeard context
-         * isn't available.
-         */
         if (!contextElement) {
             return;
         }
@@ -961,10 +759,6 @@
             contextList
         );
 
-
-        /*
-         * Expand / collapse.
-         */
         $("#result_list").on(
             "click",
             "a.treebeard-collapse",
@@ -979,9 +773,6 @@
 
                 node.toggle();
 
-                /*
-                 * Keep aria-expanded synchronized.
-                 */
                 $(event.currentTarget).attr(
                     "aria-expanded",
                     node.isCollapsed()
@@ -990,7 +781,6 @@
                 );
             }
         );
-
 
         setupDragHandler();
     });

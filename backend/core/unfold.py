@@ -294,7 +294,7 @@ UNFOLD_SETTINGS = {
                         "link": reverse_lazy("admin:index"),
                     },
                     {
-                        "title": _("Analytics & Charts"),
+                        "title": _("Analytics"),
                         "icon": "insights",
                         "link": reverse_lazy(
                             "admin:checkout_order_analytics"
