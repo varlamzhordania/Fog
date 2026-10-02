@@ -1,0 +1,10 @@
+{
+  "scripts": {
+    "admin:watch": "npx @tailwindcss/cli -i ./static/admin_styles/admin.css -o ./static/css/admin.css --watch",
+    "admin:build": "npx @tailwindcss/cli -i ./static/admin_styles/admin.css -o ./static/css/admin.css --minify"
+  },
+  "dependencies": {
+    "@tailwindcss/cli": "^4.1.0",
+    "tailwindcss": "^4.1.0"
+  }
+}

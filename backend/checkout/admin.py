@@ -3,11 +3,13 @@ from django.urls import NoReverseMatch, reverse
 from django.utils import timezone
 from django.utils.html import format_html
 from django.utils.translation import gettext_lazy as _
+from django.urls import path
 from unfold import admin
 from unfold.decorators import display
 
 from inventory.models import StockReservation
 from core.admin import UnfoldImportExportHistoryAdmin
+from settings.admin_views import AnalyticsDashboardView
 from .models import (
     Order,
     OrderItem,
@@ -222,7 +224,7 @@ class OrderAdmin(UnfoldImportExportHistoryAdmin):
         return format_html(
             '<span class="font-mono font-semibold">#{}</span>',
             str(obj.id)[:8]
-            )
+        )
 
     @django_admin.display(description=_("Customer"))
     def customer_display(self, obj):
@@ -283,6 +285,20 @@ class OrderAdmin(UnfoldImportExportHistoryAdmin):
 
         return shipment.status, shipment.get_status_display()
 
+    def get_urls(self):
+        custom_view = self.admin_site.admin_view(
+            AnalyticsDashboardView.as_view(model_admin=self)
+        )  #
+        custom_urls = [
+            path(
+                "analytics/",
+                custom_view,
+                name="checkout_order_analytics",
+            ),
+        ]
+        return custom_urls + super().get_urls()
+
+
 @django_admin.register(OrderPayment)
 class OrderPaymentAdmin(UnfoldImportExportHistoryAdmin):
     resource_classes = [OrderPaymentResource]
@@ -328,7 +344,7 @@ class OrderPaymentAdmin(UnfoldImportExportHistoryAdmin):
             url = reverse(
                 "admin:checkout_order_change",
                 args=[obj.order.id]
-                )
+            )
             return format_html(
                 '<a href="{}" class="font-semibold text-primary-600 underline">Order #{}</a>',
                 url,
@@ -348,7 +364,7 @@ class OrderPaymentAdmin(UnfoldImportExportHistoryAdmin):
         return format_html(
             '<span class="font-mono text-xs">{}</span>',
             obj.transaction_id
-            )
+        )
 
     @display(
         description=_("Status"),
@@ -365,7 +381,7 @@ class OrderPaymentAdmin(UnfoldImportExportHistoryAdmin):
 
     @django_admin.action(
         description=_("Mark selected payments as COMPLETED")
-        )
+    )
     def mark_as_completed(self, request, queryset):
         count = 0
         for payment in queryset:
@@ -374,7 +390,7 @@ class OrderPaymentAdmin(UnfoldImportExportHistoryAdmin):
         self.message_user(
             request,
             f"Marked {count} payment(s) as completed."
-            )
+        )
 
     @django_admin.action(description=_("Mark selected payments as FAILED"))
     def mark_as_failed(self, request, queryset):
@@ -431,7 +447,7 @@ class OrderShipmentAdmin(UnfoldImportExportHistoryAdmin):
             url = reverse(
                 "admin:checkout_order_change",
                 args=[obj.order.id]
-                )
+            )
             return format_html(
                 '<a href="{}" class="font-semibold text-primary-600 underline">Order #{}</a>',
                 url,
@@ -447,7 +463,7 @@ class OrderShipmentAdmin(UnfoldImportExportHistoryAdmin):
         return format_html(
             '<span class="font-mono text-xs font-semibold">{}</span>',
             obj.tracking_number
-            )
+        )
 
     @display(
         description=_("Status"),
@@ -463,7 +479,7 @@ class OrderShipmentAdmin(UnfoldImportExportHistoryAdmin):
 
     @django_admin.action(
         description=_("Mark selected shipments as IN TRANSIT")
-        )
+    )
     def mark_as_shipped_action(self, request, queryset):
         count = 0
         for shipment in queryset:
@@ -472,11 +488,11 @@ class OrderShipmentAdmin(UnfoldImportExportHistoryAdmin):
         self.message_user(
             request,
             f"Marked {count} shipment(s) as in transit."
-            )
+        )
 
     @django_admin.action(
         description=_("Mark selected shipments as DELIVERED")
-        )
+    )
     def mark_as_delivered_action(self, request, queryset):
         count = 0
         for shipment in queryset:
@@ -485,4 +501,4 @@ class OrderShipmentAdmin(UnfoldImportExportHistoryAdmin):
         self.message_user(
             request,
             f"Marked {count} shipment(s) as delivered."
-            )
+        )

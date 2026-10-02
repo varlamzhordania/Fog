@@ -8,7 +8,7 @@ from drf_spectacular.views import (
     SpectacularSwaggerView,
 )
 
-
+from settings.admin_views import AnalyticsDashboardView
 from .views import set_language
 
 urlpatterns = [
@@ -16,6 +16,7 @@ urlpatterns = [
     path('api/v1/inventory/', include('inventory.v1.urls', namespace='inventory-v1')),
     path('api/v1/checkout/', include('checkout.v1.urls', namespace='checkout-v1')),
     path('api/v1/settings/', include('settings.v1.urls', namespace='settings-v1')),
+
     path('admin/', admin.site.urls),
 
 ]

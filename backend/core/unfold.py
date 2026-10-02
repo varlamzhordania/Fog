@@ -37,14 +37,19 @@ def can_view(model):
 
 def nav_item(
         title, icon, model, permission=None, badge=None,
-        badge_variant="warning"
+        badge_variant="warning", extra_class=""
 ):
-    """Sidebar link to a model changelist, hidden without view permission."""
+    """Sidebar link to a model changelist, with optional custom classes."""
     item = {
         "title": title,
         "icon": icon,
         "link": changelist(model),
         "permission": permission or can_view(model),
+        "link_attrs": {
+            # Add custom margins, padding, or borders here:
+            "class": f"my-1 px-3 {extra_class}".strip(),
+            "style": f"margin-top: 2px;margin-bottom: 2px;",
+        },
     }
 
     if badge:
@@ -247,6 +252,9 @@ UNFOLD_SETTINGS = {
             # text-base-50 (#FFFFFF - Pure White)
         },
     },
+    "STYLES": [
+        lambda request: static("css/admin.css"),
+    ],
 
     # --------------------------------------------------------------------------
     # Command Palette (Ctrl/Cmd + K) - quick access to any record or model
@@ -289,6 +297,11 @@ UNFOLD_SETTINGS = {
                         "title": _("Dashboard"),
                         "icon": "dashboard",
                         "link": reverse_lazy("admin:index"),
+                    },
+                    {
+                        "title": _("Analytics & Charts"),
+                        "icon": "insights",
+                        "link": reverse_lazy("admin:checkout_order_analytics"),
                     },
                 ],
             },

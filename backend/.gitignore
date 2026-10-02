@@ -177,3 +177,5 @@ cython_debug/
 
 staticfiles/
 media/
+
+node_modules/
