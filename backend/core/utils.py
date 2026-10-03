@@ -8,7 +8,9 @@ def is_admin(user):
     Checks if the user is an admin.
     Admins are either superusers, staff members, or belong to the 'admin' group.
     """
-    return user.is_superuser or user.is_staff or user.groups.filter(name="admin").exists()
+    return user.is_superuser or user.is_staff or user.groups.filter(
+        name="admin"
+    ).exists()
 
 
 def fancy_message(request, body, level="info"):
@@ -21,7 +23,9 @@ def fancy_message(request, body, level="info"):
     """
     valid_levels = ["info", "error", "success"]
     if level not in valid_levels:
-        raise ValueError(f"Invalid level: {level}. Must be one of {valid_levels}")
+        raise ValueError(
+            f"Invalid level: {level}. Must be one of {valid_levels}"
+        )
 
     if isinstance(body, dict):
         for field_name, error_list in body.items():
@@ -32,7 +36,11 @@ def fancy_message(request, body, level="info"):
                     f"{field_name}: {error}"
                 )
     elif isinstance(body, str):
-        messages.add_message(request, messages.ERROR if level == "error" else messages.INFO, body)
+        messages.add_message(
+            request,
+            messages.ERROR if level == "error" else messages.INFO,
+            body
+        )
     else:
         raise ValueError("Unsupported message body type")
 
@@ -77,9 +85,11 @@ def pending_orders_badge_callback(request):
     """
     try:
         from checkout.models import Order
+
         # Queries orders requiring staff review or pending on-chain payment
         pending_count = Order.objects.filter(
-            status__in=[Order.StatusChoices.PENDING,Order.StatusChoices.PAYMENT]
+            status__in=[Order.StatusChoices.PENDING,
+                        Order.StatusChoices.PAYMENT]
         ).count()
         return str(pending_count) if pending_count > 0 else None
     except Exception:
@@ -93,9 +103,20 @@ def pending_shipments_badge_callback(request):
     """
     try:
         from checkout.models import OrderShipment
+
         pending_count = OrderShipment.objects.filter(
             status=OrderShipment.StatusChoices.PENDING
         ).count()
+        return str(pending_count) if pending_count > 0 else None
+    except Exception:
+        return None
+
+
+def pending_contacts_badge_callback(request):
+    try:
+        from settings.models import Contact
+
+        pending_count = Contact.objects.filter(has_responded=False).count()
         return str(pending_count) if pending_count > 0 else None
     except Exception:
         return None
@@ -109,6 +130,7 @@ def low_stock_badge_callback(request):
     try:
         from django.db.models import F
         from inventory.models import ProductStock
+
         low_count = ProductStock.objects.filter(
             product__is_active=True
         ).annotate(

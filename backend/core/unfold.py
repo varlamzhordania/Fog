@@ -298,7 +298,7 @@ UNFOLD_SETTINGS = {
                         "icon": "insights",
                         "link": reverse_lazy(
                             "admin:checkout_order_analytics"
-                            ),
+                        ),
                     },
                 ],
             },
@@ -390,6 +390,21 @@ UNFOLD_SETTINGS = {
                     nav_item(
                         _("Groups & Permissions"), "shield_person",
                         "auth.group",
+                    ),
+                ],
+            },
+
+            {
+                "title": _("Communication & Support"),
+                "separator": True,
+                "collapsible": True,
+                "items": [
+                    nav_item(
+                        _("Contact Requests"),
+                        "mail",
+                        "settings.contact",
+                        badge="core.utils.pending_contacts_badge_callback",
+                        badge_variant="warning",
                     ),
                 ],
             },
