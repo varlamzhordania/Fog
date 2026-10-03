@@ -1,0 +1,164 @@
+{% load i18n l10n %}{% localize off %}
+
+<header class="fog-head">
+    <div>
+        <h1 class="fog-title">{% trans "Welcome back," %} {{ request.user.first_name|default:request.user.email }}</h1>
+        <p class="fog-sub">{% blocktrans %}Store activity for {{ range_label }}{% endblocktrans %}</p>
+    </div>
+    <div class="fog-controls">
+        <nav class="fog-segmented" aria-label="{% trans 'Reporting period' %}"
+             hx-target="#dash" hx-swap="innerHTML" hx-push-url="true" hx-indicator="#dash">
+            {% for p in periods %}
+                <a href="{{ base_url }}?period={{ p.value }}" hx-get="{{ base_url }}?period={{ p.value }}"
+                   {% if p.active %}aria-current="true"{% endif %}>{{ p.value }} {% trans "days" %}</a>
+            {% endfor %}
+        </nav>
+        <button type="button" class="fog-icon-btn" hx-get="{{ base_url }}?period={{ period }}" hx-target="#dash"
+                hx-swap="innerHTML" hx-indicator="#dash" title="{% trans 'Refresh' %}" aria-label="{% trans 'Refresh' %}">
+            <span class="material-symbols-outlined">refresh</span>
+        </button>
+    </div>
+</header>
+
+{% if attention %}
+<section class="fog-attention" aria-label="{% trans 'Needs attention' %}">
+    <span class="fog-attention-title">{% trans "Needs attention" %}</span>
+    <ul>
+        {% for a in attention %}
+            <li><a href="{{ a.url }}" class="fog-chip fog-status-{{ a.tone }}"><strong>{{ a.n }}</strong> {{ a.label }}</a></li>
+        {% endfor %}
+    </ul>
+</section>
+{% endif %}
+
+{# Key numbers, same strip as the analytics operations row #}
+<section class="fog-ops" aria-label="{% trans 'Key numbers' %}">
+    <div class="fog-op">
+        <p class="fog-op-label">{% trans "Revenue" %}</p>
+        <p class="fog-op-value">{{ revenue }}</p>
+        <p class="fog-op-note"><span class="fog-delta fog-delta-{{ revenue_delta.tone }}">{{ revenue_delta.text }}</span> {% trans "vs previous" %}</p>
+    </div>
+    <div class="fog-op">
+        <p class="fog-op-label">{% trans "Paid orders" %}</p>
+        <p class="fog-op-value">{{ orders }}</p>
+        <p class="fog-op-note"><span class="fog-delta fog-delta-{{ orders_delta.tone }}">{{ orders_delta.text }}</span> &middot; {{ aov }} {% trans "average" %}</p>
+    </div>
+    <div class="fog-op">
+        <p class="fog-op-label">{% trans "New customers" %}</p>
+        <p class="fog-op-value">{{ customers }}</p>
+        <p class="fog-op-note"><span class="fog-delta fog-delta-{{ customers_delta.tone }}">{{ customers_delta.text }}</span> {% trans "vs previous" %}</p>
+    </div>
+    <a class="fog-op" href="{{ contacts_url }}?has_responded__exact=0">
+        <p class="fog-op-label">{% trans "Unanswered messages" %}</p>
+        <p class="fog-op-value">{{ contacts_open }}<span class="fog-op-of"> / {{ contacts_total }}</span></p>
+        <p class="fog-op-note">{% trans "Waiting for a reply" %}</p>
+    </a>
+</section>
+
+<section class="fog-split fog-split-wide">
+    <article class="fog-card" id="dash-contacts">
+        {% include "admin/dashboard/_contacts.html" %}
+    </article>
+
+    <article class="fog-card">
+        <header class="fog-card-head">
+            <div>
+                <h2 class="fog-card-title">{% trans "Daily revenue" %}</h2>
+                <p class="fog-card-note">{{ range_label }}</p>
+            </div>
+        </header>
+        <div class="fog-card-body" x-data="{ tip: '' }">
+            <div class="fog-columns" @mouseleave="tip = ''">
+                {% for b in bars %}
+                    <div @mouseenter="tip = '{{ b.label }}: {{ b.value }}'"><i style="height:{{ b.h }}%"></i></div>
+                {% endfor %}
+            </div>
+            <p class="fog-card-note" style="margin-top:.75rem;min-height:1rem" x-text="tip || '{% trans "Hover a bar to see that day" %}'"></p>
+        </div>
+    </article>
+</section>
+
+<section class="fog-split fog-split-wide">
+    <article class="fog-card">
+        <header class="fog-card-head">
+            <div>
+                <h2 class="fog-card-title">{% trans "Latest orders" %}</h2>
+                <p class="fog-card-note">{% trans "Most recent first" %}</p>
+            </div>
+            <a class="fog-link" href="{% url 'admin:checkout_order_changelist' %}">{% trans "View all" %}</a>
+        </header>
+        {% if recent_orders %}
+        <div class="fog-table-scroll">
+            <table class="fog-table">
+                <thead>
+                <tr>
+                    <th>{% trans "Order" %}</th>
+                    <th>{% trans "Customer" %}</th>
+                    <th>{% trans "Status" %}</th>
+                    <th class="num">{% trans "Total" %}</th>
+                </tr>
+                </thead>
+                <tbody>
+                {% for o in recent_orders %}
+                    <tr>
+                        <td><a class="fog-id" href="{{ o.url }}">#{{ o.id }}</a></td>
+                        <td>
+                            <span class="fog-person">
+                                <span class="fog-avatar">{{ o.initials }}</span>
+                                <span class="fog-person-text"><strong>{{ o.name|default:o.email }}</strong><small>{{ o.email }}</small></span>
+                            </span>
+                        </td>
+                        <td><span class="fog-status-wrap fog-status-{{ o.tone }}"><span class="fog-status-dot"></span>{{ o.status }}</span></td>
+                        <td class="num fog-strong">{{ o.total }}</td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+            <p class="fog-empty">{% trans "No orders yet. They will show up here as customers check out." %}</p>
+        {% endif %}
+    </article>
+
+    <article class="fog-card">
+        <header class="fog-card-head">
+            <div>
+                <h2 class="fog-card-title">{% trans "Restock soon" %}</h2>
+                <p class="fog-card-note">{% trans "At or below each product's alert level" %}</p>
+            </div>
+            <a class="fog-link" href="{% url 'admin:inventory_productstock_changelist' %}">{% trans "Manage stock" %}</a>
+        </header>
+        <div class="fog-card-body">
+            {% if low_stock %}
+                <ul class="fog-stock">
+                    {% for s in low_stock %}
+                        <li>
+                            <div class="fog-step-top">
+                                <span class="fog-product"><strong>{{ s.name }}</strong><small>{{ s.sku }}</small></span>
+                                <span class="fog-status-wrap fog-status-{{ s.tone }}"><span class="fog-status-dot"></span>{{ s.status }}</span>
+                            </div>
+                            <div class="fog-stock-meter">
+                                <div class="fog-meter fog-meter-{{ s.tone }}"><i style="width:{{ s.fill }}%"></i></div>
+                                <span>{{ s.avail }} {% trans "left" %}</span>
+                            </div>
+                        </li>
+                    {% endfor %}
+                </ul>
+            {% else %}
+                <p class="fog-empty">{% trans "Every active product is above its alert level." %}</p>
+            {% endif %}
+        </div>
+    </article>
+</section>
+
+<section class="fog-quick" aria-label="{% trans 'Shortcuts' %}">
+    {% for title, icon, url in quick %}
+        <a href="{{ url }}" class="fog-btn"><span class="material-symbols-outlined">{{ icon }}</span>{{ title }}</a>
+    {% endfor %}
+</section>
+
+<footer class="fog-foot">
+    <span>{% blocktrans %}Showing {{ range_label }}{% endblocktrans %}</span>
+    <span>{% trans "Updated" %} {{ now|date:"M j, H:i" }}</span>
+</footer>
+{% endlocalize %}

@@ -9,7 +9,7 @@ from unfold.decorators import display
 
 from inventory.models import StockReservation
 from core.admin import UnfoldImportExportHistoryAdmin
-from settings.admin_views import AnalyticsDashboardView
+from settings.admin_views.analytics import AnalyticsDashboardView
 from .models import (
     Order,
     OrderItem,

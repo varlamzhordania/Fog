@@ -249,6 +249,7 @@ UNFOLD_SETTINGS = {
     },
     "STYLES": [
         lambda request: static("css/admin.css"),
+        lambda request: static("css/dashboard.css"),
     ],
 
     # --------------------------------------------------------------------------

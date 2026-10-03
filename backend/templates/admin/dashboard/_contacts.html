@@ -1,0 +1,45 @@
+{% load i18n %}
+<header class="fog-card-head">
+    <div>
+        <h2 class="fog-card-title">{% trans "Contact messages" %}</h2>
+        <p class="fog-card-note">{% blocktrans count n=contacts_open %}{{ n }} message waiting for a reply{% plural %}{{ n }} messages waiting for a reply{% endblocktrans %}</p>
+    </div>
+    <div class="fog-controls" hx-target="#dash-contacts" hx-swap="innerHTML">
+        <nav class="fog-segmented" aria-label="{% trans 'Filter messages' %}">
+            <a href="{{ base_url }}?show=open" hx-get="{{ base_url }}?panel=contacts&show=open" {% if contacts_show == 'open' %}aria-current="true"{% endif %}>{% trans "Open" %}</a>
+            <a href="{{ base_url }}?show=all" hx-get="{{ base_url }}?panel=contacts&show=all" {% if contacts_show == 'all' %}aria-current="true"{% endif %}>{% trans "All" %}</a>
+        </nav>
+        <a class="fog-link" href="{{ contacts_url }}">{% trans "Open inbox" %}</a>
+    </div>
+</header>
+
+<ul class="fog-inbox" x-data="{ open: null }" style="margin-top:.5rem">
+    {% for c in contacts %}
+        <li>
+            <button type="button" class="fog-inbox-row" @click="open = open === {{ c.id }} ? null : {{ c.id }}" :aria-expanded="open === {{ c.id }}">
+                <span class="fog-avatar">{{ c.initials }}</span>
+                <span class="fog-person-text" style="flex:1">
+                    <strong>{{ c.subject }}</strong>
+                    <small>{{ c.name }} &middot; {{ c.email }}</small>
+                </span>
+                {% if c.done %}<span class="fog-status-wrap fog-status-success"><span class="fog-status-dot"></span>{% trans "Replied" %}</span>{% endif %}
+                <span class="fog-inbox-time">{{ c.created|timesince }} {% trans "ago" %}</span>
+            </button>
+
+            <div x-show="open === {{ c.id }}" x-cloak>
+                <p class="fog-message">{{ c.message }}</p>
+                <div class="fog-actions">
+                    <a class="fog-btn fog-btn-primary" href="mailto:{{ c.email }}?subject=Re:%20{{ c.subject|urlencode }}">
+                        <span class="material-symbols-outlined">reply</span>{% trans "Reply by email" %}</a>
+                    {% if can_reply and not c.done %}
+                        <button type="button" class="fog-btn" hx-post="{{ base_url }}?panel=contacts&show={{ contacts_show }}"
+                                hx-vals='{"id": "{{ c.id }}"}' hx-target="#dash-contacts" hx-swap="innerHTML">
+                            <span class="material-symbols-outlined">check</span>{% trans "Mark as replied" %}</button>
+                    {% endif %}
+                </div>
+            </div>
+        </li>
+    {% empty %}
+        <li><p class="fog-empty">{% if contacts_show == 'open' %}{% trans "Inbox is clear. New messages from the contact form will appear here." %}{% else %}{% trans "No contact messages yet." %}{% endif %}</p></li>
+    {% endfor %}
+</ul>

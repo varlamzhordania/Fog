@@ -1,0 +1,15 @@
+{% extends "admin/base.html" %}
+{% load i18n %}
+
+{% block breadcrumbs %}{% endblock %}
+
+{% block branding %}
+    {% include "unfold/helpers/site_branding.html" %}
+{% endblock %}
+
+{% block content %}
+{# Same wrapper as analytics: tokens, dark mode and the htmx loading line come from .fog-dashboard. #}
+<div id="dash" class="fog-dashboard" hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}'>
+    {% include "admin/dashboard/_body.html" %}
+</div>
+{% endblock %}
