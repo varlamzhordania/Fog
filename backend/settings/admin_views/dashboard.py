@@ -125,7 +125,7 @@ class DashboardView(UnfoldModelAdminViewMixin, TemplateView):
                 (_("Add product"), "add_box", reverse("admin:inventory_product_add")),
                 (_("Orders"), "receipt_long", reverse("admin:checkout_order_changelist")),
                 (_("Stock levels"), "warehouse", reverse("admin:inventory_productstock_changelist")),
-                (_("Analytics"), "insights", reverse("admin:checkout_order_analytics")),
+                (_("Analytics"), "insights", reverse("admin-analytics")),
                 (_("Live config"), "tune", reverse("admin:constance_config_changelist")),
             ],
         )

@@ -13,13 +13,14 @@ from django.db.models import (
     Value,
 )
 from django.db.models.functions import Coalesce, TruncDate
+from django.contrib import admin
 from django.urls import reverse
 from django.utils import timezone
 from django.utils.cache import patch_vary_headers
 from django.utils.translation import gettext_lazy as _
 from django.utils.translation import ngettext
 from django.views.generic import TemplateView
-
+from unfold.admin import ModelAdmin
 from unfold.views import UnfoldModelAdminViewMixin
 
 from checkout.models import Order, OrderItem, OrderPayment, ShoppingCart
@@ -849,3 +850,8 @@ class AnalyticsDashboardView(UnfoldModelAdminViewMixin, TemplateView):
                 for value, label in Order.StatusChoices.choices
             ]
         return data
+
+
+def analytics_view(request, *args, **kwargs):
+    view = AnalyticsDashboardView.as_view(model_admin=ModelAdmin(Order, admin.site))
+    return admin.site.admin_view(view)(request, *args, **kwargs)

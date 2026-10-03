@@ -285,18 +285,18 @@ class OrderAdmin(UnfoldImportExportHistoryAdmin):
 
         return shipment.status, shipment.get_status_display()
 
-    def get_urls(self):
-        custom_view = self.admin_site.admin_view(
-            AnalyticsDashboardView.as_view(model_admin=self)
-        )  #
-        custom_urls = [
-            path(
-                "analytics/",
-                custom_view,
-                name="checkout_order_analytics",
-            ),
-        ]
-        return custom_urls + super().get_urls()
+    # def get_urls(self):
+    #     custom_view = self.admin_site.admin_view(
+    #         AnalyticsDashboardView.as_view(model_admin=self)
+    #     )  #
+    #     custom_urls = [
+    #         path(
+    #             "analytics/",
+    #             custom_view,
+    #             name="checkout_order_analytics",
+    #         ),
+    #     ]
+    #     return custom_urls + super().get_urls()
 
 
 @django_admin.register(OrderPayment)

@@ -9,10 +9,12 @@ from drf_spectacular.views import (
 )
 
 from settings.admin_views.dashboard import dashboard_view
+from settings.admin_views.analytics import analytics_view
 from .views import set_language
 
 urlpatterns = [
     path('admin/', dashboard_view, name='admin-dashboard'),
+    path('admin/analytics/', analytics_view, name='admin-analytics'),
 
     path('api/v1/account/', include('account.v1.urls', namespace='account-v1')),
     path('api/v1/inventory/', include('inventory.v1.urls', namespace='inventory-v1')),

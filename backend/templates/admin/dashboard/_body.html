@@ -20,6 +20,12 @@
     </div>
 </header>
 
+<section class="fog-quick" aria-label="{% trans 'Shortcuts' %}">
+    {% for title, icon, url in quick %}
+        <a href="{{ url }}" class="fog-btn"><span class="material-symbols-outlined">{{ icon }}</span>{{ title }}</a>
+    {% endfor %}
+</section>
+
 {% if attention %}
 <section class="fog-attention" aria-label="{% trans 'Needs attention' %}">
     <span class="fog-attention-title">{% trans "Needs attention" %}</span>
@@ -149,12 +155,6 @@
             {% endif %}
         </div>
     </article>
-</section>
-
-<section class="fog-quick" aria-label="{% trans 'Shortcuts' %}">
-    {% for title, icon, url in quick %}
-        <a href="{{ url }}" class="fog-btn"><span class="material-symbols-outlined">{{ icon }}</span>{{ title }}</a>
-    {% endfor %}
 </section>
 
 <footer class="fog-foot">
