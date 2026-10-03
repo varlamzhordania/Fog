@@ -4,7 +4,6 @@ import environ
 from collections import OrderedDict
 from pathlib import Path
 from django.utils.translation import gettext_lazy as _
-from django.conf.urls.static import static
 
 from core.ckeditor import BASE_CKEDITOR_5_CONFIGS
 from core.unfold import (
@@ -291,12 +290,18 @@ STRIPE_SECRET_KEY = env("STRIPE_SECRET_KEY", default="sk_***")
 STRIPE_PUBLISHABLE_KEY = env("STRIPE_PUBLISHABLE_KEY", default="pk_***")
 STRIPE_WEBHOOK_KEY = env("STRIPE_WEBHOOK_KEY", default="whsec_***")
 
+# SHKeeper
+SHKEEPER_URL = env("SHKEEPER_URL", default="http://shkeeper:5000")
+SHKEEPER_API_KEY = env("SHKEEPER_API_KEY", default="")
+SHKEEPER_CALLBACK_BASE = env("SHKEEPER_CALLBACK_BASE", default="http://backend:8000")
+SECURE_REDIRECT_EXEMPT = [r"^api/v1/checkout/webhooks/shkeeper/$"]
+
 USE_HTTPS_IN_ABSOLUTE_URLS = env.bool(
     "USE_HTTPS_IN_ABSOLUTE_URLS",
     default=False
 )
 
-SERVER_DOMAIN = env("BACKEND_DOMAIN", default="127.0.0.1:8000")
+SERVER_DOMAIN = env("SERVER_DOMAIN", default="127.0.0.1:8000")
 FRONTEND_DOMAIN = env("FRONTEND_DOMAIN", default="localhost:3000")
 
 BASE_DOMAIN = FRONTEND_DOMAIN
@@ -351,7 +356,7 @@ EMAIL_HOST = env("EMAIL_HOST", default="")
 EMAIL_PORT = env("EMAIL_PORT", default="")
 EMAIL_USE_TLS = env.bool("EMAIL_USE_TLS", default=True)
 EMAIL_HOST_USER = env("EMAIL_HOST_USER", default="")
-EMAIL_HOST_PASSWORD = env("EMAIL_HOST_password", default="")
+EMAIL_HOST_PASSWORD = env("EMAIL_HOST_PASSWORD", default="")
 
 # Uncomment if Using RabbitMQ
 RABBITMQ_HOST = env("RABBITMQ_HOST", default="")

@@ -121,7 +121,9 @@ class StockReservationInline(admin.TabularInline):
 
     @django_admin.display(boolean=True, description=_("Expired?"))
     def is_expired(self, obj):
-        return timezone.now() > obj.expires_at
+        if obj.expires_at:
+            return timezone.now() > obj.expires_at
+        return False
 
 
 class ProductStockInline(

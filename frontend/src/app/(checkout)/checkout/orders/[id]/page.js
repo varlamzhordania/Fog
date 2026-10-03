@@ -63,7 +63,8 @@ export default function OrderPaymentPage() {
     }, [remaining, order, refetch]);
 
     if (isLoading) {
-        return <div className="container py-16"><Skeleton className="h-64 w-full rounded-xl"/></div>;
+        return <div className="container py-16"><Skeleton className="h-64 w-full rounded-xl"/>
+        </div>;
     }
     if (isError || !order) {
         return (
@@ -105,7 +106,8 @@ export default function OrderPaymentPage() {
                         <Typography type="body-sm" className="uppercase tracking-wider text-muted">
                             FOG DIRECT
                         </Typography>
-                        <Typography type="h1" className="text-3xl font-light">Order #{order.id}</Typography>
+                        <Typography type="h1" className="text-3xl font-light">Order
+                            #{order.id}</Typography>
                     </div>
                     <Chip color={status.color}><Chip.Label>{status.label}</Chip.Label></Chip>
                 </div>
@@ -113,17 +115,20 @@ export default function OrderPaymentPage() {
                 {awaiting && (
                     <Card>
                         <Card.Content className="flex flex-col gap-4 p-5 sm:p-6">
-                            <div className="flex items-center gap-3">
+                            <div className="flex items-start gap-3">
                                 <Icon icon={Clock} className="size-6 text-warning"/>
                                 <div>
-                                    <Typography type="body-sm" className="text-muted">Time left to pay</Typography>
+                                    <Typography type="body-sm" className="text-muted">
+                                        Time left to pay
+                                    </Typography>
                                     <Typography type="h2" className="font-mono tabular-nums">
                                         {formatClock(remaining)}
                                     </Typography>
                                 </div>
                             </div>
                             <Typography type="body-xs" className="text-muted">
-                                If payment isn't completed before the timer ends, the order is cancelled
+                                If payment isn't completed before the timer ends, the order is
+                                cancelled
                                 automatically and the items are released.
                             </Typography>
 
@@ -135,11 +140,25 @@ export default function OrderPaymentPage() {
                                             Pay with {order.payment_instructions.method}
                                         </Typography>
                                         <p className="text-muted">{order.payment_instructions.message}</p>
+                                        {order.payment_instructions.checkout_url && (
+                                            <Button className="w-fit"
+                                                    onPress={() => window.location.assign(order.payment_instructions.checkout_url)}>
+                                                Pay by card
+                                            </Button>
+                                        )}
                                         <dl className="mt-2 grid grid-cols-2 gap-2">
                                             <dt className="text-muted">Reference</dt>
                                             <dd className="font-mono">{order.payment_instructions.reference}</dd>
                                             <dt className="text-muted">Amount</dt>
                                             <dd className="font-mono">{formatPrice(order.payment_instructions.amount)}</dd>
+                                            {order.payment_instructions.address && (<>
+                                                <dt className="text-muted">Send exactly</dt>
+                                                <dd className="font-mono">
+                                                    {order.payment_instructions.crypto_amount} {order.payment_instructions.asset}
+                                                </dd>
+                                                <dt className="text-muted">To address</dt>
+                                                <dd className="break-all font-mono">{order.payment_instructions.address}</dd>
+                                            </>)}
                                         </dl>
                                     </div>
                                 </>
@@ -193,7 +212,8 @@ export default function OrderPaymentPage() {
                             </div>
                             {order.shipment?.tracking_number && (
                                 <Typography type="body-sm" className="text-muted">
-                                    {order.shipment.carrier} · Tracking {order.shipment.tracking_number}
+                                    {order.shipment.carrier} ·
+                                    Tracking {order.shipment.tracking_number}
                                 </Typography>
                             )}
                         </Card.Content>
@@ -211,7 +231,8 @@ export default function OrderPaymentPage() {
                                     <span className="min-w-0 truncate">
                                         {item.quantity} × {item.product_name ?? "Removed product"}
                                     </span>
-                                    <span className="shrink-0">{formatPrice(item.total_price)}</span>
+                                    <span
+                                        className="shrink-0">{formatPrice(item.total_price)}</span>
                                 </li>
                             ))}
                         </ul>
@@ -230,7 +251,8 @@ export default function OrderPaymentPage() {
                             </p>
                         </div>
                         {awaiting && (
-                            <Button variant="ghost" onPress={cancel} isPending={cancelMutation.isPending}
+                            <Button variant="ghost" onPress={cancel}
+                                    isPending={cancelMutation.isPending}
                                     className="text-danger">
                                 Cancel order
                             </Button>

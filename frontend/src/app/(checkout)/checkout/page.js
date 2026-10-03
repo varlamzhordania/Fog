@@ -70,8 +70,12 @@ export default function CheckoutPage() {
         }
 
         createOrder.mutate(payload, {
-            onSuccess: ({order}) => {
+            onSuccess: ({order, payment_instructions}) => {
                 useCartStore.getState().resetLocalCart();
+                if (payment_instructions?.checkout_url) {
+                    window.location.assign(payment_instructions.checkout_url);
+                    return;
+                }
                 toast.success("Order created. Complete your payment within 60 minutes.");
                 router.push(`/checkout/orders/${order.id}/`);
             },
@@ -81,12 +85,15 @@ export default function CheckoutPage() {
 
     if (!logged_in) {
         return (
-            <div className="container flex min-h-[60vh] flex-col items-center justify-center gap-4 text-center">
-                <Typography type="h1" className="text-3xl font-light">Sign in to checkout</Typography>
+            <div
+                className="container flex min-h-[60vh] flex-col items-center justify-center gap-4 text-center">
+                <Typography type="h1" className="text-3xl font-light">Sign in to
+                    checkout</Typography>
                 <Typography type="body-sm" className="max-w-sm text-muted">
                     Your cart is saved. Sign in or create an account to choose an address and pay.
                 </Typography>
-                <Link href="/login" className="inline-flex items-center gap-2 text-accent no-underline">
+                <Link href="/login"
+                      className="inline-flex items-center gap-2 text-accent no-underline">
                     <Icon icon={LogIn}/> Sign in
                 </Link>
             </div>
@@ -95,10 +102,13 @@ export default function CheckoutPage() {
 
     if (totalQuantity === 0) {
         return (
-            <div className="container flex min-h-[60vh] flex-col items-center justify-center gap-4 text-center">
+            <div
+                className="container flex min-h-[60vh] flex-col items-center justify-center gap-4 text-center">
                 <Icon icon={ShoppingCart} className="size-10 text-muted"/>
-                <Typography type="h1" className="text-3xl font-light">Your cart is empty</Typography>
-                <Link href="/products" className="inline-flex items-center gap-2 text-accent no-underline">
+                <Typography type="h1" className="text-3xl font-light">Your cart is
+                    empty</Typography>
+                <Link href="/products"
+                      className="inline-flex items-center gap-2 text-accent no-underline">
                     Explore Catalog <Icon icon={ArrowRight} className="size-4"/>
                 </Link>
             </div>
@@ -109,10 +119,12 @@ export default function CheckoutPage() {
         <div className="flex w-full flex-col">
             <header className="container pb-6 pt-6 sm:pb-8 sm:pt-8">
                 <div className="border-b pb-5">
-                    <Typography type="body-sm" className="mb-1.5 uppercase tracking-wider text-muted">
+                    <Typography type="body-sm"
+                                className="mb-1.5 uppercase tracking-wider text-muted">
                         FOG DIRECT · Secure checkout
                     </Typography>
-                    <Typography type="h1" className="text-3xl font-light tracking-tight sm:text-4xl">
+                    <Typography type="h1"
+                                className="text-3xl font-light tracking-tight sm:text-4xl">
                         Checkout
                     </Typography>
                 </div>
@@ -125,12 +137,14 @@ export default function CheckoutPage() {
                     {/* 1. Address */}
                     <Card>
                         <Card.Content className="flex flex-col gap-5 p-5 sm:p-6">
-                            <Typography type="h3" className="font-normal">1. Delivery address</Typography>
+                            <Typography type="h3" className="font-normal">1. Delivery
+                                address</Typography>
 
                             {addressesLoading ? (
                                 <Skeleton className="h-20 w-full rounded-lg"/>
                             ) : (
-                                <RadioGroup name="address" value={selectedAddress} onChange={setAddressChoice}>
+                                <RadioGroup name="address" value={selectedAddress}
+                                            onChange={setAddressChoice}>
                                     {addresses.map((a) => (
                                         <Radio key={a.id} value={String(a.id)}
                                                className="w-full flex-row rounded-lg border p-3">
@@ -148,7 +162,8 @@ export default function CheckoutPage() {
                                             </Radio.Content>
                                         </Radio>
                                     ))}
-                                    <Radio value="new" className="w-full flex-row rounded-lg border p-3">
+                                    <Radio value="new"
+                                           className="w-full flex-row rounded-lg border p-3">
                                         <Radio.Content>
                                             <Radio.Control><Radio.Indicator/></Radio.Control>
                                             <Label className="font-medium">Use a new address</Label>
@@ -159,7 +174,8 @@ export default function CheckoutPage() {
 
                             {selectedAddress === "new" && (
                                 <NewAddressForm value={newAddress} onChange={setNewAddress}
-                                                saveAddress={saveAddress} onSaveChange={setSaveAddress}/>
+                                                saveAddress={saveAddress}
+                                                onSaveChange={setSaveAddress}/>
                             )}
                         </Card.Content>
                     </Card>
@@ -167,7 +183,8 @@ export default function CheckoutPage() {
                     {/* 2. Payment */}
                     <Card>
                         <Card.Content className="flex flex-col gap-5 p-5 sm:p-6">
-                            <Typography type="h3" className="font-normal">2. Payment method</Typography>
+                            <Typography type="h3" className="font-normal">2. Payment
+                                method</Typography>
 
                             {methodsLoading ? (
                                 <Skeleton className="h-20 w-full rounded-lg"/>
@@ -186,7 +203,8 @@ export default function CheckoutPage() {
                                                 <div className="flex flex-col">
                                                     <Label className="font-medium">{m.name}</Label>
                                                     {m.description && (
-                                                        <span className="text-sm text-muted">{m.description}</span>
+                                                        <span
+                                                            className="text-sm text-muted">{m.description}</span>
                                                     )}
                                                     {Number(m.min_amount) > 0 && (
                                                         <span className="text-xs text-muted">
@@ -200,7 +218,8 @@ export default function CheckoutPage() {
                                 </RadioGroup>
                             )}
                             <Typography type="body-xs" className="text-muted">
-                                Your order is held for 60 minutes. If it isn't paid in that time it is
+                                Your order is held for 60 minutes. If it isn't paid in that time it
+                                is
                                 cancelled and the items go back on sale.
                             </Typography>
                         </Card.Content>
@@ -209,10 +228,13 @@ export default function CheckoutPage() {
                     {/* 3. Notes */}
                     <Card>
                         <Card.Content className="flex flex-col gap-3 p-5 sm:p-6">
-                            <Typography type="h3" className="font-normal">3. Notes (optional)</Typography>
-                            <TextField variant="secondary" name="notes" value={notes} onChange={setNotes}>
+                            <Typography type="h3" className="font-normal">3. Notes
+                                (optional)</Typography>
+                            <TextField variant="secondary" name="notes" value={notes}
+                                       onChange={setNotes}>
                                 <Label className="sr-only">Order notes</Label>
-                                <TextArea rows={3} maxLength={1000} placeholder="Delivery instructions…"/>
+                                <TextArea rows={3} maxLength={1000}
+                                          placeholder="Delivery instructions…"/>
                             </TextField>
                         </Card.Content>
                     </Card>
@@ -222,11 +244,13 @@ export default function CheckoutPage() {
                 <aside className="col-span-12 lg:col-span-4 xl:col-span-3">
                     <Card className="lg:sticky lg:top-30">
                         <Card.Content className="p-5 sm:p-6">
-                            <Typography type="h3" className="mb-5 font-normal">Order Summary</Typography>
+                            <Typography type="h3" className="mb-5 font-normal">Order
+                                Summary</Typography>
 
                             <ul className="flex flex-col gap-3">
                                 {items.map((item) => (
-                                    <li key={item.product.id} className="flex justify-between gap-3 text-sm">
+                                    <li key={item.product.id}
+                                        className="flex justify-between gap-3 text-sm">
                                         <span className="min-w-0 truncate">
                                             {item.quantity} × {item.product.name}
                                         </span>
@@ -241,7 +265,8 @@ export default function CheckoutPage() {
 
                             <div className="mb-6 flex items-center justify-between gap-4">
                                 <Typography type="body">Total</Typography>
-                                <Typography type="h2" className="font-normal">{formatPrice(totalPrice)}</Typography>
+                                <Typography type="h2"
+                                            className="font-normal">{formatPrice(totalPrice)}</Typography>
                             </div>
 
                             {belowMinimum && (
@@ -273,7 +298,8 @@ function NewAddressForm({value, onChange, saveAddress, onSaveChange}) {
     const set = (name) => (v) => onChange((prev) => ({...prev, [name]: v}));
 
     const field = (name, label, props = {}) => (
-        <TextField variant="secondary" name={name} value={value[name]} onChange={set(name)} {...props}>
+        <TextField variant="secondary" name={name} value={value[name]}
+                   onChange={set(name)} {...props}>
             <Label>{label}</Label>
             <Input/>
             <FieldError/>
@@ -282,8 +308,10 @@ function NewAddressForm({value, onChange, saveAddress, onSaveChange}) {
 
     return (
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-            <div className="sm:col-span-2">{field("full_name", "Full name", {isRequired: true})}</div>
-            <div className="sm:col-span-2">{field("line1", "Address line 1", {isRequired: true})}</div>
+            <div
+                className="sm:col-span-2">{field("full_name", "Full name", {isRequired: true})}</div>
+            <div
+                className="sm:col-span-2">{field("line1", "Address line 1", {isRequired: true})}</div>
             <div className="sm:col-span-2">{field("line2", "Address line 2 (optional)")}</div>
             {field("city", "City / Town", {isRequired: true})}
             {field("state", "State / Province (optional)")}

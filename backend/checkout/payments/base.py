@@ -1,14 +1,22 @@
+from datetime import timedelta
+from django.utils import timezone
+
+
+def payment_deadline(order):
+    times = [r.expires_at for r in order.stock_reservations.filter(status="active")]
+    return max(times) if times else timezone.now() + timedelta(minutes=60)
+
+
 class PaymentProvider:
-    """
-    One class per payment gateway. `codes` are the PaymentMethod.code values it serves.
-    - instructions(): pure, no side effects. Safe to call on every order fetch.
-    - initiate(): may create an invoice/address at the gateway. Called once per
-      (re)start of a payment.
-    """
-    codes: tuple = ()
+    code: str = ""
 
     def instructions(self, order, payment, method) -> dict:
+        """Pure: built only from stored payment data. Safe on every fetch."""
         raise NotImplementedError
 
     def initiate(self, order, payment, method) -> dict:
+        """May call the gateway. Must fill provider_reference/provider_data."""
         return self.instructions(order, payment, method)
+
+    def cancel(self, reference: str) -> None:
+        """Best-effort: close the open invoice/session. Default: nothing."""

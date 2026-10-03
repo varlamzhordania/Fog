@@ -14,6 +14,11 @@ User = get_user_model()
 
 
 class PaymentMethod(BaseModel):
+    class PaymentProviderChoices(models.TextChoices):
+        MANUAL = "manual", _("Manual (staff confirmed)")
+        STRIPE = "stripe", _("Stripe")
+        SHKEEPER = "shkeeper", _("SHKeeper (crypto)")
+
     name = models.CharField(
         max_length=100,
         unique=True,
@@ -28,11 +33,23 @@ class PaymentMethod(BaseModel):
         verbose_name=_("Code"),
         help_text=_("Short code identifier, e.g., stripe, paypal, crypto")
     )
+
     description = models.TextField(
         blank=True,
         null=True,
         verbose_name=_("Description"),
         help_text=_("Optional description for the payment method")
+    )
+    provider = models.CharField(
+        max_length=20, choices=PaymentProviderChoices.choices,
+        default=PaymentProviderChoices.MANUAL, db_index=True,
+        help_text=_("Gateway that processes this method."),
+    )
+    asset = models.CharField(
+        max_length=30, blank=True, default="",
+        help_text=_(
+            "Gateway symbol, e.g. BTC, XMR, ETH, TRX-USDT (SHKeeper)."
+        ),
     )
     icon = models.ImageField(
         upload_to=UploadPath(folder="public", sub_path="images"),
@@ -401,11 +418,24 @@ class OrderPayment(BaseModel):
         default=StatusChoices.PENDING,
         verbose_name=_('Status'),
     )
+    provider = models.CharField(
+        max_length=20,
+        choices=PaymentMethod.PaymentProviderChoices.choices,
+        default=PaymentMethod.PaymentProviderChoices.MANUAL,
+        db_index=True,
+        verbose_name=_("Provider"),
+    )
+    provider_reference = models.CharField(
+        max_length=128, blank=True, default="", db_index=True,
+        help_text=_("Stripe session id / SHKeeper external id."),
+    )
     method = models.CharField(
         max_length=50,
         verbose_name=_('Payment Method'),
         help_text=_('e.g. Stripe, Crypto, PayPal'),
     )
+    method_code = models.CharField(max_length=50, blank=True, default="")
+    provider_data = models.JSONField(default=dict, blank=True)
     transaction_id = models.CharField(
         max_length=100,
         blank=True,

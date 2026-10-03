@@ -1,0 +1,64 @@
+name: fog
+
+x-backend: &backend
+  build: ./backend
+  env_file: docker.env
+  depends_on:
+    db: {condition: service_healthy}
+    redis: {condition: service_started}
+  networks: [default, shkeeper]
+  restart: unless-stopped
+
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: ${DB_NAME}
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    volumes: [pgdata:/var/lib/postgresql/data]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER} -d ${DB_NAME}"]
+      interval: 5s
+      retries: 10
+
+  redis:
+    image: redis:7-alpine
+    volumes: [redisdata:/data]
+
+  backend:
+    <<: *backend
+    command: >
+      sh -c "python manage.py migrate --noinput &&
+             python manage.py collectstatic --noinput &&
+             gunicorn core.wsgi:application -b 0.0.0.0:8000 --workers 3 --timeout 60"
+    ports: ["8000:8000"]
+    volumes: [media:/home/app/media, static:/home/app/staticfiles]
+
+  celery:
+    <<: *backend
+    command: celery -A core worker -l info
+
+  celery-beat:
+    <<: *backend
+    command: celery -A core beat -l info
+
+  frontend:
+    build:
+      context: ./frontend
+      args:   # NEXT_PUBLIC_* and rewrites are baked in at build time
+        NEXT_PUBLIC_API_BASE_URL: http://localhost:8000    # what the browser calls
+        NEXT_PUBLIC_MEDIA_BASE_URL: http://backend:8000    # what the Next server proxies /media to
+    environment:
+      INTERNAL_API_BASE_URL: http://backend:8000           # server-side fetches
+      AUTH_CLIENT_ID: ${AUTH_CLIENT_ID}
+      AUTH_CLIENT_SECRET: ${AUTH_CLIENT_SECRET}
+    ports: ["3000:3000"]
+    depends_on: [backend]
+
+networks:
+  shkeeper:
+    external: true
+    name: shkeeper_net
+
+volumes: {pgdata: {}, redisdata: {}, media: {}, static: {}}

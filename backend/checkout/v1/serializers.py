@@ -129,6 +129,7 @@ class OrderPaymentPublicSerializer(serializers.ModelSerializer):
         fields = [
             'amount',
             'status',
+            'provider',
             'method',
             'transaction_id',
             'paid_at',

@@ -63,7 +63,7 @@ class OrderPaymentInline(admin.StackedInline):
     extra = 0
     can_delete = False
     fields = [
-        ("method", "status"),
+        ("provider", "method", "status"),
         ("amount", "transaction_id"),
         "paid_at",
     ]
@@ -107,7 +107,8 @@ class OrderStockReservationInline(admin.TabularInline):
 @django_admin.register(PaymentMethod)
 class PaymentMethodAdmin(UnfoldImportExportHistoryAdmin):
     resource_classes = [PaymentMethodResource]
-    list_display = ["icon_preview", "name", "code", "min_amount_display",
+    list_display = ["icon_preview", "asset", "name", "provider", "code",
+                    "min_amount_display",
                     "created_at"]
     search_fields = ["name", "code", "description"]
     readonly_fields = ["created_at", "updated_at"]
@@ -119,10 +120,13 @@ class PaymentMethodAdmin(UnfoldImportExportHistoryAdmin):
             {
                 "fields": (
                     "name",
+                    "provider",
                     "code",
+                    "asset",
                     "icon",
                     "min_amount",
                     "description",
+                    "is_active",
                 )
             },
         ),
@@ -308,7 +312,7 @@ class OrderAdmin(UnfoldImportExportHistoryAdmin):
 
     @django_admin.action(
         description=_("Confirm payment manually (commits stock)")
-        )
+    )
     def confirm_payment_manually(self, request, queryset):
         run_on_orders(
             self,
@@ -316,28 +320,28 @@ class OrderAdmin(UnfoldImportExportHistoryAdmin):
             [o.pk for o in queryset],
             OrderService.confirm_payment,
             "Confirmed payment on {n} order(s)."
-            )
+        )
 
     @action(description=_("Start processing"))
     def mark_processing(self, request, queryset):
         run_on_orders(
             self, request, [o.pk for o in queryset],
             OrderService.start_processing, "{n} order(s) now processing."
-            )
+        )
 
     @action(description=_("Mark as shipped"))
     def mark_shipped(self, request, queryset):
         run_on_orders(
             self, request, [o.pk for o in queryset],
             OrderService.mark_shipped, "{n} order(s) shipped."
-            )
+        )
 
     @action(description=_("Mark as delivered"))
     def mark_delivered(self, request, queryset):
         run_on_orders(
             self, request, [o.pk for o in queryset],
             OrderService.mark_delivered, "{n} order(s) delivered."
-            )
+        )
 
     @action(description=_("Refund (before dispatch) and restock"))
     def refund_orders(self, request, queryset):
@@ -346,9 +350,9 @@ class OrderAdmin(UnfoldImportExportHistoryAdmin):
             lambda pk: OrderService.refund_order(
                 pk,
                 performed_by=request.user
-                ),
+            ),
             "Refunded {n} order(s)."
-            )
+        )
 
     @action(description=_("Cancel unpaid order and release stock"))
     def cancel_unpaid(self, request, queryset):
@@ -357,25 +361,22 @@ class OrderAdmin(UnfoldImportExportHistoryAdmin):
             lambda pk: OrderService.cancel_order(
                 pk,
                 "Cancelled by staff."
-                ),
+            ),
             "Processed {n} order(s)."
-            )
+        )
 
 
 @django_admin.register(OrderPayment)
 class OrderPaymentAdmin(UnfoldImportExportHistoryAdmin):
     resource_classes = [OrderPaymentResource]
-    list_display = [
-        "order_link",
-        "method",
-        "amount_display",
-        "status_badge",
-        "transaction_id_display",
-        "paid_at",
-    ]
-    list_filter = ["status", "method", "created_at"]
-    search_fields = ["order__id", "transaction_id", "method"]
-    readonly_fields = ["created_at", "updated_at", "paid_at"]
+    # OrderPaymentAdmin
+    list_display = ["order_link", "provider", "method", "amount_display",
+                    "status_badge", "transaction_id_display", "paid_at"]
+    list_filter = ["status", "provider", "method", "created_at"]
+    search_fields = ["order__id", "transaction_id", "method",
+                     "provider_reference"]
+    readonly_fields = ["created_at", "updated_at", "paid_at",
+                       "provider_reference", "provider_data"]
     actions = ["mark_as_completed", "mark_as_failed"]
 
     fieldsets = [
@@ -442,16 +443,29 @@ class OrderPaymentAdmin(UnfoldImportExportHistoryAdmin):
     def status_badge(self, obj):
         return obj.status, obj.get_status_display()
 
-    @action(description=_("Confirm payment (marks order paid, commits stock)"))
+    @action(
+        description=_("Confirm payment (marks order paid, commits stock)")
+    )
     def mark_as_completed(self, request, queryset):
-        run_on_orders(self, request, [p.order_id for p in queryset],
-                      OrderService.confirm_payment, "Confirmed {n} payment(s).")
+        run_on_orders(
+            self, request, [p.order_id for p in queryset],
+            OrderService.confirm_payment, "Confirmed {n} payment(s)."
+        )
 
-    @action(description=_("Mark as failed (cancels unpaid order, releases stock)"))
+    @action(
+        description=_(
+            "Mark as failed (cancels unpaid order, releases stock)"
+        )
+    )
     def mark_as_failed(self, request, queryset):
-        run_on_orders(self, request, [p.order_id for p in queryset],
-                      lambda pk: OrderService.cancel_order(pk, "Payment marked as failed by staff."),
-                      "Processed {n} payment(s).")
+        run_on_orders(
+            self, request, [p.order_id for p in queryset],
+            lambda pk: OrderService.cancel_order(
+                pk,
+                "Payment marked as failed by staff."
+            ),
+            "Processed {n} payment(s)."
+        )
 
 
 @django_admin.register(OrderShipment)
@@ -532,10 +546,20 @@ class OrderShipmentAdmin(UnfoldImportExportHistoryAdmin):
 
     @action(description=_("Mark selected shipments as IN TRANSIT"))
     def mark_as_shipped_action(self, request, queryset):
-        run_on_orders(self, request, [s.order_id for s in queryset],
-                      OrderService.mark_shipped, "Marked {n} shipment(s) as in transit.")
+        run_on_orders(
+            self,
+            request,
+            [s.order_id for s in queryset],
+            OrderService.mark_shipped,
+            "Marked {n} shipment(s) as in transit."
+        )
 
     @action(description=_("Mark selected shipments as DELIVERED"))
     def mark_as_delivered_action(self, request, queryset):
-        run_on_orders(self, request, [s.order_id for s in queryset],
-                      OrderService.mark_delivered, "Marked {n} shipment(s) as delivered.")
+        run_on_orders(
+            self,
+            request,
+            [s.order_id for s in queryset],
+            OrderService.mark_delivered,
+            "Marked {n} shipment(s) as delivered."
+        )

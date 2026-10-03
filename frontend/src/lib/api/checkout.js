@@ -48,8 +48,8 @@ export async function createOrder(data) {
     return response.data; // {order, payment_instructions}
 }
 
-export async function fetchOrders({page = 1, page_size = 25} = {}) {
-    const response = await apiClient.get(API_ENDPOINTS.checkout.orderList(page, page_size));
+export async function fetchOrders(params) {
+    const response = await apiClient.get(API_ENDPOINTS.checkout.orderList, {params: params});
     return response.data;
 }
 
