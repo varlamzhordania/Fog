@@ -58,10 +58,11 @@ export const API_ENDPOINTS = {
         cartItemDetail: (id) => `${API_BASE}/checkout/cart/items/${id}/`,
         orderCreate:
             `${API_BASE}/checkout/orders/create/`,
-        orderList: (page, pageSize) =>
-            `${API_BASE}/checkout/orders/?page=${page}&page_size=${pageSize}`,
+        orderList: `${API_BASE}/checkout/orders/`,
         orderDetail: (id) =>
             `${API_BASE}/checkout/orders/${id}/`,
+        orderPay: (id) => `${API_BASE}/checkout/orders/${id}/pay/`,
+        orderCancel: (id) => `${API_BASE}/checkout/orders/${id}/cancel/`,
     },
 
     website: {

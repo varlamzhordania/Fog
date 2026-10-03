@@ -3,13 +3,15 @@ from django.urls import NoReverseMatch, reverse
 from django.utils import timezone
 from django.utils.html import format_html
 from django.utils.translation import gettext_lazy as _
-from django.urls import path
 from unfold import admin
-from unfold.decorators import display
+from unfold.decorators import display, action
+from django.contrib import messages
+from rest_framework.exceptions import APIException
+from checkout.services.order import OrderService
 
 from inventory.models import StockReservation
 from core.admin import UnfoldImportExportHistoryAdmin
-from settings.admin_views.analytics import AnalyticsDashboardView
+
 from .models import (
     Order,
     OrderItem,
@@ -24,6 +26,22 @@ from .resources import (
     ShoppingCartResource, OrderPaymentResource,
     OrderShipmentResource,
 )
+
+
+def run_on_orders(modeladmin, request, order_ids, fn, success):
+    done = 0
+    for order_id in order_ids:
+        try:
+            fn(order_id)
+            done += 1
+        except APIException as exc:
+            modeladmin.message_user(
+                request,
+                f"Order #{order_id}: {exc.detail}",
+                level=messages.ERROR
+            )
+    if done:
+        modeladmin.message_user(request, success.format(n=done))
 
 
 class ShoppingCartItemInline(admin.TabularInline):
@@ -49,7 +67,7 @@ class OrderPaymentInline(admin.StackedInline):
         ("amount", "transaction_id"),
         "paid_at",
     ]
-    readonly_fields = ["paid_at"]
+    readonly_fields = ["paid_at", "status"]
 
 
 class OrderShipmentInline(admin.StackedInline):
@@ -218,6 +236,9 @@ class OrderAdmin(UnfoldImportExportHistoryAdmin):
             },
         ),
     ]
+    actions = ["confirm_payment_manually", "mark_processing",
+               "mark_shipped",
+               "mark_delivered", "refund_orders", "cancel_unpaid"]
 
     @django_admin.display(description=_("Order #"))
     def id_short(self, obj):
@@ -285,18 +306,60 @@ class OrderAdmin(UnfoldImportExportHistoryAdmin):
 
         return shipment.status, shipment.get_status_display()
 
-    # def get_urls(self):
-    #     custom_view = self.admin_site.admin_view(
-    #         AnalyticsDashboardView.as_view(model_admin=self)
-    #     )  #
-    #     custom_urls = [
-    #         path(
-    #             "analytics/",
-    #             custom_view,
-    #             name="checkout_order_analytics",
-    #         ),
-    #     ]
-    #     return custom_urls + super().get_urls()
+    @django_admin.action(
+        description=_("Confirm payment manually (commits stock)")
+        )
+    def confirm_payment_manually(self, request, queryset):
+        run_on_orders(
+            self,
+            request,
+            [o.pk for o in queryset],
+            OrderService.confirm_payment,
+            "Confirmed payment on {n} order(s)."
+            )
+
+    @action(description=_("Start processing"))
+    def mark_processing(self, request, queryset):
+        run_on_orders(
+            self, request, [o.pk for o in queryset],
+            OrderService.start_processing, "{n} order(s) now processing."
+            )
+
+    @action(description=_("Mark as shipped"))
+    def mark_shipped(self, request, queryset):
+        run_on_orders(
+            self, request, [o.pk for o in queryset],
+            OrderService.mark_shipped, "{n} order(s) shipped."
+            )
+
+    @action(description=_("Mark as delivered"))
+    def mark_delivered(self, request, queryset):
+        run_on_orders(
+            self, request, [o.pk for o in queryset],
+            OrderService.mark_delivered, "{n} order(s) delivered."
+            )
+
+    @action(description=_("Refund (before dispatch) and restock"))
+    def refund_orders(self, request, queryset):
+        run_on_orders(
+            self, request, [o.pk for o in queryset],
+            lambda pk: OrderService.refund_order(
+                pk,
+                performed_by=request.user
+                ),
+            "Refunded {n} order(s)."
+            )
+
+    @action(description=_("Cancel unpaid order and release stock"))
+    def cancel_unpaid(self, request, queryset):
+        run_on_orders(
+            self, request, [o.pk for o in queryset],
+            lambda pk: OrderService.cancel_order(
+                pk,
+                "Cancelled by staff."
+                ),
+            "Processed {n} order(s)."
+            )
 
 
 @django_admin.register(OrderPayment)
@@ -338,7 +401,7 @@ class OrderPaymentAdmin(UnfoldImportExportHistoryAdmin):
         ),
     ]
 
-    @django_admin.display(description=_("Order"))
+    @display(description=_("Order"))
     def order_link(self, obj):
         try:
             url = reverse(
@@ -353,11 +416,11 @@ class OrderPaymentAdmin(UnfoldImportExportHistoryAdmin):
         except (NoReverseMatch, AttributeError):
             return f"Order #{str(obj.order.id)[:8]}"
 
-    @django_admin.display(description=_("Amount"))
+    @display(description=_("Amount"))
     def amount_display(self, obj):
         return f"${obj.amount:,.2f}"
 
-    @django_admin.display(description=_("Transaction ID"))
+    @display(description=_("Transaction ID"))
     def transaction_id_display(self, obj):
         if not obj.transaction_id:
             return "—"
@@ -379,26 +442,16 @@ class OrderPaymentAdmin(UnfoldImportExportHistoryAdmin):
     def status_badge(self, obj):
         return obj.status, obj.get_status_display()
 
-    @django_admin.action(
-        description=_("Mark selected payments as COMPLETED")
-    )
+    @action(description=_("Confirm payment (marks order paid, commits stock)"))
     def mark_as_completed(self, request, queryset):
-        count = 0
-        for payment in queryset:
-            payment.mark_completed()
-            count += 1
-        self.message_user(
-            request,
-            f"Marked {count} payment(s) as completed."
-        )
+        run_on_orders(self, request, [p.order_id for p in queryset],
+                      OrderService.confirm_payment, "Confirmed {n} payment(s).")
 
-    @django_admin.action(description=_("Mark selected payments as FAILED"))
+    @action(description=_("Mark as failed (cancels unpaid order, releases stock)"))
     def mark_as_failed(self, request, queryset):
-        count = 0
-        for payment in queryset:
-            payment.mark_failed()
-            count += 1
-        self.message_user(request, f"Marked {count} payment(s) as failed.")
+        run_on_orders(self, request, [p.order_id for p in queryset],
+                      lambda pk: OrderService.cancel_order(pk, "Payment marked as failed by staff."),
+                      "Processed {n} payment(s).")
 
 
 @django_admin.register(OrderShipment)
@@ -477,28 +530,12 @@ class OrderShipmentAdmin(UnfoldImportExportHistoryAdmin):
     def status_badge(self, obj):
         return obj.status, obj.get_status_display()
 
-    @django_admin.action(
-        description=_("Mark selected shipments as IN TRANSIT")
-    )
+    @action(description=_("Mark selected shipments as IN TRANSIT"))
     def mark_as_shipped_action(self, request, queryset):
-        count = 0
-        for shipment in queryset:
-            shipment.mark_shipped()
-            count += 1
-        self.message_user(
-            request,
-            f"Marked {count} shipment(s) as in transit."
-        )
+        run_on_orders(self, request, [s.order_id for s in queryset],
+                      OrderService.mark_shipped, "Marked {n} shipment(s) as in transit.")
 
-    @django_admin.action(
-        description=_("Mark selected shipments as DELIVERED")
-    )
+    @action(description=_("Mark selected shipments as DELIVERED"))
     def mark_as_delivered_action(self, request, queryset):
-        count = 0
-        for shipment in queryset:
-            shipment.mark_delivered()
-            count += 1
-        self.message_user(
-            request,
-            f"Marked {count} shipment(s) as delivered."
-        )
+        run_on_orders(self, request, [s.order_id for s in queryset],
+                      OrderService.mark_delivered, "Marked {n} shipment(s) as delivered.")

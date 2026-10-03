@@ -19,6 +19,8 @@ import {
 import {notFoundImage} from "@/lib/config";
 import Image from "@/components/Image";
 import {useCartActions} from "@/hooks/useCartActions";
+import {useRouter} from "next/navigation";
+import {useAuthStore} from "@/stores/auth";
 
 
 const formatPrice = (value) =>
@@ -170,7 +172,7 @@ function ProductItem({data}) {
     const product = data.product;
     const quantity = Number(data.quantity);
 
-    const { handleRemove } = useCartActions(product);
+    const {handleRemove} = useCartActions(product);
 
     const image =
         product.primary_image ||
@@ -226,7 +228,8 @@ function ProductItem({data}) {
                             </Link>
 
                             {/* Pricing */}
-                            <div className="mt-1.5 flex flex-wrap items-center gap-1.5 sm:mt-2 sm:gap-2">
+                            <div
+                                className="mt-1.5 flex flex-wrap items-center gap-1.5 sm:mt-2 sm:gap-2">
                                 <Typography type="body-sm" className="font-medium">
                                     {formatPrice(storePrice)}
                                 </Typography>
@@ -254,7 +257,7 @@ function ProductItem({data}) {
                             aria-label={`Remove ${product.name} from cart`}
                             className="size-8 shrink-0 text-muted hover:text-danger sm:size-9"
                         >
-                            <Icon icon={Trash2} className="size-4" />
+                            <Icon icon={Trash2} className="size-4"/>
                         </Button>
                     </div>
 
@@ -282,6 +285,19 @@ function ProductItem({data}) {
 }
 
 function OrderSummary({totalQuantity, totalPrice}) {
+    const router = useRouter()
+    const isAuthenticated = useAuthStore().logged_in
+    const {availabilityCheck} = useCartStore(state => state)
+
+    const handleCheckout = () => {
+        if (!isAuthenticated) {
+            toast.danger("Please sign in before continue with your checkout")
+        }
+        if (availabilityCheck()) {
+            router.push("/checkout")
+        }
+    }
+
     return (
         <Card className="lg:sticky lg:top-30">
             <Card.Content className="p-5 sm:p-6">
@@ -356,15 +372,12 @@ function OrderSummary({totalQuantity, totalPrice}) {
                 </div>
 
                 <Button
-                    as={Link}
-                    href="/checkout"
-                    color="primary"
                     size="lg"
                     fullWidth
                     className="group"
+                    onPress={handleCheckout}
                 >
                     Proceed to Checkout
-
                     <Icon
                         icon={ArrowRight}
                         className="size-4 transition-transform group-hover:translate-x-0.5"

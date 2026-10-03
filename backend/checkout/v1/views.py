@@ -9,15 +9,18 @@ from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.viewsets import ReadOnlyModelViewSet
+from django.shortcuts import get_object_or_404
 
 from checkout.models import Order, PaymentMethod
-from checkout.services import CartService
+from checkout.services.cart import CartService
+from checkout.services.order import OrderService
 
 from .serializers import (
     OrderSerializer,
     PaymentMethodSerializer,
     ShoppingCartInputSerializer,
     ShoppingCartSerializer, ShoppingCartItemUpdateSerializer,
+    OrderCreateSerializer, OrderPaySerializer,
 )
 
 logger = logging.getLogger("fog")
@@ -37,8 +40,71 @@ class UserOrderView(ReadOnlyModelViewSet):
     serializer_class = OrderSerializer
 
     def get_queryset(self):
-        return Order.objects.filter(user=self.request.user)
+        # Lazy safety net: cancel this user's overdue orders before reading.
+        OrderService.expire_due_orders(user=self.request.user)
+        return (
+            Order.objects.filter(user=self.request.user)
+            .select_related("delivery_address", "payment", "shipment")
+            .prefetch_related("items__product", "stock_reservations")
+        )
 
+
+def _order_payload(order_id, request, instructions=None):
+    order = (
+        Order.objects.select_related("delivery_address", "payment", "shipment")
+        .prefetch_related("items__product", "stock_reservations")
+        .get(pk=order_id)
+    )
+    return {
+        "order": OrderSerializer(order, context={"request": request}).data,
+        "payment_instructions": instructions,
+    }
+
+
+@extend_schema(tags=["Checkout"], request=OrderCreateSerializer)
+class OrderCreateView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request: Request) -> Response:
+        serializer = OrderCreateSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        data = serializer.validated_data
+
+        order, instructions = OrderService.create_order(
+            user=request.user,
+            payment_method_code=data["payment_method"],
+            address_id=data.get("address_id"),
+            address_data=dict(data["address"]) if data.get("address") else None,
+            save_address=data["save_address"],
+            notes=data.get("notes", ""),
+        )
+        return Response(
+            _order_payload(order.pk, request, instructions),
+            status=status.HTTP_201_CREATED,
+        )
+
+
+@extend_schema(tags=["Checkout"], request=OrderPaySerializer)
+class OrderPayView(APIView):
+    """Start/retry/switch the payment provider while the order is still open."""
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request: Request, pk: int) -> Response:
+        serializer = OrderPaySerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        order, instructions = OrderService.start_payment(
+            pk, request.user, serializer.validated_data["payment_method"]
+        )
+        return Response(_order_payload(order.pk, request, instructions))
+
+
+@extend_schema(tags=["Checkout"])
+class OrderCancelView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request: Request, pk: int) -> Response:
+        order = OrderService.customer_cancel(pk, request.user)
+        return Response(_order_payload(order.pk, request))
 
 @extend_schema(tags=["Checkout"])
 class ShoppingCartAPIView(APIView):

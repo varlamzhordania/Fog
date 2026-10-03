@@ -3,15 +3,10 @@ import {API_ENDPOINTS} from "@/lib/config";
 
 // ─── Addresses ───────────────────────────────────────────────────────────────
 
-export async function fetchAddresses({page = 1, page_size = 25, pagination = true} = {}) {
-    const params = new URLSearchParams();
-    params.set("page", page);
-    params.set("page_size", page_size);
-    if (!pagination) params.set("pagination", "false");
-
-    const response = await apiClient.get(
-        `${API_ENDPOINTS.account.address}?${params}`
-    );
+export async function fetchAddresses({params}) {
+    const response = await apiClient.get(API_ENDPOINTS.account.address,{
+        params:params
+    });
     return response.data;
 }
 

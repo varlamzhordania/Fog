@@ -1,33 +1,19 @@
 from django.urls import path
-from rest_framework.routers import SimpleRouter
 
 from .views import (
-    PaymentMethodListView,
-    UserOrderView, ShoppingCartAPIView, ShoppingCartItemAPIView,
+    PaymentMethodListView, UserOrderView, ShoppingCartAPIView,
+    ShoppingCartItemAPIView, OrderCreateView, OrderPayView, OrderCancelView,
 )
 
-router = SimpleRouter()
-router.register('orders', UserOrderView, basename='order')
-
 app_name = 'checkout-v1'
+
 urlpatterns = [
-    path(
-        'payment-methods/',
-        PaymentMethodListView.as_view(),
-        name='payment_methods'
-    ),
+    path('payment-methods/', PaymentMethodListView.as_view(), name='payment_methods'),
     path('cart/', ShoppingCartAPIView.as_view(), name='cart_detail'),
-    path(
-        'cart/items/',
-        ShoppingCartItemAPIView.as_view(),
-        name='cart_item_add'
-    ),
-    path(
-        'cart/items/<int:product_id>/',
-        ShoppingCartItemAPIView.as_view(),
-        name='cart_item_modify'
-    ),
+    path('cart/items/', ShoppingCartItemAPIView.as_view(), name='cart_item_add'),
+    path('cart/items/<int:product_id>/', ShoppingCartItemAPIView.as_view(), name='cart_item_modify'),
 
+    path('orders/create/', OrderCreateView.as_view(), name='order_create'),
+    path('orders/<int:pk>/pay/', OrderPayView.as_view(), name='order_pay'),
+    path('orders/<int:pk>/cancel/', OrderCancelView.as_view(), name='order_cancel'),
 ]
-
-urlpatterns += router.urls

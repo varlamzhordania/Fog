@@ -372,7 +372,10 @@ CELERY_TASK_DEFAULT_RETRY_DELAY = 60
 CELERY_TASK_MAX_RETRIES = 3
 CELERY_TIMEZONE = 'UTC'
 CELERY_BEAT_SCHEDULE = {
-    # Example: 'task_name': {'task': 'task_path', 'schedule': 'interval_or_cron'}
+    "expire-unpaid-orders": {
+        "task": "checkout.tasks.expire_unpaid_orders",
+        "schedule": 60.0,
+    },
 }
 
 CKEDITOR_5_CONFIGS = BASE_CKEDITOR_5_CONFIGS

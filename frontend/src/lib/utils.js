@@ -38,3 +38,16 @@ export const getClientIp = (headers) => {
 
     return null;
 }
+
+export const getApiErrorMessage = (error, fallback = "Something went wrong.") => {
+    const data = error?.response?.data;
+    if (!data) return error?.message || fallback;
+    if (typeof data === "string") return data;
+    if (data.detail) return Array.isArray(data.detail) ? data.detail[0] : data.detail;
+
+    const first = Object.values(data)[0];
+    if (Array.isArray(first)) return String(first[0]);
+    if (typeof first === "string") return first;
+    if (first && typeof first === "object") return String(Object.values(first)[0]?.[0] ?? fallback);
+    return fallback;
+};

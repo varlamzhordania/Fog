@@ -1,6 +1,9 @@
 from django.utils.translation import gettext_lazy as _
 from rest_framework import serializers
 
+from account.models import Address
+from checkout.services.order import OrderService
+from checkout.payments import get_provider
 from inventory.models import Product
 from checkout.models import (
     PaymentMethod,
@@ -148,15 +151,19 @@ class OrderShipmentPublicSerializer(serializers.ModelSerializer):
 
 
 class OrderItemSerializer(serializers.ModelSerializer):
+    product_name = serializers.SerializerMethodField()
+    product_slug = serializers.SerializerMethodField()
+
     class Meta:
         model = OrderItem
-        fields = [
-            "id",
-            "product",
-            "quantity",
-            "unit_price",
-            "total_price",
-        ]
+        fields = ["id", "product", "product_name", "product_slug",
+                  "quantity", "unit_price", "total_price"]
+
+    def get_product_name(self, obj):
+        return obj.product.name if obj.product else None
+
+    def get_product_slug(self, obj):
+        return obj.product.slug if obj.product else None
 
 
 class OrderSerializer(serializers.ModelSerializer):
@@ -164,18 +171,45 @@ class OrderSerializer(serializers.ModelSerializer):
     delivery_address = ListAddressSerializer(many=False, read_only=True)
     payment = OrderPaymentPublicSerializer(many=False, read_only=True)
     shipment = OrderShipmentPublicSerializer(many=False, read_only=True)
+    expires_at = serializers.SerializerMethodField()
+    payment_instructions = serializers.SerializerMethodField()
 
     class Meta:
         model = Order
         fields = [
-            "id",
-            "delivery_address",
-            "status",
-            "total_price",
-            "notes",
-            "created_at",
-            "updated_at",
-            "items",
-            "shipment",
-            "payment",
+            "id", "delivery_address", "status", "total_price", "notes",
+            "created_at", "updated_at", "expires_at", "items",
+            "shipment", "payment", "payment_instructions",
         ]
+
+    def get_expires_at(self, obj):
+        return OrderService.expires_at(obj)
+
+    def get_payment_instructions(self, obj):
+        return OrderService.payment_instructions(obj)
+
+
+class CheckoutAddressSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Address
+        fields = ("full_name", "line1", "line2", "city",
+                  "state", "postal_code", "country")
+
+
+class OrderCreateSerializer(serializers.Serializer):
+    payment_method = serializers.CharField()
+    address_id = serializers.IntegerField(required=False)
+    address = CheckoutAddressSerializer(required=False)
+    save_address = serializers.BooleanField(default=True)
+    notes = serializers.CharField(required=False, allow_blank=True, max_length=1000)
+
+    def validate(self, attrs):
+        if bool(attrs.get("address_id")) == bool(attrs.get("address")):
+            raise serializers.ValidationError(
+                {"address": "Choose a saved address or enter a new one."}
+            )
+        return attrs
+
+
+class OrderPaySerializer(serializers.Serializer):
+    payment_method = serializers.CharField()

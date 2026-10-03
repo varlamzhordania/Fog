@@ -216,6 +216,10 @@ export const useCartStore = create(
                 }
             },
 
+            availabilityCheck: () => {
+                return true
+            },
+
             clearCart: async () => {
                 const previousItems = get().items;
                 if (previousItems.length === 0) return;

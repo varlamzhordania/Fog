@@ -43,28 +43,27 @@ export async function deleteCartItem(productId) {
 }
 
 
-export async function postOrder(data) {
-    return await fetchWithAuth(API_ENDPOINTS.checkout.orderCreate, {
-        method: "POST",
-        body: data
-    })
+export async function createOrder(data) {
+    const response = await apiClient.post(API_ENDPOINTS.checkout.orderCreate, data);
+    return response.data; // {order, payment_instructions}
 }
 
-export async function fetchOrders({page = 1, page_size = 25}) {
-    return await fetchWithAuth(API_ENDPOINTS.checkout.orderList(page, page_size), {
-        method: "GET"
-    })
+export async function fetchOrders({page = 1, page_size = 25} = {}) {
+    const response = await apiClient.get(API_ENDPOINTS.checkout.orderList(page, page_size));
+    return response.data;
 }
 
 export async function fetchOrderDetail(id) {
-    return await fetchWithAuth(API_ENDPOINTS.checkout.orderDetail(id), {
-        method: "GET"
-    })
+    const response = await apiClient.get(API_ENDPOINTS.checkout.orderDetail(id));
+    return response.data;
 }
 
-export async function stripeOrderPayment(data) {
-    return await fetchWithAuth(API_ENDPOINTS.checkout.stripe, {
-        method: "POST",
-        body: data
-    })
+export async function payOrder(id, data) {
+    const response = await apiClient.post(API_ENDPOINTS.checkout.orderPay(id), data);
+    return response.data;
+}
+
+export async function cancelOrder(id) {
+    const response = await apiClient.post(API_ENDPOINTS.checkout.orderCancel(id));
+    return response.data;
 }

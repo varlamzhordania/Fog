@@ -1,25 +1,60 @@
-import {useMutation, useQuery} from "@tanstack/react-query";
-import {fetchCart} from "@/lib/api/checkout";
+import {useMutation, useQuery, useQueryClient} from "@tanstack/react-query";
+import {
+    fetchCart, fetchPaymentMethods, createOrder, fetchOrders,
+    fetchOrderDetail, payOrder, cancelOrder,
+} from "@/lib/api/checkout";
 import {useAuthStore} from "@/stores/auth";
-import {authFetch} from "@/queries/auth";
 
 export function useCart() {
+    return useQuery({queryKey: ["checkout", "cart"], queryFn: () => fetchCart(), retry: false});
+}
+
+export function usePaymentMethods() {
+    const loggedIn = useAuthStore((s) => s.logged_in);
     return useQuery({
-        queryKey: ["checkout", "cart"],
-        queryFn: () => fetchCart(),
-        retry: false,
+        queryKey: ["checkout", "payment-methods"],
+        queryFn: fetchPaymentMethods,
+        enabled: loggedIn,
     });
 }
 
-export function useAddItem() {
-    const setAuth = useAuthStore((s) => s.setAuth);
+export function useOrders(params = {}) {
+    return useQuery({queryKey: ["checkout", "orders", params], queryFn: () => fetchOrders(params)});
+}
 
+export function useOrder(id) {
+    return useQuery({
+        queryKey: ["checkout", "order", String(id)],
+        queryFn: () => fetchOrderDetail(id),
+        enabled: Boolean(id),
+        // keep polling while the order is waiting for payment
+        refetchInterval: (query) => (query.state.data?.status === "payment" ? 15000 : false),
+    });
+}
+
+export function useCreateOrder() {
+    const qc = useQueryClient();
     return useMutation({
-        mutationFn: ({email, password}) =>
-            authFetch("/api/auth/login", {email, password}),
+        mutationFn: createOrder,
+        onSuccess: () => qc.invalidateQueries({queryKey: ["checkout", "orders"]}),
+    });
+}
 
-        onSuccess: ({access_token, user}) => {
-            setAuth({access_token, user});
+export function usePayOrder(id) {
+    const qc = useQueryClient();
+    return useMutation({
+        mutationFn: (data) => payOrder(id, data),
+        onSuccess: ({order}) => qc.setQueryData(["checkout", "order", String(id)], order),
+    });
+}
+
+export function useCancelOrder(id) {
+    const qc = useQueryClient();
+    return useMutation({
+        mutationFn: () => cancelOrder(id),
+        onSuccess: ({order}) => {
+            qc.setQueryData(["checkout", "order", String(id)], order);
+            qc.invalidateQueries({queryKey: ["checkout", "orders"]});
         },
     });
 }
