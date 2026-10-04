@@ -52,6 +52,9 @@ local-restart-workers:
 local-restart-frontend:
 	$(LOCAL) restart frontend
 
+local-restart-backend:
+	$(LOCAL) restart backend
+
 # ----------------------------------------------------------- production ----
 
 init-prod:

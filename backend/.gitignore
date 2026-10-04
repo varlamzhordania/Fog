@@ -132,6 +132,9 @@ celerybeat.pid
 .venv
 development.env
 docker.env
+.env.local
+.env.docker
+.env.production
 env/
 venv/
 ENV/
