@@ -5,7 +5,7 @@ from .registry import register
 @register
 class ManualProvider(PaymentProvider):
     """Staff confirm the payment by hand in the admin (OrderPayment -> 'Confirm payment')."""
-    codes = "manual"
+    code = "manual"
 
     def instructions(self, order, payment, method):
         return {

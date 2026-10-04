@@ -17,6 +17,10 @@ def _configure():
     stripe.max_network_retries = 2
     stripe.default_http_client = stripe._http_client.RequestsClient(timeout=15)
 
+def fetch_status(reference):
+    _configure()
+    s = stripe.checkout.Session.retrieve(reference)
+    return s.payment_status == "paid", s.amount_total, s.payment_intent
 
 @register
 class StripeProvider(PaymentProvider):
@@ -74,3 +78,4 @@ class StripeProvider(PaymentProvider):
             stripe.checkout.Session.expire(reference)
         except stripe.StripeError:
             pass  # already completed or expired
+

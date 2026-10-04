@@ -294,24 +294,22 @@ class OrderService:
             order = _lock(order_id)
             if order.status != S.PAYMENT:
                 raise CheckoutError("This order is not awaiting payment.")
-
             for reservation in order.stock_reservations.filter(
                     status=ACTIVE
             ):
                 reservation.commit()
-
-                order.payment.mark_completed(transaction_id)
-                attempts.close(
-                    order.payment,
-                    attempts.S.SUCCEEDED,
-                    transaction_id=transaction_id
-                )
-                OrderShipment.objects.get_or_create(order=order)
-                order.status = S.PENDING
-                order.save(update_fields=["status", "updated_at"])
+            order.payment.mark_completed(transaction_id)
+            attempts.close(
+                order.payment,
+                attempts.S.SUCCEEDED,
+                transaction_id=transaction_id
+            )
+            OrderShipment.objects.get_or_create(order=order)
+            order.status = S.PENDING
+            order.save(update_fields=["status", "updated_at"])
             events.order_event(order.id, "payment_received")
             events.order_paid(order.id)
-            return order
+        return order
 
     # ------------------------------------------------------------------
     # Cancellation / expiry
@@ -337,11 +335,20 @@ class OrderService:
         payment = getattr(order, "payment", None)
         if payment:
             payment.mark_failed()
-            attempts.close(payment, attempts.S.EXPIRED if expired else attempts.S.CANCELLED, error=reason)
-            transaction.on_commit(
-                lambda p=payment.provider, r=payment.provider_reference: _cancel_remote(p, r)
+            attempts.close(
+                payment,
+                attempts.S.EXPIRED if expired else attempts.S.CANCELLED,
+                error=reason
             )
-        events.order_event(order_id, "order_expired" if expired else "order_cancelled")
+            transaction.on_commit(
+                lambda
+                    p=payment.provider,
+                    r=payment.provider_reference: _cancel_remote(p, r)
+            )
+        events.order_event(
+            order_id,
+            "order_expired" if expired else "order_cancelled"
+        )
         return True
 
     @classmethod
@@ -392,6 +399,7 @@ class OrderService:
             )
         order.status = S.PROCESSING
         order.save(update_fields=["status", "updated_at"])
+        events.order_event(order.id, "order_processing")
         return order
 
     @classmethod
@@ -410,6 +418,7 @@ class OrderService:
         shipment.mark_shipped(tracking_number, carrier, notes)
         order.status = S.SHIPPED
         order.save(update_fields=["status", "updated_at"])
+        events.order_event(order.id, "order_shipped", countdown=120)
         return order
 
     @classmethod
@@ -423,6 +432,7 @@ class OrderService:
         order.shipment.mark_delivered()
         order.status = S.DELIVERED
         order.save(update_fields=["status", "updated_at"])
+        events.order_event(order.id, "order_delivered", countdown=120)
         return order
 
     @classmethod
@@ -458,6 +468,8 @@ class OrderService:
         order.status = S.CANCELLED
         _append_note(order, "Refunded before dispatch.")
         order.save(update_fields=["status", "notes", "updated_at"])
+        attempts.mark_refunded(payment)
+        events.order_event(order.id, "order_refunded")
         return order
 
     @classmethod
@@ -475,6 +487,12 @@ class OrderService:
         if data:
             payment.provider_data = {**payment.provider_data, **data}
             payment.save(update_fields=["provider_data", "updated_at"])
+            attempts.mark_late(payment, transaction_id)
+            events.order_event(
+                order_id,
+                "late_payment",
+                extra={"transaction_id": transaction_id}
+            )
         try:
             cls.confirm_payment(order_id, transaction_id)
         except CheckoutError:
@@ -515,3 +533,4 @@ class OrderService:
         if payment:
             payment.provider_data = {**payment.provider_data, **data}
             payment.save(update_fields=["provider_data", "updated_at"])
+            attempts.sync_data(payment, data)

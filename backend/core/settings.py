@@ -396,7 +396,7 @@ CELERY_TASK_TIME_LIMIT = 120
 CELERY_TASK_SOFT_TIME_LIMIT = 90
 CELERY_TASK_ROUTES = {
     "checkout.tasks.send_order_email": {"queue": "emails"},
-    "account.v1.tasks.send_password_reset_email_task": {"queue": "emails"},
+    "account.tasks.send_password_reset_email_task": {"queue": "emails"},
 }
 CELERY_BEAT_SCHEDULE = {
     "expire-unpaid-orders": {"task": "checkout.tasks.expire_unpaid_orders",

@@ -125,20 +125,17 @@ class PasswordResetRequestSerializer(serializers.Serializer):
 
 
 class PasswordResetConfirmSerializer(serializers.Serializer):
-    new_password = serializers.CharField(write_only=True)
-    uidb64 = serializers.CharField(write_only=True)
+    new_password1 = serializers.CharField(write_only=True)
+    new_password2 = serializers.CharField(write_only=True)
+    uid = serializers.CharField(write_only=True)
     token = serializers.CharField(write_only=True)
 
     def validate_new_password(self, value):
-        try:
-            validate_password(value)  # runs Django’s password validators
-        except ValidationError as e:
-            raise serializers.ValidationError(e.messages)
-        return value
+        validate_password(value)
 
     def validate(self, attrs):
         try:
-            uid = force_str(urlsafe_base64_decode(attrs['uidb64']))
+            uid = force_str(urlsafe_base64_decode(attrs['uid']))
             user = User.objects.get(pk=uid)
         except (TypeError, ValueError, OverflowError, User.DoesNotExist):
             raise serializers.ValidationError(_('Invalid user or UID.'))
@@ -152,7 +149,7 @@ class PasswordResetConfirmSerializer(serializers.Serializer):
             )
 
         # everything valid → reset password
-        user.set_password(attrs['new_password'])
+        user.set_password(attrs['new_password1'])
         user.save()
 
         attrs['user'] = user  # return user if needed

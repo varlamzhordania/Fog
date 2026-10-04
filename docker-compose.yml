@@ -62,6 +62,7 @@ services:
       args:   # baked in at build time
         NEXT_PUBLIC_API_BASE_URL: ${PUBLIC_URL}            # same origin, nginx routes /api/v1
         NEXT_PUBLIC_MEDIA_BASE_URL: http://backend:8000    # Next proxies /media (image optimizer)
+#        NEXT_PUBLIC_MEDIA_BASE_URL: http://nginx    # for production
     environment:
       INTERNAL_API_BASE_URL: http://backend:8000
       AUTH_CLIENT_ID: ${AUTH_CLIENT_ID}

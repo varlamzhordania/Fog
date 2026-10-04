@@ -1,2 +1,7 @@
 .idea/
 docker.env
+.env
+shkeeper/.env
+shkeeper/shkeeper.env
+nginx/letsencrypt/
+nginx/certbot-webroot/
