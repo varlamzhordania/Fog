@@ -1,3 +1,4 @@
+# HTTPS with redirect (NGINX_MODE=https). Requires a Let's Encrypt certificate.
 server {
     listen 80;
     server_name ${SITE_DOMAIN};

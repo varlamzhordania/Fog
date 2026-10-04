@@ -1,3 +1,4 @@
+# HTTP only: first start and certificate issuance (NGINX_MODE=http).
 server {
     listen 80 default_server;
     server_name _;

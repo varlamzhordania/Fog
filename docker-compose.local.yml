@@ -1,0 +1,90 @@
+# Local development stack. Run with:  make local-up
+# Hot reload for backend (runserver) and frontend (next dev); code is bind-mounted.
+name: fog-local
+
+x-backend: &backend
+  build: ./backend
+  image: fog-backend:local
+  env_file: env/local/backend.env
+  environment:
+    DB_ENGINE: postgresql
+    DB_HOST: db
+    DB_PORT: "5432"
+    DB_NAME: ${DB_NAME:-fog}
+    DB_USER: ${DB_USER:-fog}
+    DB_PASSWORD: ${DB_PASSWORD:-fog}
+    CELERY_BROKER_URL: redis://redis:6379/0
+    CELERY_RESULT_BACKEND: redis://redis:6379/1
+    REDIS_HOST: redis://redis:6379/2
+  volumes:
+    - ./backend:/home/app
+  depends_on:
+    db: {condition: service_healthy}
+    redis: {condition: service_started}
+  restart: unless-stopped
+
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: ${DB_NAME:-fog}
+      POSTGRES_USER: ${DB_USER:-fog}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-fog}
+    ports: ["127.0.0.1:5433:5432"]   # for DB clients (DBeaver, psql, ...)
+    volumes: [pgdata:/var/lib/postgresql/data]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-fog} -d ${DB_NAME:-fog}"]
+      interval: 5s
+      retries: 10
+    restart: unless-stopped
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+
+  backend:
+    <<: *backend
+    command: >
+      sh -c "python manage.py migrate --noinput &&
+             python manage.py runserver 0.0.0.0:8000"
+    ports: ["8000:8000"]
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/api/v1/settings/')"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 40s
+
+  celery:
+    <<: *backend
+    depends_on:
+      backend: {condition: service_healthy}
+    command: celery -A core worker -l info -Q celery,emails -c 2
+
+  celery-beat:
+    <<: *backend
+    depends_on:
+      backend: {condition: service_healthy}
+    command: celery -A core beat -l info --schedule /tmp/celerybeat-schedule
+
+  frontend:
+    image: node:22-alpine
+    working_dir: /app
+    env_file: env/local/frontend.env
+    environment:
+      NEXT_TELEMETRY_DISABLED: "1"
+      WATCHPACK_POLLING: "true"       # reliable file watching on Docker Desktop
+    command: sh -c "npm install --no-audit --no-fund && npm run dev -- -H 0.0.0.0"
+    ports: ["3000:3000"]
+    volumes:
+      - ./frontend:/app
+      - frontend_node_modules:/app/node_modules
+      - frontend_next:/app/.next
+    depends_on:
+      backend: {condition: service_healthy}
+    restart: unless-stopped
+
+volumes:
+  pgdata: {}
+  frontend_node_modules: {}
+  frontend_next: {}

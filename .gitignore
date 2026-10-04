@@ -1,6 +1,7 @@
 .idea/
-docker.env
 .env
+env/*/*.env
+backups/
 shkeeper/.env
 shkeeper/shkeeper.env
 nginx/letsencrypt/

@@ -1,8 +1,27 @@
+# Production stack. Run with:  make prod-up
+# Keeps the project name "fog" so existing volumes (pgdata, media, ...) are reused.
 name: fog
 
 x-backend: &backend
   build: ./backend
-  env_file: docker.env
+  image: fog-backend:prod
+  env_file: env/prod/backend.env
+  environment:
+    DJANGO_DEBUG: "False"
+    DJANGO_ALLOWED_HOSTS: ${SITE_DOMAIN:?set SITE_DOMAIN in env/prod/compose.env},backend,localhost
+    SERVER_DOMAIN: ${SITE_DOMAIN}
+    FRONTEND_DOMAIN: ${SITE_DOMAIN}
+    DB_ENGINE: postgresql
+    DB_HOST: db
+    DB_PORT: "5432"
+    DB_NAME: ${DB_NAME}
+    DB_USER: ${DB_USER}
+    DB_PASSWORD: ${DB_PASSWORD:?set DB_PASSWORD in env/prod/compose.env}
+    CELERY_BROKER_URL: redis://redis:6379/0
+    CELERY_RESULT_BACKEND: redis://redis:6379/1
+    REDIS_HOST: redis://redis:6379/2
+    SHKEEPER_URL: http://shkeeper:5000
+    SHKEEPER_CALLBACK_BASE: http://backend:8000
   networks: [default, shkeeper]
   restart: unless-stopped
 
@@ -12,7 +31,7 @@ services:
     environment:
       POSTGRES_DB: ${DB_NAME}
       POSTGRES_USER: ${DB_USER}
-      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:?set DB_PASSWORD in env/prod/compose.env}
     volumes: [pgdata:/var/lib/postgresql/data]
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${DB_USER} -d ${DB_NAME}"]
@@ -47,7 +66,7 @@ services:
   celery:
     <<: *backend
     depends_on:
-      backend: {condition: service_healthy}   # migrations are done
+      backend: {condition: service_healthy}
     command: celery -A core worker -l info -Q celery,emails -c 4
 
   celery-beat:
@@ -60,13 +79,13 @@ services:
     build:
       context: ./frontend
       args:   # baked in at build time
-        NEXT_PUBLIC_API_BASE_URL: ${PUBLIC_URL}            # same origin, nginx routes /api/v1
-        NEXT_PUBLIC_MEDIA_BASE_URL: http://backend:8000    # Next proxies /media (image optimizer)
-#        NEXT_PUBLIC_MEDIA_BASE_URL: http://nginx    # for production
+        NEXT_PUBLIC_API_BASE_URL: ${PUBLIC_URL:?set PUBLIC_URL in env/prod/compose.env}
+        NEXT_PUBLIC_MEDIA_BASE_URL: http://backend:8000
+        NEXT_PUBLIC_SITE_URL: ${PUBLIC_URL}
+    image: fog-frontend:prod
+    env_file: env/prod/frontend.env
     environment:
       INTERNAL_API_BASE_URL: http://backend:8000
-      AUTH_CLIENT_ID: ${AUTH_CLIENT_ID}
-      AUTH_CLIENT_SECRET: ${AUTH_CLIENT_SECRET}
     expose: ["3000"]
     depends_on:
       backend: {condition: service_healthy}
@@ -79,7 +98,7 @@ services:
     ports: ["80:80", "443:443"]
     volumes:
       - ./nginx/zones.conf:/etc/nginx/conf.d/00-zones.conf:ro
-      - ./nginx/${NGINX_MODE:-dev}.conf.template:/etc/nginx/templates/default.conf.template:ro
+      - ./nginx/${NGINX_MODE:-http}.conf.template:/etc/nginx/templates/default.conf.template:ro
       - ./nginx/locations.conf:/etc/nginx/locations.conf:ro
       - ./nginx/letsencrypt:/etc/letsencrypt:ro
       - ./nginx/certbot-webroot:/var/www/certbot:ro
