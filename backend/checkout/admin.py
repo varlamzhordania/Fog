@@ -17,7 +17,9 @@ from .models import (
     OrderItem,
     OrderPayment,
     OrderShipment,
+    OrderNotification,
     PaymentMethod,
+    PaymentAttempt,
     ShoppingCart,
     ShoppingCartItem,
 )
@@ -26,6 +28,7 @@ from .resources import (
     ShoppingCartResource, OrderPaymentResource,
     OrderShipmentResource,
 )
+from .tasks import send_order_email
 
 
 def run_on_orders(modeladmin, request, order_ids, fn, success):
@@ -102,6 +105,31 @@ class OrderStockReservationInline(admin.TabularInline):
     def is_expired(self, obj):
         if obj.expires_at:
             return timezone.now() > obj.expires_at
+
+
+class PaymentAttemptInline(admin.TabularInline):
+    model = PaymentAttempt
+    extra = 0
+    can_delete = False
+    fields = ["number", "method", "provider", "status",
+              "provider_reference",
+              "transaction_id", "error", "created_at", "finished_at"]
+    readonly_fields = fields
+
+    def has_add_permission(self, request, obj=None):
+        return False
+
+
+class OrderNotificationInline(admin.TabularInline):
+    model = OrderNotification
+    extra = 0
+    can_delete = False
+    fields = ["event", "audience", "status", "recipients", "sent_at",
+              "error"]
+    readonly_fields = fields
+
+    def has_add_permission(self, request, obj=None):
+        return False
 
 
 @django_admin.register(PaymentMethod)
@@ -188,6 +216,7 @@ class OrderAdmin(UnfoldImportExportHistoryAdmin):
         OrderPaymentInline,
         OrderShipmentInline,
         OrderStockReservationInline,
+        OrderNotificationInline,
     ]
 
     list_display = [
@@ -369,7 +398,7 @@ class OrderAdmin(UnfoldImportExportHistoryAdmin):
 @django_admin.register(OrderPayment)
 class OrderPaymentAdmin(UnfoldImportExportHistoryAdmin):
     resource_classes = [OrderPaymentResource]
-    # OrderPaymentAdmin
+    inlines = [PaymentAttemptInline]
     list_display = ["order_link", "provider", "method", "amount_display",
                     "status_badge", "transaction_id_display", "paid_at"]
     list_filter = ["status", "provider", "method", "created_at"]
@@ -563,3 +592,33 @@ class OrderShipmentAdmin(UnfoldImportExportHistoryAdmin):
             OrderService.mark_delivered,
             "Marked {n} shipment(s) as delivered."
         )
+
+@django_admin.register(PaymentAttempt)
+class PaymentAttemptAdmin(admin.ModelAdmin):
+    list_display = ["payment", "number", "provider", "method", "status", "transaction_id", "created_at"]
+    list_filter = ["status", "provider", "method"]
+    search_fields = ["payment__order__id", "provider_reference", "transaction_id"]
+    readonly_fields = [f.name for f in PaymentAttempt._meta.fields]
+
+    def has_add_permission(self, request):
+        return False
+
+
+@django_admin.register(OrderNotification)
+class OrderNotificationAdmin(admin.ModelAdmin):
+    list_display = ["order", "event", "audience", "status", "recipients", "sent_at"]
+    list_filter = ["status", "audience", "event"]
+    search_fields = ["order__id", "recipients", "subject"]
+    readonly_fields = [f.name for f in OrderNotification._meta.fields]
+    actions = ["resend"]
+
+    def has_add_permission(self, request):
+        return False
+
+    @action(description=_("Resend selected emails"))
+    def resend(self, request, queryset):
+        for n in queryset:
+            n.status = OrderNotification.Status.PENDING
+            n.save(update_fields=["status", "updated_at"])
+            send_order_email.delay(n.order_id, n.event, n.audience)
+        self.message_user(request, f"Queued {queryset.count()} email(s).")

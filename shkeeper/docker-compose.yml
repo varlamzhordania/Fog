@@ -1,0 +1,48 @@
+name: shkeeper
+
+services:
+  shkeeper:
+    image: vsyshost/shkeeper:${SHKEEPER_TAG}      # pin an exact version, don't use latest
+    env_file: shkeeper.env                        # variable names: see the official docs
+    depends_on:
+      db: {condition: service_healthy}
+    ports:
+      - "127.0.0.1:5000:5000"                     # admin UI: SSH tunnel or VPN only
+    networks:
+      shkeeper:
+        aliases: [shkeeper]                       # the app stack calls http://shkeeper:5000
+    restart: unless-stopped
+
+  db:
+    image: mariadb:11
+    environment:
+      MARIADB_DATABASE: ${SHKEEPER_DB_NAME:-shkeeper}
+      MARIADB_USER: ${SHKEEPER_DB_USER:-shkeeper}
+      MARIADB_PASSWORD: ${SHKEEPER_DB_PASSWORD}
+      MARIADB_ROOT_PASSWORD: ${SHKEEPER_DB_ROOT_PASSWORD}
+    volumes: [shkeeper_db:/var/lib/mysql]
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 10s
+      retries: 10
+    networks: [shkeeper]
+    restart: unless-stopped
+
+  # --- Coin wallets -----------------------------------------------------------
+  # Each coin runs its own wallet adapter (and node, or a remote node).
+  # Copy the services for the coins you enable from SHKeeper's official compose,
+  # keep them on the `shkeeper` network, and start with light ones (LTC, XMR with
+  # a remote node, TRX-USDT) before BTC/ETH, which need hundreds of GB.
+  #
+  # ltc-shkeeper:
+  #   image: <official image>
+  #   networks: [shkeeper]
+  #   volumes: [ltc_data:/data]
+
+networks:
+  shkeeper:
+    name: shkeeper_net
+
+volumes:
+  shkeeper_db: {}
+  # ltc_data: {}

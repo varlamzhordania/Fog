@@ -3,9 +3,6 @@ name: fog
 x-backend: &backend
   build: ./backend
   env_file: docker.env
-  depends_on:
-    db: {condition: service_healthy}
-    redis: {condition: service_started}
   networks: [default, shkeeper]
   restart: unless-stopped
 
@@ -21,40 +18,74 @@ services:
       test: ["CMD-SHELL", "pg_isready -U ${DB_USER} -d ${DB_NAME}"]
       interval: 5s
       retries: 10
+    restart: unless-stopped
 
   redis:
     image: redis:7-alpine
+    command: ["redis-server", "--appendonly", "yes"]
     volumes: [redisdata:/data]
+    restart: unless-stopped
 
   backend:
     <<: *backend
+    depends_on:
+      db: {condition: service_healthy}
+      redis: {condition: service_started}
     command: >
       sh -c "python manage.py migrate --noinput &&
              python manage.py collectstatic --noinput &&
-             gunicorn core.wsgi:application -b 0.0.0.0:8000 --workers 3 --timeout 60"
-    ports: ["8000:8000"]
+             gunicorn core.wsgi:application -b 0.0.0.0:8000 --workers 3 --timeout 60 --access-logfile -"
+    expose: ["8000"]
     volumes: [media:/home/app/media, static:/home/app/staticfiles]
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/api/v1/settings/')"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 40s
 
   celery:
     <<: *backend
-    command: celery -A core worker -l info
+    depends_on:
+      backend: {condition: service_healthy}   # migrations are done
+    command: celery -A core worker -l info -Q celery,emails -c 4
 
   celery-beat:
     <<: *backend
-    command: celery -A core beat -l info
+    depends_on:
+      backend: {condition: service_healthy}
+    command: celery -A core beat -l info --schedule /tmp/celerybeat-schedule
 
   frontend:
     build:
       context: ./frontend
-      args:   # NEXT_PUBLIC_* and rewrites are baked in at build time
-        NEXT_PUBLIC_API_BASE_URL: http://localhost:8000    # what the browser calls
-        NEXT_PUBLIC_MEDIA_BASE_URL: http://backend:8000    # what the Next server proxies /media to
+      args:   # baked in at build time
+        NEXT_PUBLIC_API_BASE_URL: ${PUBLIC_URL}            # same origin, nginx routes /api/v1
+        NEXT_PUBLIC_MEDIA_BASE_URL: http://backend:8000    # Next proxies /media (image optimizer)
     environment:
-      INTERNAL_API_BASE_URL: http://backend:8000           # server-side fetches
+      INTERNAL_API_BASE_URL: http://backend:8000
       AUTH_CLIENT_ID: ${AUTH_CLIENT_ID}
       AUTH_CLIENT_SECRET: ${AUTH_CLIENT_SECRET}
-    ports: ["3000:3000"]
-    depends_on: [backend]
+    expose: ["3000"]
+    depends_on:
+      backend: {condition: service_healthy}
+    restart: unless-stopped
+
+  nginx:
+    image: nginx:1.27-alpine
+    environment:
+      SITE_DOMAIN: ${SITE_DOMAIN}
+    ports: ["80:80", "443:443"]
+    volumes:
+      - ./nginx/zones.conf:/etc/nginx/conf.d/00-zones.conf:ro
+      - ./nginx/${NGINX_MODE:-dev}.conf.template:/etc/nginx/templates/default.conf.template:ro
+      - ./nginx/locations.conf:/etc/nginx/locations.conf:ro
+      - ./nginx/letsencrypt:/etc/letsencrypt:ro
+      - ./nginx/certbot-webroot:/var/www/certbot:ro
+      - static:/srv/static:ro
+      - media:/srv/media:ro
+    depends_on: [backend, frontend]
+    restart: unless-stopped
 
 networks:
   shkeeper:

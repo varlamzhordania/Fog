@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>{{ headline }}</title></head>
+<body style="margin:0;padding:0;background:#f5f7fb;">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f5f7fb;padding:24px;">
+<tr><td align="center">
+<table role="presentation" width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;">
+  <tr><td align="center" style="padding:16px 0;font:700 20px/1.2 -apple-system,'Segoe UI',Roboto,Arial,sans-serif;color:#111827;">{{ app_name }}</td></tr>
+  <tr><td style="background:#ffffff;border-radius:12px;padding:32px;font:400 15px/1.6 -apple-system,'Segoe UI',Roboto,Arial,sans-serif;color:#374151;">
+    <h1 style="margin:0 0 12px;font:700 22px/1.3 -apple-system,'Segoe UI',Roboto,Arial,sans-serif;color:#111827;">{{ headline }}</h1>
+    <p style="margin:0 0 20px;">{{ intro }}</p>
+
+    {% if rows %}
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:0 0 20px;font-size:14px;">
+      {% for label, value in rows %}
+      <tr>
+        <td style="padding:6px 0;color:#6b7280;width:35%;vertical-align:top;">{{ label }}</td>
+        <td style="padding:6px 0;color:#111827;word-break:break-all;">{{ value }}</td>
+      </tr>
+      {% endfor %}
+    </table>
+    {% endif %}
+
+    {% if items %}
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:0 0 24px;font-size:14px;border-top:1px solid #e5e7eb;">
+      {% for name, qty, total in items %}
+      <tr>
+        <td style="padding:8px 0;border-bottom:1px solid #e5e7eb;">{{ qty }} &times; {{ name }}</td>
+        <td style="padding:8px 0;border-bottom:1px solid #e5e7eb;text-align:right;">{{ total }}</td>
+      </tr>
+      {% endfor %}
+    </table>
+    {% endif %}
+
+    {% if cta_url %}
+    <a href="{{ cta_url }}" target="_blank" rel="noopener"
+       style="display:inline-block;background:#0C6E99;color:#ffffff;text-decoration:none;padding:12px 20px;border-radius:8px;font-weight:600;">{{ cta_label }}</a>
+    {% endif %}
+  </td></tr>
+  <tr><td align="center" style="padding:20px 8px;font:400 12px/1.6 Arial,sans-serif;color:#9ca3af;">
+    You received this because of activity on your {{ app_name }} order.
+  </td></tr>
+</table>
+</td></tr></table>
+</body></html>

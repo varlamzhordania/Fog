@@ -5,3 +5,6 @@ class CheckoutError(APIException):
     status_code = 400
     default_code = "checkout_error"
     default_detail = "Checkout failed."
+
+class GatewayError(CheckoutError):
+    """The payment gateway refused or was unreachable."""

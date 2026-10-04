@@ -1,6 +1,6 @@
 from celery import shared_task
 from account.models import User
-from .helpers import send_password_reset_email
+from account.v1.helpers import send_password_reset_email
 
 import logging
 

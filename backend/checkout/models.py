@@ -475,3 +475,63 @@ class OrderPayment(BaseModel):
 
     def is_paid(self):
         return self.status == self.StatusChoices.COMPLETED and self.paid_at is not None
+
+
+class PaymentAttempt(BaseModel):
+    class StatusChoices(models.TextChoices):
+        INITIATED = "initiated", _("Initiated")
+        PENDING = "pending", _("Awaiting payment")
+        SUCCEEDED = "succeeded", _("Succeeded")
+        FAILED = "failed", _("Failed to start")
+        EXPIRED = "expired", _("Expired")
+        CANCELLED = "cancelled", _("Cancelled")
+        SUPERSEDED = "superseded", _("Replaced by a newer attempt")
+        LATE = "late", _("Paid after the order closed")
+        REFUNDED = "refunded", _("Refunded")
+
+    payment = models.ForeignKey(OrderPayment, on_delete=models.CASCADE, related_name="attempts")
+    number = models.PositiveSmallIntegerField(default=1)
+    provider = models.CharField(max_length=20, choices=PaymentMethod.PaymentProviderChoices.choices)
+    method = models.CharField(max_length=50)
+    method_code = models.CharField(max_length=50, blank=True, default="")
+    asset = models.CharField(max_length=30, blank=True, default="")
+    amount = models.DecimalField(max_digits=12, decimal_places=2)
+    status = models.CharField(max_length=20, choices=StatusChoices.choices,
+                              default=StatusChoices.INITIATED, db_index=True)
+    provider_reference = models.CharField(max_length=128, blank=True, default="", db_index=True)
+    provider_data = models.JSONField(default=dict, blank=True)
+    transaction_id = models.CharField(max_length=100, blank=True, null=True)
+    error = models.TextField(blank=True, default="")
+    finished_at = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        ordering = ["-number"]
+        unique_together = ("payment", "number")
+
+    def __str__(self):
+        return f"Order #{self.payment.order_id} attempt {self.number} ({self.method}, {self.status})"
+
+
+class OrderNotification(BaseModel):
+    class Audience(models.TextChoices):
+        CUSTOMER = "customer", _("Customer")
+        ADMIN = "admin", _("Admin")
+
+    class Status(models.TextChoices):
+        PENDING = "pending", _("Pending")
+        SENT = "sent", _("Sent")
+        FAILED = "failed", _("Failed")
+        SKIPPED = "skipped", _("Skipped")
+
+    order = models.ForeignKey(Order, on_delete=models.CASCADE, related_name="notifications")
+    event = models.CharField(max_length=40)
+    audience = models.CharField(max_length=10, choices=Audience.choices)
+    recipients = models.TextField(blank=True, default="")
+    subject = models.CharField(max_length=255, blank=True, default="")
+    status = models.CharField(max_length=10, choices=Status.choices, default=Status.PENDING)
+    error = models.TextField(blank=True, default="")
+    sent_at = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        unique_together = ("order", "event", "audience")
+        ordering = ["-created_at"]

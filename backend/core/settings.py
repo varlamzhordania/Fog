@@ -4,6 +4,7 @@ import environ
 from collections import OrderedDict
 from pathlib import Path
 from django.utils.translation import gettext_lazy as _
+from celery.schedules import crontab
 
 from core.ckeditor import BASE_CKEDITOR_5_CONFIGS
 from core.unfold import (
@@ -26,9 +27,14 @@ SECRET_KEY = env('DJANGO_SECRET_KEY', default=str(uuid.uuid4()))
 
 DEBUG = env.bool('DJANGO_DEBUG', default=True)
 
+
 if not DEBUG:
-    SECURE_SSL_REDIRECT = True
-    SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+    SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+    USE_X_FORWARDED_HOST = True
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
+    # SECURE_SSL_REDIRECT = True
+# delete SECURE_SSL_REDIRECT and SECURE_REDIRECT_EXEMPT FOR NGINX
 
 ALLOWED_HOSTS = env.list('DJANGO_ALLOWED_HOSTS', default=['*'])
 
@@ -293,8 +299,11 @@ STRIPE_WEBHOOK_KEY = env("STRIPE_WEBHOOK_KEY", default="whsec_***")
 # SHKeeper
 SHKEEPER_URL = env("SHKEEPER_URL", default="http://shkeeper:5000")
 SHKEEPER_API_KEY = env("SHKEEPER_API_KEY", default="")
-SHKEEPER_CALLBACK_BASE = env("SHKEEPER_CALLBACK_BASE", default="http://backend:8000")
-SECURE_REDIRECT_EXEMPT = [r"^api/v1/checkout/webhooks/shkeeper/$"]
+SHKEEPER_CALLBACK_BASE = env(
+    "SHKEEPER_CALLBACK_BASE",
+    default="http://backend:8000"
+)
+# SECURE_REDIRECT_EXEMPT = [r"^api/v1/checkout/webhooks/shkeeper/$"]
 
 USE_HTTPS_IN_ABSOLUTE_URLS = env.bool(
     "USE_HTTPS_IN_ABSOLUTE_URLS",
@@ -306,6 +315,7 @@ FRONTEND_DOMAIN = env("FRONTEND_DOMAIN", default="localhost:3000")
 
 BASE_DOMAIN = FRONTEND_DOMAIN
 FRONTEND_URL = f"{'https' if USE_HTTPS_IN_ABSOLUTE_URLS else 'http'}://{FRONTEND_DOMAIN}"
+ADMIN_BASE_URL = f"{'https' if USE_HTTPS_IN_ABSOLUTE_URLS else 'http'}://{SERVER_DOMAIN}"
 
 if DEBUG:
     CORS_ALLOWED_ORIGINS = [
@@ -353,10 +363,16 @@ else:
     EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
 
 EMAIL_HOST = env("EMAIL_HOST", default="")
-EMAIL_PORT = env("EMAIL_PORT", default="")
+EMAIL_PORT = env.int("EMAIL_PORT", default=587)
 EMAIL_USE_TLS = env.bool("EMAIL_USE_TLS", default=True)
 EMAIL_HOST_USER = env("EMAIL_HOST_USER", default="")
 EMAIL_HOST_PASSWORD = env("EMAIL_HOST_PASSWORD", default="")
+EMAIL_TIMEOUT = 10
+DEFAULT_FROM_EMAIL = env(
+    "DEFAULT_FROM_EMAIL",
+    default="FOG Direct <noreply@localhost>"
+)
+SERVER_EMAIL = DEFAULT_FROM_EMAIL
 
 # Uncomment if Using RabbitMQ
 RABBITMQ_HOST = env("RABBITMQ_HOST", default="")
@@ -366,21 +382,32 @@ RABBITMQ_PASSWORD = env("RABBITMQ_PASSWORD", default="")
 RABBITMQ_QUEUE_NAME = env("RABBITMQ_QUEUE_NAME", default="")
 RABBITMQ_VHOST = env("RABBITMQ_VHOST", default="")
 
-CELERY_BROKER_URL = 'redis://redis:6379/0'
-CELERY_RESULT_BACKEND = 'redis://redis:6379/1'
-CELERY_ACCEPT_CONTENT = ['json']
-CELERY_TASK_SERIALIZER = 'json'
-CELERY_RESULT_SERIALIZER = 'json'
-# CELERY_TASK_TIME_LIMIT = 300  # Task time limit in seconds
-CELERY_TASK_RETRY = True
-CELERY_TASK_DEFAULT_RETRY_DELAY = 60
-CELERY_TASK_MAX_RETRIES = 3
-CELERY_TIMEZONE = 'UTC'
+CELERY_BROKER_URL = env(
+    "CELERY_BROKER_URL",
+    default="redis://redis:6379/0"
+)
+CELERY_RESULT_BACKEND = env(
+    "CELERY_RESULT_BACKEND",
+    default="redis://redis:6379/1"
+)
+CELERY_TASK_ACKS_LATE = True
+CELERY_WORKER_PREFETCH_MULTIPLIER = 1
+CELERY_TASK_TIME_LIMIT = 120
+CELERY_TASK_SOFT_TIME_LIMIT = 90
+CELERY_TASK_ROUTES = {
+    "checkout.tasks.send_order_email": {"queue": "emails"},
+    "account.v1.tasks.send_password_reset_email_task": {"queue": "emails"},
+}
 CELERY_BEAT_SCHEDULE = {
-    "expire-unpaid-orders": {
-        "task": "checkout.tasks.expire_unpaid_orders",
-        "schedule": 60.0,
-    },
+    "expire-unpaid-orders": {"task": "checkout.tasks.expire_unpaid_orders",
+                             "schedule": 60.0},
+    "payment-reminders": {"task": "checkout.tasks.send_payment_reminders",
+                          "schedule": 300.0},
+    "reconcile-stripe": {
+        "task": "checkout.tasks.reconcile_stripe_payments",
+        "schedule": 300.0},
+    "admin-digest": {"task": "checkout.tasks.send_admin_digest",
+                     "schedule": crontab(hour=8, minute=0)},
 }
 
 CKEDITOR_5_CONFIGS = BASE_CKEDITOR_5_CONFIGS
@@ -397,352 +424,381 @@ CONSTANCE_IGNORE_ADMIN_VERSION_CHECK = True
 
 CONSTANCE_ADDITIONAL_FIELDS = CUSTOM_UNFOLD_CONSTANCE_ADDITIONAL_FIELDS
 
-
-CONSTANCE_CONFIG = OrderedDict([
-    # -------------------------------------------------------------------------
-    # 1. Website Branding & Identity
-    # -------------------------------------------------------------------------
-    (
-        "WEBSITE_TITLE",
+CONSTANCE_CONFIG = OrderedDict(
+    [
+        # -------------------------------------------------------------------------
+        # 1. Website Branding & Identity
+        # -------------------------------------------------------------------------
         (
-            "FOG | Mycology Research & Supplies",
-            "Authoritative site name used in browser tabs and layout headers.",
-            str,
-        ),
-    ),
-    (
-        "WEBSITE_TAGLINE",
-        (
-            "Premium Spore Microscopy & Laboratory Supplies",
-            "Short brand subtitle or tagline displayed in the header or hero section.",
-            str,
-        ),
-    ),
-    (
-        "WEBSITE_FAVICON",
-        (
-            "/imgs/logo_black_2.png",
-            "Browser favicon (.ico or .png).",
-            "image_field",
-        ),
-    ),
-    (
-        "WEBSITE_PRIMARY_ICON",
-        (
-            "/imgs/logo_black_2.png",
-            "Primary brand logo used on default/light backgrounds.",
-            "image_field",
-        ),
-    ),
-    (
-        "WEBSITE_SECONDARY_ICON",
-        (
-            "/imgs/logo_white.png",
-            "Secondary brand logo used on dark or contrasting backgrounds.",
-            "image_field",
-        ),
-    ),
-
-    # -------------------------------------------------------------------------
-    # 2. SEO & Social Metadata
-    # -------------------------------------------------------------------------
-    (
-        "WEBSITE_META_DESCRIPTION",
-        (
-            "Source for premium mycology genetics, research spores, laboratory "
-            "equipment, and cultivation media. Secure anonymous cryptocurrency checkout.",
-            "Default fallback description used for meta tags and search crawlers.",
-            str,
-        ),
-    ),
-    (
-        "WEBSITE_META_KEYWORDS",
-        (
-            "mycology, spore microscopy, research genetics, lab supplies, crypto checkout",
-            "Comma-separated default SEO keywords.",
-            str,
-        ),
-    ),
-    (
-        "WEBSITE_OG_IMAGE",
-        (
-            "og-cover.jpg",
-            "Default 1200x630 Open Graph preview image for social sharing.",
-            "image_field",
-        ),
-    ),
-
-    # -------------------------------------------------------------------------
-    # 3. Header & Announcement Bar
-    # -------------------------------------------------------------------------
-    (
-        "ANNOUNCEMENT_BAR_ENABLED",
-        (
-            True,
-            "Toggle the top notification banner across storefront pages.",
-            bool,
-        ),
-    ),
-    (
-        "ANNOUNCEMENT_BAR_TEXT",
-        (
-            "Notice: All spore materials are intended strictly for taxonomy "
-            "and microscopy research.",
-            "Banner message displayed at the top of the viewport.",
-            str,
-        ),
-    ),
-    (
-        "ANNOUNCEMENT_BAR_LINK",
-        (
-            "http://localhost:3000/pages/research-policy",
-            "Optional URL destination when users click the announcement banner.",
-            "link_field",
-        ),
-    ),
-
-    # -------------------------------------------------------------------------
-    # 4. Legal Compliance & Footer
-    # -------------------------------------------------------------------------
-    (
-        "LEGAL_RESEARCH_DISCLAIMER",
-        (
-            "All psilocybe spore syringes and microscopy prints are sold exclusively "
-            "for research, taxonomy, and educational identification purposes under "
-            "high-power microscopy. Cultivation of regulated species is strictly "
-            "prohibited. Sales are void where prohibited.",
-            "Mandatory legal disclaimer displayed on product detail pages and footer.",
-            str,
-        ),
-    ),
-    (
-        "FOOTER_COPYRIGHT_TEXT",
-        (
-            "© 2026 FOG Mycology Research Lab. All rights reserved.",
-            "Copyright line rendered at the bottom of the storefront layout.",
-            str,
-        ),
-    ),
-
-    # -------------------------------------------------------------------------
-    # 5. Community & Support
-    # -------------------------------------------------------------------------
-    (
-        "SUPPORT_EMAIL",
-        (
-            "support@fog-mycology.example",
-            "Contact email displayed to users for payment discrepancies or expired orders.",
-            str,
-        ),
-    ),
-    (
-        "COMMUNITY_TELEGRAM_URL",
-        (
-            "https://t.me/fog_mycology",
-            "Official Telegram group or announcement channel URL.",
-            "link_field",
-        ),
-    ),
-    (
-        "COMMUNITY_DISCORD_URL",
-        (
-            "https://discord.gg/fog_mycology",
-            "Official Discord community invite link. Leave empty if inactive.",
-            "link_field",
-        ),
-    ),
-    (
-        "COMMUNITY_TWITTER_URL",
-        (
-            "https://x.com/fog_mycology",
-            "Official X (Twitter) profile URL.",
-            "link_field",
-        ),
-    ),
-
-    # -------------------------------------------------------------------------
-    # 6. Crypto Payment & Security
-    # -------------------------------------------------------------------------
-    (
-        "CRYPTO_PAYMENT_WINDOW_MINUTES",
-        (
-            60,
-            "Expiration window for pending crypto payments, in minutes.",
-            int,
-        ),
-    ),
-    (
-        "CRYPTO_REQUIRED_CONFIRMATIONS",
-        (
-            2,
-            "Number of on-chain confirmations required before marking an order confirmed.",
-            int,
-        ),
-    ),
-    (
-        "CRYPTO_EXCHANGE_BUFFER_PERCENT",
-        (
-            2.0,
-            "Volatility buffer percentage added to crypto order estimates.",
-            float,
-        ),
-    ),
-
-    # -------------------------------------------------------------------------
-    # 7. Store Operations
-    # -------------------------------------------------------------------------
-    (
-        "STORE_MAINTENANCE_MODE",
-        (
-            False,
-            "Temporarily disable checkout and order creation for maintenance.",
-            bool,
-        ),
-    ),
-    (
-        "MINIMUM_ORDER_AMOUNT_USD",
-        (
-            15.0,
-            "Minimum cart value required to initiate anonymous crypto checkout.",
-            float,
-        ),
-    ),
-
-    # -------------------------------------------------------------------------
-    # 8. Store Pricing & Tax
-    # -------------------------------------------------------------------------
-    (
-        "TAX_ENABLED",
-        (
-            True,
-            "Enable tax calculation during checkout.",
-            bool,
-        ),
-    ),
-    (
-        "TAX_RATE",
-        (
-            18.0,
-            "Tax rate applied to taxable orders, expressed as a percentage.",
-            float,
-        ),
-    ),
-    (
-        "TAX_NAME",
-        (
-            "VAT",
-            "Display name used for the configured tax.",
-            str,
-        ),
-    ),
-    (
-        "PRICES_INCLUDE_TAX",
-        (
-            False,
-            "Whether displayed product prices already include the configured tax.",
-            bool,
-        ),
-    ),
-])
-
-
-
-CONSTANCE_CONFIG_FIELDSETS = OrderedDict([
-    (
-        "Website Branding & Identity",
-        {
-            "fields": (
-                "WEBSITE_TITLE",
-                "WEBSITE_TAGLINE",
-                "WEBSITE_FAVICON",
-                "WEBSITE_PRIMARY_ICON",
-                "WEBSITE_SECONDARY_ICON",
+            "WEBSITE_TITLE",
+            (
+                "FOG | Mycology Research & Supplies",
+                "Authoritative site name used in browser tabs and layout headers.",
+                str,
             ),
-        },
-    ),
-
-    (
-        "SEO & Social Metadata",
-        {
-            "fields": (
-                "WEBSITE_META_DESCRIPTION",
-                "WEBSITE_META_KEYWORDS",
-                "WEBSITE_OG_IMAGE",
+        ),
+        (
+            "WEBSITE_TAGLINE",
+            (
+                "Premium Spore Microscopy & Laboratory Supplies",
+                "Short brand subtitle or tagline displayed in the header or hero section.",
+                str,
             ),
-            "collapse": True,
-        },
-    ),
-
-    (
-        "Header & Announcement Bar",
-        {
-            "fields": (
-                "ANNOUNCEMENT_BAR_ENABLED",
-                "ANNOUNCEMENT_BAR_TEXT",
-                "ANNOUNCEMENT_BAR_LINK",
+        ),
+        (
+            "WEBSITE_FAVICON",
+            (
+                "/imgs/logo_black_2.png",
+                "Browser favicon (.ico or .png).",
+                "image_field",
             ),
-            "collapse": True,
-        },
-    ),
-
-    (
-        "Legal Compliance & Footer",
-        {
-            "fields": (
-                "LEGAL_RESEARCH_DISCLAIMER",
-                "FOOTER_COPYRIGHT_TEXT",
+        ),
+        (
+            "WEBSITE_PRIMARY_ICON",
+            (
+                "/imgs/logo_black_2.png",
+                "Primary brand logo used on default/light backgrounds.",
+                "image_field",
             ),
-            "collapse": True,
-        },
-    ),
-
-    (
-        "Community & Customer Support",
-        {
-            "fields": (
-                "SUPPORT_EMAIL",
-                "COMMUNITY_TELEGRAM_URL",
-                "COMMUNITY_DISCORD_URL",
-                "COMMUNITY_TWITTER_URL",
+        ),
+        (
+            "WEBSITE_SECONDARY_ICON",
+            (
+                "/imgs/logo_white.png",
+                "Secondary brand logo used on dark or contrasting backgrounds.",
+                "image_field",
             ),
-            "collapse": True,
-        },
-    ),
+        ),
+        # -------------------------------------------------------------------------
+        # . Notifications
+        # -------------------------------------------------------------------------
 
-    (
-        "Crypto Payment & Security",
-        {
-            "fields": (
-                "CRYPTO_PAYMENT_WINDOW_MINUTES",
-                "CRYPTO_REQUIRED_CONFIRMATIONS",
-                "CRYPTO_EXCHANGE_BUFFER_PERCENT",
+        (
+            "ORDER_ADMIN_EMAILS",
+            (
+                "",
+                "Comma-separated addresses for order alerts. Empty = all active staff in the admin/support groups.",
+                str,
             ),
-        },
-    ),
+        ),
+        (
+            "NOTIFY_CUSTOMERS",
+            (
+                True,
+                "Send order status emails to customers.",
+                bool
+            )
+        ),
+        # -------------------------------------------------------------------------
+        # 2. SEO & Social Metadata
+        # -------------------------------------------------------------------------
+        (
+            "WEBSITE_META_DESCRIPTION",
+            (
+                "Source for premium mycology genetics, research spores, laboratory "
+                "equipment, and cultivation media. Secure anonymous cryptocurrency checkout.",
+                "Default fallback description used for meta tags and search crawlers.",
+                str,
+            ),
+        ),
+        (
+            "WEBSITE_META_KEYWORDS",
+            (
+                "mycology, spore microscopy, research genetics, lab supplies, crypto checkout",
+                "Comma-separated default SEO keywords.",
+                str,
+            ),
+        ),
+        (
+            "WEBSITE_OG_IMAGE",
+            (
+                "og-cover.jpg",
+                "Default 1200x630 Open Graph preview image for social sharing.",
+                "image_field",
+            ),
+        ),
 
-    (
-        "Store Operations",
-        {
-            "fields": (
-                "STORE_MAINTENANCE_MODE",
-                "MINIMUM_ORDER_AMOUNT_USD",
+        # -------------------------------------------------------------------------
+        # 3. Header & Announcement Bar
+        # -------------------------------------------------------------------------
+        (
+            "ANNOUNCEMENT_BAR_ENABLED",
+            (
+                True,
+                "Toggle the top notification banner across storefront pages.",
+                bool,
             ),
-        },
-    ),
+        ),
+        (
+            "ANNOUNCEMENT_BAR_TEXT",
+            (
+                "Notice: All spore materials are intended strictly for taxonomy "
+                "and microscopy research.",
+                "Banner message displayed at the top of the viewport.",
+                str,
+            ),
+        ),
+        (
+            "ANNOUNCEMENT_BAR_LINK",
+            (
+                "http://localhost:3000/pages/research-policy",
+                "Optional URL destination when users click the announcement banner.",
+                "link_field",
+            ),
+        ),
 
-    (
-        "Store Pricing & Tax",
-        {
-            "fields": (
-                "TAX_ENABLED",
-                "TAX_RATE",
-                "TAX_NAME",
-                "PRICES_INCLUDE_TAX",
+        # -------------------------------------------------------------------------
+        # 4. Legal Compliance & Footer
+        # -------------------------------------------------------------------------
+        (
+            "LEGAL_RESEARCH_DISCLAIMER",
+            (
+                "All psilocybe spore syringes and microscopy prints are sold exclusively "
+                "for research, taxonomy, and educational identification purposes under "
+                "high-power microscopy. Cultivation of regulated species is strictly "
+                "prohibited. Sales are void where prohibited.",
+                "Mandatory legal disclaimer displayed on product detail pages and footer.",
+                str,
             ),
-            "collapse": True,
-        },
-    ),
-])
+        ),
+        (
+            "FOOTER_COPYRIGHT_TEXT",
+            (
+                "© 2026 FOG Mycology Research Lab. All rights reserved.",
+                "Copyright line rendered at the bottom of the storefront layout.",
+                str,
+            ),
+        ),
+
+        # -------------------------------------------------------------------------
+        # 5. Community & Support
+        # -------------------------------------------------------------------------
+        (
+            "SUPPORT_EMAIL",
+            (
+                "support@fog-mycology.example",
+                "Contact email displayed to users for payment discrepancies or expired orders.",
+                str,
+            ),
+        ),
+        (
+            "COMMUNITY_TELEGRAM_URL",
+            (
+                "https://t.me/fog_mycology",
+                "Official Telegram group or announcement channel URL.",
+                "link_field",
+            ),
+        ),
+        (
+            "COMMUNITY_DISCORD_URL",
+            (
+                "https://discord.gg/fog_mycology",
+                "Official Discord community invite link. Leave empty if inactive.",
+                "link_field",
+            ),
+        ),
+        (
+            "COMMUNITY_TWITTER_URL",
+            (
+                "https://x.com/fog_mycology",
+                "Official X (Twitter) profile URL.",
+                "link_field",
+            ),
+        ),
+
+        # -------------------------------------------------------------------------
+        # 6. Crypto Payment & Security
+        # -------------------------------------------------------------------------
+        (
+            "CRYPTO_PAYMENT_WINDOW_MINUTES",
+            (
+                60,
+                "Expiration window for pending crypto payments, in minutes.",
+                int,
+            ),
+        ),
+        (
+            "CRYPTO_REQUIRED_CONFIRMATIONS",
+            (
+                2,
+                "Number of on-chain confirmations required before marking an order confirmed.",
+                int,
+            ),
+        ),
+        (
+            "CRYPTO_EXCHANGE_BUFFER_PERCENT",
+            (
+                2.0,
+                "Volatility buffer percentage added to crypto order estimates.",
+                float,
+            ),
+        ),
+
+        # -------------------------------------------------------------------------
+        # 7. Store Operations
+        # -------------------------------------------------------------------------
+        (
+            "STORE_MAINTENANCE_MODE",
+            (
+                False,
+                "Temporarily disable checkout and order creation for maintenance.",
+                bool,
+            ),
+        ),
+        (
+            "MINIMUM_ORDER_AMOUNT_USD",
+            (
+                15.0,
+                "Minimum cart value required to initiate anonymous crypto checkout.",
+                float,
+            ),
+        ),
+
+        # -------------------------------------------------------------------------
+        # 8. Store Pricing & Tax
+        # -------------------------------------------------------------------------
+        (
+            "TAX_ENABLED",
+            (
+                True,
+                "Enable tax calculation during checkout.",
+                bool,
+            ),
+        ),
+        (
+            "TAX_RATE",
+            (
+                18.0,
+                "Tax rate applied to taxable orders, expressed as a percentage.",
+                float,
+            ),
+        ),
+        (
+            "TAX_NAME",
+            (
+                "VAT",
+                "Display name used for the configured tax.",
+                str,
+            ),
+        ),
+        (
+            "PRICES_INCLUDE_TAX",
+            (
+                False,
+                "Whether displayed product prices already include the configured tax.",
+                bool,
+            ),
+        ),
+    ]
+)
+
+CONSTANCE_CONFIG_FIELDSETS = OrderedDict(
+    [
+        (
+            "Website Branding & Identity",
+            {
+                "fields": (
+                    "WEBSITE_TITLE",
+                    "WEBSITE_TAGLINE",
+                    "WEBSITE_FAVICON",
+                    "WEBSITE_PRIMARY_ICON",
+                    "WEBSITE_SECONDARY_ICON",
+                ),
+            },
+        ),
+
+        (
+            "SEO & Social Metadata",
+            {
+                "fields": (
+                    "WEBSITE_META_DESCRIPTION",
+                    "WEBSITE_META_KEYWORDS",
+                    "WEBSITE_OG_IMAGE",
+                ),
+                "collapse": True,
+            },
+        ),
+        (
+            "Email & Notifications",
+            {
+                "fields": (
+                    "ORDER_ADMIN_EMAILS",
+                    "NOTIFY_CUSTOMERS",
+                ),
+                "collapse": True,
+            },
+        ),
+        (
+            "Header & Announcement Bar",
+            {
+                "fields": (
+                    "ANNOUNCEMENT_BAR_ENABLED",
+                    "ANNOUNCEMENT_BAR_TEXT",
+                    "ANNOUNCEMENT_BAR_LINK",
+                ),
+                "collapse": True,
+            },
+        ),
+
+        (
+            "Legal Compliance & Footer",
+            {
+                "fields": (
+                    "LEGAL_RESEARCH_DISCLAIMER",
+                    "FOOTER_COPYRIGHT_TEXT",
+                ),
+                "collapse": True,
+            },
+        ),
+
+        (
+            "Community & Customer Support",
+            {
+                "fields": (
+                    "SUPPORT_EMAIL",
+                    "COMMUNITY_TELEGRAM_URL",
+                    "COMMUNITY_DISCORD_URL",
+                    "COMMUNITY_TWITTER_URL",
+                ),
+                "collapse": True,
+            },
+        ),
+
+        (
+            "Crypto Payment & Security",
+            {
+                "fields": (
+                    "CRYPTO_PAYMENT_WINDOW_MINUTES",
+                    "CRYPTO_REQUIRED_CONFIRMATIONS",
+                    "CRYPTO_EXCHANGE_BUFFER_PERCENT",
+                ),
+            },
+        ),
+
+        (
+            "Store Operations",
+            {
+                "fields": (
+                    "STORE_MAINTENANCE_MODE",
+                    "MINIMUM_ORDER_AMOUNT_USD",
+                ),
+            },
+        ),
+
+        (
+            "Store Pricing & Tax",
+            {
+                "fields": (
+                    "TAX_ENABLED",
+                    "TAX_RATE",
+                    "TAX_NAME",
+                    "PRICES_INCLUDE_TAX",
+                ),
+                "collapse": True,
+            },
+        ),
+    ]
+)
 
 CONSTANCE_PUBLIC_KEYS = {
     "WEBSITE_TITLE",

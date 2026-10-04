@@ -9,12 +9,14 @@ from django.shortcuts import get_object_or_404
 from django.utils import timezone
 
 from account.models import Address
-from checkout.exceptions import CheckoutError
 from checkout.models import (
     Order, OrderItem, OrderPayment, OrderShipment, PaymentMethod,
 )
 from checkout.payments import get_provider
+from checkout.services import attempts
 from checkout.services.cart import CartService
+from checkout import events
+from checkout.exceptions import CheckoutError, GatewayError
 
 from inventory.models import (
     ProductStock, StockReservation, StockTransactionLog,
@@ -60,6 +62,21 @@ class OrderService:
     # ------------------------------------------------------------------
     # Helpers
     # ------------------------------------------------------------------
+
+    @staticmethod
+    def _initiate(order, payment, method):
+        attempt = attempts.begin(payment, method)
+        try:
+            instructions = get_provider(method.provider).initiate(
+                order,
+                payment,
+                method
+            )
+        except CheckoutError as exc:
+            raise GatewayError(exc.detail)
+        attempts.started(attempt, payment)
+        return instructions
+
     @staticmethod
     def _get_method(code):
         method = PaymentMethod.objects.filter(
@@ -213,12 +230,8 @@ class OrderService:
             )
 
         cart.items.all().delete()
-
-        instructions = get_provider(method.provider).initiate(
-            order,
-            payment,
-            method
-            )
+        instructions = cls._initiate(order, payment, method)
+        events.order_event(order.id, "order_created")
         return order, instructions
 
     # ------------------------------------------------------------------
@@ -232,37 +245,40 @@ class OrderService:
                 "The payment window expired and the order was cancelled."
             )
         method = cls._get_method(payment_method_code)
+        try:
+            with transaction.atomic():
+                order = _lock(order.pk)
+                if order.status != S.PAYMENT:
+                    raise CheckoutError(
+                        "This order is not awaiting payment."
+                    )
+                cls._check_min(method, order.total_price)
+                payment = order.payment
+                old_provider, old_ref = payment.provider, payment.provider_reference
 
-        with transaction.atomic():
-            order = _lock(order.pk)
-            if order.status != S.PAYMENT:
-                raise CheckoutError("This order is not awaiting payment.")
-            cls._check_min(method, order.total_price)
-            payment = order.payment
-            old_provider, old_ref = payment.provider, payment.provider_reference
-
-            payment.method = method.name
-            payment.method_code = method.code
-            payment.provider = method.provider
-            payment.provider_reference = ""
-            payment.provider_data = {}
-            payment.status = P.PENDING
-            payment.save(
-                update_fields=[
-                    "method", "method_code", "provider",
-                    "provider_reference",
-                    "provider_data", "status", "updated_at",
-                ]
+                attempts.close(payment, attempts.S.SUPERSEDED)
+                payment.method, payment.method_code = method.name, method.code
+                payment.provider, payment.provider_reference = method.provider, ""
+                payment.provider_data, payment.status = {}, P.PENDING
+                payment.save(
+                    update_fields=[
+                        "method", "method_code", "provider",
+                        "provider_reference",
+                        "provider_data", "status", "updated_at",
+                    ]
+                )
+                instructions = cls._initiate(order, payment, method)
+                transaction.on_commit(
+                    lambda: _cancel_remote(old_provider, old_ref)
+                )
+                return order, instructions
+        except GatewayError as exc:
+            attempts.record_failure(
+                OrderPayment.objects.get(order_id=order_id),
+                method,
+                str(exc.detail)
             )
-            instructions = get_provider(method.provider).initiate(
-                order,
-                payment,
-                method
-                )
-            transaction.on_commit(
-                lambda: _cancel_remote(old_provider, old_ref)
-                )
-            return order, instructions
+            raise
 
     # ------------------------------------------------------------------
     # Payment confirmation (called by admin now, webhooks later)
@@ -284,11 +300,18 @@ class OrderService:
             ):
                 reservation.commit()
 
-            order.payment.mark_completed(transaction_id)
-            OrderShipment.objects.get_or_create(order=order)
-            order.status = S.PENDING  # paid, waiting for staff review
-            order.save(update_fields=["status", "updated_at"])
-        return order
+                order.payment.mark_completed(transaction_id)
+                attempts.close(
+                    order.payment,
+                    attempts.S.SUCCEEDED,
+                    transaction_id=transaction_id
+                )
+                OrderShipment.objects.get_or_create(order=order)
+                order.status = S.PENDING
+                order.save(update_fields=["status", "updated_at"])
+            events.order_event(order.id, "payment_received")
+            events.order_paid(order.id)
+            return order
 
     # ------------------------------------------------------------------
     # Cancellation / expiry
@@ -310,13 +333,15 @@ class OrderService:
         _append_note(order, reason)
         order.save(update_fields=["status", "notes", "updated_at"])
 
+        expired = reason == EXPIRED_REASON
         payment = getattr(order, "payment", None)
         if payment:
+            payment.mark_failed()
+            attempts.close(payment, attempts.S.EXPIRED if expired else attempts.S.CANCELLED, error=reason)
             transaction.on_commit(
-                lambda
-                    p=payment.provider,
-                    r=payment.provider_reference: _cancel_remote(p, r)
+                lambda p=payment.provider, r=payment.provider_reference: _cancel_remote(p, r)
             )
+        events.order_event(order_id, "order_expired" if expired else "order_cancelled")
         return True
 
     @classmethod
@@ -438,7 +463,9 @@ class OrderService:
     @classmethod
     def settle_payment(cls, order_id, transaction_id=None, data=None):
         """Idempotent. Returns 'confirmed' | 'duplicate' | 'late' | 'unknown'."""
-        order = Order.objects.select_related("payment").filter(pk=order_id).first()
+        order = Order.objects.select_related("payment").filter(
+            pk=order_id
+        ).first()
         payment = getattr(order, "payment", None) if order else None
         if not payment:
             logger.error("Payment callback for unknown order %s", order_id)
@@ -461,7 +488,7 @@ class OrderService:
         order = _lock(order_id)
         payment = order.payment
         if payment.status == P.COMPLETED:
-            return "duplicate"           # lost a race with a parallel webhook
+            return "duplicate"  # lost a race with a parallel webhook
         if payment.provider_data.get("late_payment"):
             return "late"
         payment.provider_data = {
@@ -469,10 +496,17 @@ class OrderService:
             "late_transaction_id": transaction_id,
         }
         payment.save(update_fields=["provider_data", "updated_at"])
-        _append_note(order, f"LATE PAYMENT received ({transaction_id or 'no tx id'}) "
-                            "after the order was closed. Refund or re-open manually.")
+        _append_note(
+            order,
+            f"LATE PAYMENT received ({transaction_id or 'no tx id'}) "
+            "after the order was closed. Refund or re-open manually."
+        )
         order.save(update_fields=["notes", "updated_at"])
-        logger.error("Late payment for order %s (%s)", order_id, transaction_id)
+        logger.error(
+            "Late payment for order %s (%s)",
+            order_id,
+            transaction_id
+        )
         return "late"
 
     @classmethod

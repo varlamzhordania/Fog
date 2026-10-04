@@ -330,6 +330,16 @@ UNFOLD_SETTINGS = {
                         _("Payment Methods"), "credit_card",
                         "checkout.paymentmethod",
                     ),
+                    nav_item(
+                        _("Payment Attempts"),
+                        "history_edu",
+                        "checkout.paymentattempt"
+                    ),
+                    nav_item(
+                        _("Email Log"),
+                        "forward_to_inbox",
+                        "checkout.ordernotification"
+                    ),
                 ],
             },
             {

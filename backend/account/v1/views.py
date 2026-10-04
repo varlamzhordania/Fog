@@ -19,7 +19,7 @@ from .serializers import (
     PasswordResetRequestSerializer,
     PasswordResetConfirmSerializer, UserRegisterSerializer,
 )
-from .tasks import send_password_reset_email_task
+from account.tasks import send_password_reset_email_task
 
 
 @extend_schema(tags=["Account"])
@@ -40,6 +40,7 @@ class UserView(RetrieveUpdateAPIView):
             return UserSettingsSerializer
         else:
             return UserSerializer
+
 
 @extend_schema(
     tags=["Account"],
@@ -75,6 +76,7 @@ class UserRegisterView(APIView):
             ).data,
             status=status.HTTP_201_CREATED,
         )
+
 
 @extend_schema(tags=["Account"])
 class AddressViewSet(OptionalPaginationMixin, ModelViewSet):
@@ -167,7 +169,9 @@ class PasswordResetRequestView(APIView):
             user = User.objects.get(
                 email=serializer.validated_data['email']
             )
-            send_password_reset_email_task(user.id)
+            transaction.on_commit(
+                lambda: send_password_reset_email_task.delay(user.id)
+            )
             return Response(
                 {"message": "Password reset link sent to your email."},
                 status=status.HTTP_200_OK
