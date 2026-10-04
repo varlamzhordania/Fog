@@ -3,9 +3,10 @@ PROD  := docker compose -f docker-compose.prod.yml  --env-file env/prod/compose.
 
 .DEFAULT_GOAL := help
 .PHONY: help secret \
-	init-local local-up local-down local-reset local-logs local-ps local-shell \
-	local-superuser local-fixtures local-restart-workers \
-	init-prod prod-up prod-down prod-logs prod-ps prod-superuser prod-backup
+    init-local local-up local-down local-reset local-logs local-ps local-shell \
+    local-superuser local-fixtures local-restart-workers \
+    init-prod prod-up prod-down prod-logs prod-ps prod-superuser prod-backup \
+    shkeeper-up shkeeper-down shkeeper-restart shkeeper-ps shkeeper-logs
 
 help:
 	@echo "Local:       make local-up | local-down | local-logs | local-shell | local-superuser | local-fixtures | local-restart-workers | local-reset"
@@ -82,3 +83,26 @@ prod-backup:
 	@mkdir -p backups
 	$(PROD) exec -T db sh -c 'pg_dump -U "$$POSTGRES_USER" "$$POSTGRES_DB"' > backups/db-$$(date +%F-%H%M).sql
 	@echo "saved to backups/"
+
+# ----------------------------------------------------------- shkeeper ----
+
+SHKEEPER_RELEASE := shkeeper
+SHKEEPER_NAMESPACE := shkeeper
+SHKEEPER_VALUES := shkeeper/values.yaml
+
+shkeeper-up:
+	helm upgrade --install $(SHKEEPER_RELEASE) vsys-host/shkeeper \
+		-f $(SHKEEPER_VALUES)
+
+shkeeper-down:
+	helm uninstall $(SHKEEPER_RELEASE)
+
+shkeeper-restart:
+	kubectl rollout restart deployment -n $(SHKEEPER_NAMESPACE) shkeeper-deployment
+	kubectl rollout restart deployment -n $(SHKEEPER_NAMESPACE) tron-shkeeper
+
+shkeeper-ps:
+	kubectl get pods,svc,pvc -n $(SHKEEPER_NAMESPACE)
+
+shkeeper-logs:
+	kubectl logs -n $(SHKEEPER_NAMESPACE) deployment/shkeeper-deployment -f --tail=100

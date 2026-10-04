@@ -8,6 +8,7 @@ import {
 } from "@heroui/react";
 import {CheckCircle2, Clock, XCircle} from "lucide-react";
 import Icon from "@/components/Icon/Icon";
+import QRCode from "react-qr-code";
 import {useCancelOrder, useOrder, usePayOrder, usePaymentMethods} from "@/queries/checkout";
 import {getApiErrorMessage} from "@/lib/utils";
 
@@ -139,27 +140,72 @@ export default function OrderPaymentPage() {
                                         <Typography type="h4">
                                             Pay with {order.payment_instructions.method}
                                         </Typography>
-                                        <p className="text-muted">{order.payment_instructions.message}</p>
+
+                                        <p className="text-muted">
+                                            {order.payment_instructions.message}
+                                        </p>
+
                                         {order.payment_instructions.checkout_url && (
-                                            <Button className="w-fit"
-                                                    onPress={() => window.location.assign(order.payment_instructions.checkout_url)}>
+                                            <Button
+                                                className="w-fit"
+                                                onPress={() =>
+                                                    window.location.assign(
+                                                        order.payment_instructions.checkout_url
+                                                    )
+                                                }
+                                            >
                                                 Pay by card
                                             </Button>
                                         )}
+
                                         <dl className="mt-2 grid grid-cols-2 gap-2">
                                             <dt className="text-muted">Reference</dt>
-                                            <dd className="font-mono">{order.payment_instructions.reference}</dd>
+                                            <dd className="font-mono">
+                                                {order.payment_instructions.reference}
+                                            </dd>
+
                                             <dt className="text-muted">Amount</dt>
-                                            <dd className="font-mono">{formatPrice(order.payment_instructions.amount)}</dd>
-                                            {order.payment_instructions.address && (<>
-                                                <dt className="text-muted">Send exactly</dt>
-                                                <dd className="font-mono">
-                                                    {order.payment_instructions.crypto_amount} {order.payment_instructions.asset}
-                                                </dd>
-                                                <dt className="text-muted">To address</dt>
-                                                <dd className="break-all font-mono">{order.payment_instructions.address}</dd>
-                                            </>)}
+                                            <dd className="font-mono">
+                                                {formatPrice(order.payment_instructions.amount)}
+                                            </dd>
+
+                                            {order.payment_instructions.address && (
+                                                <>
+                                                    <dt className="text-muted">Send exactly</dt>
+                                                    <dd className="font-mono">
+                                                        {order.payment_instructions.crypto_amount}{" "}
+                                                        {order.payment_instructions.asset}
+                                                    </dd>
+
+                                                    <dt className="text-muted">To address</dt>
+                                                    <dd className="break-all font-mono">
+                                                        {order.payment_instructions.address}
+                                                    </dd>
+                                                </>
+                                            )}
                                         </dl>
+
+                                        {order.payment_instructions.address && (
+                                            <div className="mt-4 flex flex-col items-center gap-3">
+                                                <div
+                                                    className="rounded-xl border border-separator bg-surface p-4">
+                                                    <QRCode
+                                                        value={order.payment_instructions.address}
+                                                        size={180}
+                                                        bgColor="transparent"
+                                                        fgColor="currentColor"
+                                                        level="M"
+                                                    />
+                                                </div>
+
+                                                <Typography
+                                                    type="body-xs"
+                                                    className="text-center text-muted"
+                                                >
+                                                    Scan the QR code to pay
+                                                </Typography>
+                                            </div>
+                                        )}
                                     </div>
                                 </>
                             )}
