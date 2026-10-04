@@ -5,6 +5,8 @@
     "fields": {
       "name": "Bitcoin",
       "code": "btc",
+      "provider": "shkeeper",
+      "asset": "BTC",
       "description": "Pay with Bitcoin (BTC). Your deposit address is valid for 60 minutes.",
       "icon": null,
       "min_amount": "25.00",
@@ -19,6 +21,8 @@
     "fields": {
       "name": "Monero",
       "code": "xmr",
+      "provider": "shkeeper",
+      "asset": "XMR",
       "description": "Pay privately with Monero (XMR). Your deposit address is valid for 60 minutes.",
       "icon": null,
       "min_amount": "10.00",
@@ -33,6 +37,8 @@
     "fields": {
       "name": "Litecoin",
       "code": "ltc",
+      "provider": "shkeeper",
+      "asset": "LTC",
       "description": "Fast, low-fee payment with Litecoin (LTC).",
       "icon": null,
       "min_amount": "10.00",
@@ -47,6 +53,8 @@
     "fields": {
       "name": "Tether (USDT TRC-20)",
       "code": "usdt-trc20",
+      "provider": "shkeeper",
+      "asset": "TRX-USDT",
       "description": "Stable-value payment with Tether on the TRON network.",
       "icon": null,
       "min_amount": "15.00",
@@ -61,6 +69,8 @@
     "fields": {
       "name": "Ethereum",
       "code": "eth",
+      "provider": "shkeeper",
+      "asset": "ETH",
       "description": "Pay with Ether (ETH) on the Ethereum mainnet.",
       "icon": null,
       "min_amount": "20.00",
@@ -75,6 +85,8 @@
     "fields": {
       "name": "Card (Stripe)",
       "code": "stripe",
+      "provider": "stripe",
+      "asset": "",
       "description": "Card payments are currently disabled.",
       "icon": null,
       "min_amount": "0.00",

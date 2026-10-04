@@ -60,6 +60,8 @@ THIRD_PARTY_APPS = [
     # Live runtime configuration (Must follow unfold.contrib.constance)
     "constance",
     "constance.backends.database",
+    # Celery
+    "django_celery_beat",
     # Rich text editor & trees
     "django_ckeditor_5",
     "treebeard",

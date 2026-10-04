@@ -419,6 +419,34 @@ UNFOLD_SETTINGS = {
                     ),
                 ],
             },
+            # ------------------------------------------------------------------
+            # Automation & Scheduled Tasks (Django Celery Beat)
+            # ------------------------------------------------------------------
+            {
+                "title": _("Automation & Tasks"),
+                "separator": True,
+                "collapsible": True,
+                "items": [
+                    nav_item(
+                        _("Periodic Tasks"),
+                        "schedule",
+                        "django_celery_beat.periodictask",
+                        permission=superuser_only,
+                    ),
+                    nav_item(
+                        _("Crontab Schedules"),
+                        "calendar_clock",
+                        "django_celery_beat.crontabschedule",
+                        permission=superuser_only,
+                    ),
+                    nav_item(
+                        _("Interval Schedules"),
+                        "timelapse",
+                        "django_celery_beat.intervalschedule",
+                        permission=superuser_only,
+                    ),
+                ],
+            },
             {
                 "title": _("System & Configuration"),
                 "separator": True,
