@@ -49,6 +49,9 @@ local-fixtures:
 local-restart-workers:
 	$(LOCAL) restart celery celery-beat
 
+local-restart-frontend:
+	$(LOCAL) restart frontend
+
 # ----------------------------------------------------------- production ----
 
 init-prod:

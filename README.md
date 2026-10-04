@@ -44,7 +44,7 @@ make local-superuser
 5. Apply the change:
 
 ```bash
-make local-up
+make local-restart-frontend
 ```
 
 ### 4. Load sample data (optional)
@@ -124,7 +124,7 @@ docker compose up -d
 
 ### 4. First start (HTTP) and certificate
 
-Keep `NGINX_MODE=http` and `USE_HTTPS_IN_ABSOLUTE_URLS=False` for the first start:
+Keep `NGINX_MODE=http` and `USE_HTTPS_IN_ABSOLUTE_URLS=False` *set it to False* for the first start:
 
 ```bash
 mkdir -p nginx/letsencrypt nginx/certbot-webroot
