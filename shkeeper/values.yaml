@@ -50,12 +50,17 @@ firo:
 # Tron
 #
 
+#tron_fullnode:
+#  image: vsyshost/javatron:GreatVoyage-v4.8.2.3
+#  enabled: false
+#  url: http://fullnode.tron.shkeeper.io
+#  solidity_url: http://fullnode.tron.shkeeper.io
+#  mainnet: true
+
 tron_fullnode:
-  image: vsyshost/javatron:GreatVoyage-v4.8.2.3
   enabled: false
-  url: http://fullnode.tron.shkeeper.io
-  solidity_url: http://fullnode.tron.shkeeper.io
-  mainnet: true
+  mainnet: false
+  url: https://nile.trongrid.io/
 
 tron_shkeeper:
   image: vsyshost/tron-shkeeper:2.0.0
