@@ -5,7 +5,7 @@ from .views import (
     PaymentMethodListView, UserOrderView, ShoppingCartAPIView,
     ShoppingCartItemAPIView, OrderCreateView, OrderPayView, OrderCancelView,
 )
-from .webhooks import stripe_webhook, shkeeper_webhook
+from .webhooks import stripe_webhook, shkeeper_webhook,xcash_webhook
 
 app_name = 'checkout-v1'
 
@@ -24,6 +24,7 @@ urlpatterns = [
 
     path('webhooks/stripe/', stripe_webhook, name='webhook_stripe'),
     path('webhooks/shkeeper/', shkeeper_webhook, name='webhook_shkeeper'),
+    path("webhooks/xcash/", xcash_webhook, name="xcash_webhook"),
 ]
 
 urlpatterns += router.urls

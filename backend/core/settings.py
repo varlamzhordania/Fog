@@ -294,14 +294,16 @@ STRIPE_SECRET_KEY = env("STRIPE_SECRET_KEY", default="sk_***")
 STRIPE_PUBLISHABLE_KEY = env("STRIPE_PUBLISHABLE_KEY", default="pk_***")
 STRIPE_WEBHOOK_KEY = env("STRIPE_WEBHOOK_KEY", default="whsec_***")
 
-# SHKeeper
-SHKEEPER_URL = env("SHKEEPER_URL", default="http://shkeeper:5000")
-SHKEEPER_API_KEY = env("SHKEEPER_API_KEY", default="")
-SHKEEPER_CALLBACK_BASE = env(
-    "SHKEEPER_CALLBACK_BASE",
-    default="http://backend:8000"
-)
+# XCASH CRYPTO PAYMENT GATEWAY
+XCASH_API_URL = env("XCASH_API_URL", default="https://pay.xca.sh")
+XCASH_NOTIFY_URL = env("XCASH_NOTIFY_URL", default="http://localhost:8000/api/v1/checkout/webhooks/xcash/")
+XCASH_APPID = env("XCASH_APPID", default="")
+XCASH_HMAC_KEY = env("XCASH_HMAC_KEY", default="")
+XCASH_INVOICE_DURATION = env.int("XCASH_INVOICE_DURATION", default=20)
+# Optional restricted methods dict: e.g. {"USDT": ["ethereum", "base", "arbitrum-one"], "ETH": ["ethereum", "base"]}
+XCASH_METHODS = env.json("XCASH_METHODS", default=None)
 # SECURE_REDIRECT_EXEMPT = [r"^api/v1/checkout/webhooks/shkeeper/$"]
+
 
 USE_HTTPS_IN_ABSOLUTE_URLS = env.bool(
     "USE_HTTPS_IN_ABSOLUTE_URLS",

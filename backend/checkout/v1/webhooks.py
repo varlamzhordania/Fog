@@ -1,10 +1,15 @@
+import hashlib
+import time
 import hmac
 import json
 import logging
 
 import stripe
 from django.conf import settings
-from django.http import HttpResponse
+from django.http import (
+    HttpResponse, HttpResponseBadRequest,
+    HttpResponseForbidden,
+)
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_POST
 
@@ -100,3 +105,93 @@ def shkeeper_webhook(request):
             data
         )  # partial payment etc.
     return HttpResponse(status=202)  # SHKeeper retries until it gets 202
+
+
+@csrf_exempt
+@require_POST
+def xcash_webhook(request):
+    appid = request.headers.get("XC-Appid", "")
+    timestamp = request.headers.get("XC-Timestamp", "")
+    nonce = request.headers.get("XC-Nonce", "")
+    signature = request.headers.get("XC-Signature", "")
+
+    expected_appid = getattr(settings, "XCASH_APPID", "")
+    secret_key = getattr(settings, "XCASH_HMAC_KEY", "")
+
+    if not expected_appid or not secret_key:
+        logger.error("Xcash webhook received but server credentials unconfigured.")
+        return HttpResponse(status=403)
+
+    if not all([appid, timestamp, nonce, signature]):
+        return HttpResponse(status=403)
+
+    if not hmac.compare_digest(appid.encode(), expected_appid.encode()):
+        return HttpResponse(status=403)
+
+    try:
+        if abs(time.time() - int(timestamp)) > 300:
+            return HttpResponse(status=403)
+    except (ValueError, TypeError):
+        return HttpResponse(status=403)
+
+    raw_body_str = request.body.decode("utf-8")
+    message = f"{nonce}{timestamp}{raw_body_str}"
+    expected_sig = hmac.new(
+        secret_key.encode("utf-8"),
+        message.encode("utf-8"),
+        hashlib.sha256,
+    ).hexdigest()
+
+    if not hmac.compare_digest(expected_sig.lower().encode(), signature.lower().encode()):
+        return HttpResponse(status=403)
+
+    try:
+        payload = json.loads(request.body)
+        event_type = payload.get("type")
+        data = payload.get("data") or {}
+    except (ValueError, KeyError):
+        logger.error("Malformed Xcash callback payload")
+        return HttpResponse("ok", content_type="text/plain", status=200)
+
+    if event_type != "invoice":
+        return HttpResponse("ok", content_type="text/plain", status=200)
+
+    out_no = str(data.get("out_no", ""))
+    try:
+        # Format: FOG-{order_id}-{payment_id}
+        parts = out_no.split("-")
+        order_id = int(parts[1])
+    except (IndexError, ValueError):
+        logger.error("Malformed out_no in Xcash callback: %s", out_no)
+        return HttpResponse("ok", content_type="text/plain", status=200)
+
+    tx_hash = data.get("hash")
+    confirmed = bool(data.get("confirmed", False))
+    provider_data = {
+        "xcash_status": "completed" if confirmed else "waiting",
+        "sys_no": data.get("sys_no"),
+        "crypto": data.get("crypto"),
+        "chain": data.get("chain"),
+        "pay_address": data.get("pay_address"),
+        "pay_amount": str(data.get("pay_amount", "")),
+        "block": data.get("block"),
+        "hash": tx_hash,
+        "confirmed": confirmed,
+        "risk_level": data.get("risk_level"),
+        "risk_score": data.get("risk_score"),
+    }
+
+    if confirmed:
+        OrderService.settle_payment(
+            order_id,
+            transaction_id=tx_hash,
+            data=provider_data,
+        )
+    else:
+        OrderService.update_provider_data(
+            order_id,
+            provider_data,
+        )
+
+    # Xcash requires HTTP 200 with text 'ok'
+    return HttpResponse("ok", content_type="text/plain", status=200)
