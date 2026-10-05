@@ -5,8 +5,7 @@ PROD  := docker compose -f docker-compose.prod.yml  --env-file env/prod/compose.
 .PHONY: help secret \
     init-local local-up local-down local-reset local-logs local-ps local-shell \
     local-superuser local-fixtures local-restart-workers \
-    init-prod prod-up prod-down prod-logs prod-ps prod-superuser prod-backup \
-    shkeeper-up shkeeper-down shkeeper-restart shkeeper-ps shkeeper-logs
+    init-prod prod-up prod-down prod-logs prod-ps prod-superuser prod-backup
 
 help:
 	@echo "Local:       make local-up | local-down | local-logs | local-shell | local-superuser | local-fixtures | local-restart-workers | local-reset"
@@ -83,31 +82,3 @@ prod-backup:
 	@mkdir -p backups
 	$(PROD) exec -T db sh -c 'pg_dump -U "$$POSTGRES_USER" "$$POSTGRES_DB"' > backups/db-$$(date +%F-%H%M).sql
 	@echo "saved to backups/"
-
-# ----------------------------------------------------------- shkeeper ----
-# Usage: make shkeeper-up ENV=test|prod
-ENV ?= test
-SHKEEPER_CHART := vsys-host/shkeeper
-SHKEEPER_VERSION ?=            # pin it: helm search repo vsys-host/shkeeper --versions
-SHKEEPER_NS := shkeeper-$(ENV)
-
-shkeeper-up:
-	helm upgrade --install shkeeper-$(ENV) $(SHKEEPER_CHART) \
-		--namespace $(SHKEEPER_NS) --create-namespace \
-		$(if $(SHKEEPER_VERSION),--version $(SHKEEPER_VERSION)) \
-		-f shkeeper/values.$(ENV).yaml
-
-shkeeper-down:
-	@if [ "$(ENV)" = "prod" ] && [ "$(CONFIRM)" != "yes" ]; then \
-		echo "Refusing: uninstalling prod. Re-run with CONFIRM=yes"; exit 1; fi
-	helm uninstall shkeeper-$(ENV) --namespace $(SHKEEPER_NS)
-
-shkeeper-restart:
-	kubectl rollout restart deployment -n $(SHKEEPER_NS) shkeeper-deployment
-	kubectl rollout restart deployment -n $(SHKEEPER_NS) tron-shkeeper
-
-shkeeper-ps:
-	kubectl get pods,svc,pvc -n $(SHKEEPER_NS)
-
-shkeeper-logs:
-	kubectl logs -n $(SHKEEPER_NS) deployment/shkeeper-deployment -f --tail=100
