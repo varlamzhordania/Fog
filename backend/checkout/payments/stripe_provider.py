@@ -4,6 +4,7 @@ from datetime import timedelta
 import stripe
 from django.conf import settings
 from django.utils import timezone
+from constance import config
 
 from checkout.exceptions import CheckoutError
 from .base import PaymentProvider, payment_deadline
@@ -41,7 +42,7 @@ class StripeProvider(PaymentProvider):
     def initiate(self, order, payment, method):
         _configure()
         # Stripe requires expires_at to be 30 min to 24 h away.
-        expires = max(payment_deadline(order), timezone.now() + timedelta(minutes=31))
+        expires = max(payment_deadline(order), timezone.now() + timedelta(minutes=config.CRYPTO_PAYMENT_WINDOW_MINUTES))
         front = settings.FRONTEND_URL
         order_url = f"{front}/checkout/orders/{order.id}/"
         try:

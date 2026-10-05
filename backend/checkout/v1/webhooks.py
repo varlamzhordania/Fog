@@ -1,4 +1,3 @@
-import hashlib
 import time
 import hmac
 import json
@@ -6,18 +5,19 @@ import logging
 
 import stripe
 from django.conf import settings
-from django.http import (
-    HttpResponse, HttpResponseBadRequest,
-    HttpResponseForbidden,
-)
+from django.core.cache import cache
+from django.http import HttpResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_POST
 
 from checkout.models import OrderPayment
+from checkout.payments.xcash import sign as xcash_sign
 from checkout.services.order import OrderService
 from checkout import events
 
 logger = logging.getLogger("fog")
+
+XCASH_NONCE_TTL = 15 * 60  # longer than the 300s timestamp window
 
 
 @csrf_exempt
@@ -107,6 +107,12 @@ def shkeeper_webhook(request):
     return HttpResponse(status=202)  # SHKeeper retries until it gets 202
 
 
+def _xcash_ok():
+    # Xcash needs HTTP 200 with the body "ok". Anything else 2xx/3xx/4xx is
+    # treated as final (not retried); only 5xx and network errors are retried.
+    return HttpResponse("ok", content_type="text/plain", status=200)
+
+
 @csrf_exempt
 @require_POST
 def xcash_webhook(request):
@@ -119,7 +125,7 @@ def xcash_webhook(request):
     secret_key = getattr(settings, "XCASH_HMAC_KEY", "")
 
     if not expected_appid or not secret_key:
-        logger.error("Xcash webhook received but server credentials unconfigured.")
+        logger.error("Xcash webhook received but server credentials are not configured.")
         return HttpResponse(status=403)
 
     if not all([appid, timestamp, nonce, signature]):
@@ -134,64 +140,88 @@ def xcash_webhook(request):
     except (ValueError, TypeError):
         return HttpResponse(status=403)
 
-    raw_body_str = request.body.decode("utf-8")
-    message = f"{nonce}{timestamp}{raw_body_str}"
-    expected_sig = hmac.new(
-        secret_key.encode("utf-8"),
-        message.encode("utf-8"),
-        hashlib.sha256,
-    ).hexdigest()
+    try:
+        raw_body = request.body.decode("utf-8")
+    except UnicodeDecodeError:
+        return HttpResponse(status=403)
 
+    expected_sig = xcash_sign(secret_key, nonce, timestamp, raw_body)
     if not hmac.compare_digest(expected_sig.lower().encode(), signature.lower().encode()):
         return HttpResponse(status=403)
 
+    # --- authenticated from here on ------------------------------------
+    # The docs ask merchants to handle the same XC-Nonce idempotently. The key is
+    # released again if processing fails so Xcash's 5xx retry can succeed.
+    nonce_key = f"xcash:nonce:{appid}:{nonce}"
+    if not cache.add(nonce_key, 1, XCASH_NONCE_TTL):
+        return _xcash_ok()
+
     try:
-        payload = json.loads(request.body)
-        event_type = payload.get("type")
-        data = payload.get("data") or {}
-    except (ValueError, KeyError):
-        logger.error("Malformed Xcash callback payload")
-        return HttpResponse("ok", content_type="text/plain", status=200)
+        try:
+            payload = json.loads(raw_body)
+            event_type = payload.get("type")
+            data = payload.get("data") or {}
+        except (ValueError, AttributeError):
+            logger.error("Malformed Xcash callback payload")
+            return _xcash_ok()
 
-    if event_type != "invoice":
-        return HttpResponse("ok", content_type="text/plain", status=200)
+        if event_type != "invoice":
+            return _xcash_ok()
 
-    out_no = str(data.get("out_no", ""))
-    try:
-        # Format: FOG-{order_id}-{payment_id}
-        parts = out_no.split("-")
-        order_id = int(parts[1])
-    except (IndexError, ValueError):
-        logger.error("Malformed out_no in Xcash callback: %s", out_no)
-        return HttpResponse("ok", content_type="text/plain", status=200)
+        out_no = str(data.get("out_no", ""))
+        try:
+            # Format: FOG-{order_id}-{payment_id}-{suffix}
+            order_id = int(out_no.split("-")[1])
+        except (IndexError, ValueError):
+            logger.error("Malformed out_no in Xcash callback: %s", out_no)
+            return _xcash_ok()
 
-    tx_hash = data.get("hash")
-    confirmed = bool(data.get("confirmed", False))
-    provider_data = {
-        "xcash_status": "completed" if confirmed else "waiting",
-        "sys_no": data.get("sys_no"),
-        "crypto": data.get("crypto"),
-        "chain": data.get("chain"),
-        "pay_address": data.get("pay_address"),
-        "pay_amount": str(data.get("pay_amount", "")),
-        "block": data.get("block"),
-        "hash": tx_hash,
-        "confirmed": confirmed,
-        "risk_level": data.get("risk_level"),
-        "risk_score": data.get("risk_score"),
-    }
+        payment = OrderPayment.objects.filter(order_id=order_id).first()
+        if not payment:
+            logger.error("Xcash callback for unknown order %s", order_id)
+            return _xcash_ok()
 
-    if confirmed:
-        OrderService.settle_payment(
-            order_id,
-            transaction_id=tx_hash,
-            data=provider_data,
-        )
-    else:
-        OrderService.update_provider_data(
-            order_id,
-            provider_data,
-        )
+        if payment.provider != "xcash":
+            # The customer switched to another provider; the stray invoice is
+            # logged for staff instead of settling the order with a mismatch.
+            logger.error(
+                "Xcash callback for order %s, but its payment provider is %s",
+                order_id, payment.provider,
+            )
+            return _xcash_ok()
 
-    # Xcash requires HTTP 200 with text 'ok'
-    return HttpResponse("ok", content_type="text/plain", status=200)
+        if data.get("sys_no") != payment.provider_reference:
+            # Paid an older invoice of the same order (e.g. before refreshing it).
+            # The money is real and the amount is the same, so we still settle.
+            logger.warning(
+                "Xcash invoice %s paid for order %s, current invoice is %s",
+                data.get("sys_no"), order_id, payment.provider_reference,
+            )
+
+        tx_hash = data.get("hash")
+        confirmed = bool(data.get("confirmed", False))
+        provider_data = {
+            "xcash_status": "completed" if confirmed else "waiting",
+            "sys_no": data.get("sys_no"),
+            "crypto": data.get("crypto"),
+            "chain": data.get("chain"),
+            "pay_address": data.get("pay_address"),
+            "pay_amount": str(data.get("pay_amount", "")),
+            "block": data.get("block"),
+            "hash": tx_hash,
+            "confirmed": confirmed,
+            # Risk scoring is asynchronous, so these can still be null here.
+            "risk_level": data.get("risk_level"),
+            "risk_score": data.get("risk_score"),
+        }
+
+        if confirmed:
+            OrderService.settle_payment(order_id, transaction_id=tx_hash, data=provider_data)
+        else:
+            OrderService.update_provider_data(order_id, provider_data)
+    except Exception:
+        cache.delete(nonce_key)
+        logger.exception("Xcash webhook processing failed")
+        return HttpResponse(status=500)  # 5xx -> Xcash retries with backoff
+
+    return _xcash_ok()

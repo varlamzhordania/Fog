@@ -3,13 +3,13 @@
     "model": "checkout.paymentmethod",
     "pk": 1,
     "fields": {
-      "name": "Bitcoin",
-      "code": "btc",
-      "provider": "shkeeper",
-      "asset": "BTC",
-      "description": "Pay with Bitcoin (BTC). Your deposit address is valid for 60 minutes.",
+      "name": "Crypto",
+      "code": "xcash",
+      "provider": "xcash",
+      "asset": "",
+      "description": "Pay securely with cryptocurrency. A unique payment address will be provided and remains valid for 60 minutes.",
       "icon": null,
-      "min_amount": "25.00",
+      "min_amount": "10.00",
       "is_active": true,
       "created_at": "2026-08-01T09:00:00Z",
       "updated_at": "2026-08-01T09:00:00Z"
@@ -19,78 +19,14 @@
     "model": "checkout.paymentmethod",
     "pk": 2,
     "fields": {
-      "name": "Monero",
-      "code": "xmr",
-      "provider": "shkeeper",
-      "asset": "XMR",
-      "description": "Pay privately with Monero (XMR). Your deposit address is valid for 60 minutes.",
-      "icon": null,
-      "min_amount": "10.00",
-      "is_active": true,
-      "created_at": "2026-08-01T09:00:00Z",
-      "updated_at": "2026-08-01T09:00:00Z"
-    }
-  },
-  {
-    "model": "checkout.paymentmethod",
-    "pk": 3,
-    "fields": {
-      "name": "Litecoin",
-      "code": "ltc",
-      "provider": "shkeeper",
-      "asset": "LTC",
-      "description": "Fast, low-fee payment with Litecoin (LTC).",
-      "icon": null,
-      "min_amount": "10.00",
-      "is_active": true,
-      "created_at": "2026-08-01T09:00:00Z",
-      "updated_at": "2026-08-01T09:00:00Z"
-    }
-  },
-  {
-    "model": "checkout.paymentmethod",
-    "pk": 4,
-    "fields": {
-      "name": "Tether (USDT TRC-20)",
-      "code": "usdt-trc20",
-      "provider": "shkeeper",
-      "asset": "TRX-USDT",
-      "description": "Stable-value payment with Tether on the TRON network.",
-      "icon": null,
-      "min_amount": "15.00",
-      "is_active": true,
-      "created_at": "2026-08-01T09:00:00Z",
-      "updated_at": "2026-08-01T09:00:00Z"
-    }
-  },
-  {
-    "model": "checkout.paymentmethod",
-    "pk": 5,
-    "fields": {
-      "name": "Ethereum",
-      "code": "eth",
-      "provider": "shkeeper",
-      "asset": "ETH",
-      "description": "Pay with Ether (ETH) on the Ethereum mainnet.",
-      "icon": null,
-      "min_amount": "20.00",
-      "is_active": true,
-      "created_at": "2026-08-01T09:00:00Z",
-      "updated_at": "2026-08-01T09:00:00Z"
-    }
-  },
-  {
-    "model": "checkout.paymentmethod",
-    "pk": 6,
-    "fields": {
-      "name": "Card (Stripe)",
+      "name": "Stripe",
       "code": "stripe",
       "provider": "stripe",
       "asset": "",
-      "description": "Card payments are currently disabled.",
+      "description": "Pay securely with your credit or debit card through Stripe.",
       "icon": null,
       "min_amount": "0.00",
-      "is_active": false,
+      "is_active": true,
       "created_at": "2026-08-01T09:00:00Z",
       "updated_at": "2026-08-01T09:00:00Z"
     }
