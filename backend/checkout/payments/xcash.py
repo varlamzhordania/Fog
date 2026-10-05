@@ -66,11 +66,7 @@ class XcashProvider(PaymentProvider):
 
         front = settings.FRONTEND_URL.rstrip("/")
         order_url = f"{front}/checkout/orders/{order.id}/"
-        notify_url = getattr(
-            settings,
-            "XCASH_NOTIFY_URL",
-            f"{settings.BACKEND_URL.rstrip('/')}/api/v1/checkout/webhooks/xcash",
-        )
+        notify_url = settings.XCASH_NOTIFY_URL
 
         # Enforce server-side payment window
         deadline = payment_deadline(order)
@@ -89,8 +85,10 @@ class XcashProvider(PaymentProvider):
         }
 
         methods = getattr(settings, "XCASH_METHODS", None)
-        if methods:
-            payload["methods"] = methods
+        # if methods:
+        #     payload["methods"] = methods
+
+        print("methods",methods)
 
         raw_body = json.dumps(payload, separators=(",", ":"), ensure_ascii=False)
         timestamp = str(int(time.time()))
@@ -105,6 +103,17 @@ class XcashProvider(PaymentProvider):
             "Content-Type": "application/json",
         }
 
+        logger.error("XCASH URL: %s", f"{api_url}/v1/invoice")
+        logger.error("XCASH PAYLOAD: %s", raw_body)
+        logger.error(
+            "XCASH HEADERS: %s", {
+                "XC-Appid": appid,
+                "XC-Timestamp": timestamp,
+                "XC-Nonce": nonce,
+                "XC-Signature": signature,
+            }
+            )
+
         try:
             res = requests.post(
                 f"{api_url}/v1/invoice",
@@ -112,7 +121,17 @@ class XcashProvider(PaymentProvider):
                 headers=headers,
                 timeout=15,
             )
-            res.raise_for_status()
+
+            if not res.ok:
+                logger.error(
+                    "Xcash API rejected invoice: HTTP %s, response=%s",
+                    res.status_code,
+                    res.text,
+                )
+                raise CheckoutError(
+                    f"Xcash invoice creation failed: {res.text}"
+                )
+
             data = res.json()
         except requests.RequestException:
             logger.exception("Xcash invoice creation failed for order %s", order.id)

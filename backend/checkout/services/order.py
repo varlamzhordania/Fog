@@ -115,6 +115,7 @@ class OrderService:
         ).first() or PaymentMethod.objects.filter(
             name=payment.method
         ).first())
+
         return get_provider(payment.provider).instructions(
             order,
             payment,
