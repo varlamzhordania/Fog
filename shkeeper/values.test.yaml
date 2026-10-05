@@ -1,0 +1,36 @@
+namespace: shkeeper-test
+#external_ip: 0.0.0.0
+domain: ""
+additional_domains: []
+storageClassName: hostpath
+
+#shkeeper:
+#  image: vsyshost/shkeeper:2.5.32
+#  port: 5000
+#  enable_payout_callback: false
+
+mariadb:
+  rootPassword: shkeeper
+
+# Chart defaults enable btc/ltc/doge, so disable them explicitly
+btc: {enabled: false}
+ltc: {enabled: false}
+doge: {enabled: false}
+firo: {enabled: false}
+monero: {enabled: false}
+eth: {enabled: false}
+
+tron_fullnode:
+  enabled: false
+  mainnet: true
+#  url: https://nile.trongrid.io/
+  url: http://fullnode.tron.shkeeper.io
+
+#tron_shkeeper:
+#  image: vsyshost/tron-shkeeper:2.0.0
+#  host: tron-shkeeper
+#  port: 6000
+
+trx: {enabled: true}
+usdt: {enabled: true}
+usdc: {enabled: false}

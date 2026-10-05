@@ -85,24 +85,29 @@ prod-backup:
 	@echo "saved to backups/"
 
 # ----------------------------------------------------------- shkeeper ----
-
-SHKEEPER_RELEASE := shkeeper
-SHKEEPER_NAMESPACE := shkeeper
-SHKEEPER_VALUES := shkeeper/values.yaml
+# Usage: make shkeeper-up ENV=test|prod
+ENV ?= test
+SHKEEPER_CHART := vsys-host/shkeeper
+SHKEEPER_VERSION ?=            # pin it: helm search repo vsys-host/shkeeper --versions
+SHKEEPER_NS := shkeeper-$(ENV)
 
 shkeeper-up:
-	helm upgrade --install $(SHKEEPER_RELEASE) vsys-host/shkeeper \
-		-f $(SHKEEPER_VALUES)
+	helm upgrade --install shkeeper-$(ENV) $(SHKEEPER_CHART) \
+		--namespace $(SHKEEPER_NS) --create-namespace \
+		$(if $(SHKEEPER_VERSION),--version $(SHKEEPER_VERSION)) \
+		-f shkeeper/values.$(ENV).yaml
 
 shkeeper-down:
-	helm uninstall $(SHKEEPER_RELEASE)
+	@if [ "$(ENV)" = "prod" ] && [ "$(CONFIRM)" != "yes" ]; then \
+		echo "Refusing: uninstalling prod. Re-run with CONFIRM=yes"; exit 1; fi
+	helm uninstall shkeeper-$(ENV) --namespace $(SHKEEPER_NS)
 
 shkeeper-restart:
-	kubectl rollout restart deployment -n $(SHKEEPER_NAMESPACE) shkeeper-deployment
-	kubectl rollout restart deployment -n $(SHKEEPER_NAMESPACE) tron-shkeeper
+	kubectl rollout restart deployment -n $(SHKEEPER_NS) shkeeper-deployment
+	kubectl rollout restart deployment -n $(SHKEEPER_NS) tron-shkeeper
 
 shkeeper-ps:
-	kubectl get pods,svc,pvc -n $(SHKEEPER_NAMESPACE)
+	kubectl get pods,svc,pvc -n $(SHKEEPER_NS)
 
 shkeeper-logs:
-	kubectl logs -n $(SHKEEPER_NAMESPACE) deployment/shkeeper-deployment -f --tail=100
+	kubectl logs -n $(SHKEEPER_NS) deployment/shkeeper-deployment -f --tail=100

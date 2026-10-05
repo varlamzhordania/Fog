@@ -1,0 +1,35 @@
+namespace: shkeeper-prod
+external_ip: 0.0.0.0
+domain: shkeeper.example.com        # or "" if only reachable internally
+additional_domains: []
+storageClassName: retain-storage    # see the StorageClass below
+
+shkeeper:
+  image: vsyshost/shkeeper:2.5.32
+  port: 5000
+  enable_payout_callback: false
+
+mariadb:
+  rootPassword: CHANGE_ME_STRONG    # better: pass with --set from a secret
+
+btc: {enabled: true, mainnet: true}
+ltc: {enabled: true, mainnet: true}
+doge: {enabled: false}
+firo: {enabled: false}
+monero: {enabled: false}            # needs your own monerod, enable later
+eth: {enabled: false}               # needs your own full node, enable later
+
+tron_fullnode:
+  enabled: false
+  mainnet: true
+  url: http://fullnode.tron.shkeeper.io
+  solidity_url: http://fullnode.tron.shkeeper.io
+
+tron_shkeeper:
+  image: vsyshost/tron-shkeeper:2.0.0
+  host: tron-shkeeper
+  port: 6000
+
+trx: {enabled: true}
+usdt: {enabled: true}
+usdc: {enabled: false}
