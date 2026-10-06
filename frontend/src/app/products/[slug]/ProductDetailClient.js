@@ -10,7 +10,7 @@ import {
 
 import ProductGallery from "@/components/Sliders/ProductGallery";
 import Link from "next/link";
-import Icon from "@/components/Icon/Icon";
+import Icon from "@/components/icon/Icon";
 import ProductSlider from "@/components/Sliders/ProductSlider";
 import {useProducts} from "@/queries/inventory";
 import {useCartStore} from "@/stores/cart";

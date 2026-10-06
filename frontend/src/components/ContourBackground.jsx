@@ -1,6 +1,3 @@
-// Topographic contour lines, generated as pure SVG (no image file, scales sharply,
-// follows the theme through `currentColor`). Server component, deterministic output.
-
 const TAU = Math.PI * 2;
 
 const ring = (cx, cy, r, seed) => {

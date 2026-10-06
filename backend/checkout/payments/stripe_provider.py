@@ -14,7 +14,7 @@ logger = logging.getLogger("fog")
 
 
 def _configure():
-    stripe.api_key = settings.STRIPE_SECRET_KEY
+    stripe.api_key = config.STRIPE_SECRET_KEY
     stripe.max_network_retries = 2
     stripe.default_http_client = stripe._http_client.RequestsClient(timeout=15)
 

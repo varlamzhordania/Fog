@@ -3,7 +3,7 @@
 import {useRef} from "react";
 import {Button, Card, Label, ListBox, Pagination, Select, Skeleton, Typography} from "@heroui/react";
 import {PackageSearch, RotateCcw} from "lucide-react";
-import Icon from "@/components/Icon/Icon";
+import Icon from "@/components/icon/Icon";
 import ProductCard from "@/components/inventory/ProductCard";
 import {useProducts} from "@/queries/inventory";
 import {useProductFilters} from "@/hooks/useProductFilters";

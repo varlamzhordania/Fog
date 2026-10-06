@@ -51,7 +51,7 @@ def sign(hmac_key: str, nonce: str, timestamp: str, raw_body: str = "") -> str:
 
 
 def _api_url() -> str:
-    return getattr(settings, "XCASH_API_URL", "https://pay.xca.sh").rstrip("/")
+    return getattr(config, "XCASH_API_URL", "https://pay.xca.sh").rstrip("/")
 
 
 def parse_asset(asset: str):
@@ -91,7 +91,7 @@ def status_data(data: dict) -> dict:
 
 
 def _contract_chains() -> set:
-    raw = getattr(settings, "XCASH_CONTRACT_CHAINS", "") or ""
+    raw = getattr(config, "XCASH_CONTRACT_CHAINS", "") or ""
     if isinstance(raw, str):
         raw = raw.split(",")
     return {str(c).strip().lower() for c in raw if str(c).strip()}
@@ -105,8 +105,8 @@ def _invoice_minutes(order) -> int:
 
 
 def _create_invoice(payload: dict) -> dict:
-    appid = getattr(settings, "XCASH_APPID", "")
-    hmac_key = getattr(settings, "XCASH_HMAC_KEY", "")
+    appid = getattr(config, "XCASH_APPID", "")
+    hmac_key = getattr(config, "XCASH_HMAC_KEY", "")
     if not appid or not hmac_key:
         logger.error("Xcash credentials missing from configuration.")
         raise CheckoutError(_GENERIC)
@@ -198,7 +198,7 @@ class XcashProvider(PaymentProvider):
 
     def initiate(self, order, payment, method):
         crypto, chain = parse_asset(getattr(method, "asset", ""))
-        methods = {crypto: [chain]} if crypto else getattr(settings, "XCASH_METHODS", None)
+        methods = {crypto: [chain]} if crypto else getattr(config, "XCASH_METHODS", None)
 
         front = settings.FRONTEND_URL.rstrip("/")
         order_url = f"{front}/checkout/orders/{order.id}/"
@@ -213,7 +213,7 @@ class XcashProvider(PaymentProvider):
             "currency": "USD",
             "amount": f"{payment.amount:.2f}",
             "duration": _invoice_minutes(order),
-            "notify_url": settings.XCASH_NOTIFY_URL,
+            "notify_url": config.XCASH_NOTIFY_URL,
             "return_url": f"{order_url}?paid=1",
         }
         if methods:

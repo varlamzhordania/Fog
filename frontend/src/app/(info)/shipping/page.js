@@ -1,6 +1,6 @@
 import {Typography} from "@heroui/react";
 import {AlertTriangle, Clock, CreditCard, Globe, MapPin, Package, Shield, Truck} from "lucide-react";
-import Icon from "@/components/Icon/Icon";
+import Icon from "@/components/icon/Icon";
 
 export const metadata = {
     title: "Shipping",

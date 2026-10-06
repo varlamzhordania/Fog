@@ -6,7 +6,7 @@ import {
     ClipboardList, LogOut, MapPinHouse, Menu, Moon, Search, ShoppingCart, Sun, UserRound
 } from "lucide-react";
 import {useState} from "react";
-import Icon from "@/components/Icon/Icon";
+import Icon from "@/components/icon/Icon";
 import {useThemeStore} from "@/stores/theme";
 import {useConfig} from "@/queries/config";
 import Image from "@/components/Image";

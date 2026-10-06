@@ -23,7 +23,6 @@ SECRET_KEY = env('DJANGO_SECRET_KEY', default=str(uuid.uuid4()))
 
 DEBUG = env.bool('DJANGO_DEBUG', default=True)
 
-
 if not DEBUG:
     SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
     USE_X_FORWARDED_HOST = True
@@ -288,21 +287,6 @@ CHANNEL_LAYERS = {
         # },
     },
 }
-
-# Stripe
-STRIPE_SECRET_KEY = env("STRIPE_SECRET_KEY", default="sk_***")
-STRIPE_PUBLISHABLE_KEY = env("STRIPE_PUBLISHABLE_KEY", default="pk_***")
-STRIPE_WEBHOOK_KEY = env("STRIPE_WEBHOOK_KEY", default="whsec_***")
-
-# XCASH CRYPTO PAYMENT GATEWAY
-XCASH_API_URL = env("XCASH_API_URL", default="https://pay.xca.sh")
-XCASH_NOTIFY_URL = env("XCASH_NOTIFY_URL", default="http://localhost:8000/api/v1/checkout/webhooks/xcash/")
-XCASH_APPID = env("XCASH_APPID", default="")
-XCASH_HMAC_KEY = env("XCASH_HMAC_KEY", default="")
-# Optional restricted methods dict: e.g. {"USDT": ["ethereum", "base", "arbitrum-one"], "ETH": ["ethereum", "base"]}
-XCASH_METHODS = env.json("XCASH_METHODS", default=None)
-# SECURE_REDIRECT_EXEMPT = [r"^api/v1/checkout/webhooks/shkeeper/$"]
-
 
 USE_HTTPS_IN_ABSOLUTE_URLS = env.bool(
     "USE_HTTPS_IN_ABSOLUTE_URLS",
@@ -636,6 +620,70 @@ CONSTANCE_CONFIG = OrderedDict(
         ),
 
         # -------------------------------------------------------------------------
+        # 7. Stripe Payment
+        # -------------------------------------------------------------------------
+        (
+            "STRIPE_SECRET_KEY",
+            (
+                "sk_***",
+                "Stripe secret API key used by the backend to create and manage payments.",
+                str,
+            ),
+        ),
+        (
+            "STRIPE_PUBLISHABLE_KEY",
+            (
+                "pk_***",
+                "Stripe publishable key exposed to the storefront for client-side Stripe integration.",
+                str,
+            ),
+        ),
+        (
+            "STRIPE_WEBHOOK_KEY",
+            (
+                "whsec_***",
+                "Stripe webhook signing secret used to verify incoming webhook requests.",
+                str,
+            ),
+        ),
+
+        # -------------------------------------------------------------------------
+        # 8. Xcash Payment
+        # -------------------------------------------------------------------------
+        (
+            "XCASH_API_URL",
+            (
+                "http://localhost",
+                "Base URL of the Xcash payment server API.",
+                str,
+            ),
+        ),
+        (
+            "XCASH_NOTIFY_URL",
+            (
+                "http://localhost/api/v1/checkout/webhooks/xcash/",
+                "Webhook URL that Xcash uses to notify FOG about payment events.",
+                str,
+            ),
+        ),
+        (
+            "XCASH_APPID",
+            (
+                "",
+                "Xcash application ID used to authenticate payment API requests.",
+                str,
+            ),
+        ),
+        (
+            "XCASH_HMAC_KEY",
+            (
+                "",
+                "Secret HMAC key used to authenticate and verify Xcash payment requests.",
+                str,
+            ),
+        ),
+
+        # -------------------------------------------------------------------------
         # 7. Store Operations
         # -------------------------------------------------------------------------
         (
@@ -764,6 +812,30 @@ CONSTANCE_CONFIG_FIELDSETS = OrderedDict(
                 "collapse": True,
             },
         ),
+        (
+            "Stripe Payment",
+            {
+                "fields": (
+                    "STRIPE_SECRET_KEY",
+                    "STRIPE_PUBLISHABLE_KEY",
+                    "STRIPE_WEBHOOK_KEY",
+                ),
+                "collapse": True,
+            },
+        ),
+
+        (
+            "Xcash Payment",
+            {
+                "fields": (
+                    "XCASH_API_URL",
+                    "XCASH_NOTIFY_URL",
+                    "XCASH_APPID",
+                    "XCASH_HMAC_KEY",
+                ),
+                "collapse": True,
+            },
+        ),
 
         (
             "Crypto Payment & Security",
@@ -775,7 +847,6 @@ CONSTANCE_CONFIG_FIELDSETS = OrderedDict(
                 ),
             },
         ),
-
         (
             "Store Operations",
             {

@@ -11,7 +11,7 @@ import {
     RefreshCw, ShieldCheck, Truck, XCircle,
 } from "lucide-react";
 import QRCode from "react-qr-code";
-import Icon from "@/components/Icon/Icon";
+import Icon from "@/components/icon/Icon";
 import {
     useCancelOrder, useOrder, usePayOrder, usePaymentMethods,
 } from "@/queries/checkout";

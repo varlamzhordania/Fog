@@ -1,6 +1,6 @@
 import {Typography} from "@heroui/react";
 import {BookOpen, CheckCircle, FileCheck, FlaskConical, MapPin, Microscope, UserCheck, XCircle} from "lucide-react";
-import Icon from "@/components/Icon/Icon";
+import Icon from "@/components/icon/Icon";
 
 export const metadata = {
     title: "Research Policy",

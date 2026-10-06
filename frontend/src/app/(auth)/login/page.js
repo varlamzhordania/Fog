@@ -15,7 +15,7 @@ import {
     Typography, InputGroup
 } from "@heroui/react";
 import {Eye, EyeOff, LogIn} from "lucide-react";
-import Icon from "@/components/Icon/Icon";
+import Icon from "@/components/icon/Icon";
 import {useLogin} from "@/queries/auth";
 import {validateEmail, validatePassword} from "@/lib/utils";
 import {useAuthStore} from "@/stores/auth";

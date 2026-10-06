@@ -3,7 +3,7 @@
 import Link from "next/link";
 import {useCartStore} from "@/stores/cart";
 import CartQuantityControl from "@/components/inventory/CartQuantityControl";
-import Icon from "@/components/Icon/Icon";
+import Icon from "@/components/icon/Icon";
 import {
     ArrowRight,
     ShoppingCart,

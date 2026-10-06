@@ -1,6 +1,6 @@
 import {Typography} from "@heroui/react";
 import {Eye, Lock, Mail, Settings, ShieldCheck} from "lucide-react";
-import Icon from "@/components/Icon/Icon";
+import Icon from "@/components/icon/Icon";
 
 export const metadata = {
     title: "Privacy Policy",

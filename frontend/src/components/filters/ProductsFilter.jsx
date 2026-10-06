@@ -18,7 +18,7 @@ import {
 } from "@heroui/react"
 import {RotateCcw, SlidersHorizontal} from "lucide-react"
 import {useState} from "react"
-import Icon from "@/components/Icon/Icon"
+import Icon from "@/components/icon/Icon"
 import {useCategories, usePriceRange} from "@/queries/inventory"
 import {useProductFilters} from "@/hooks/useProductFilters"
 import {PRODUCT_TYPE_OPTIONS, STOCK_OPTIONS} from "@/data/productFilters"

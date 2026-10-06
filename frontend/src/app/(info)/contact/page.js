@@ -3,7 +3,7 @@
 import {useState} from "react";
 import {Button, Typography} from "@heroui/react";
 import {CheckCircle, Clock, Mail, MessageSquare, Send} from "lucide-react";
-import Icon from "@/components/Icon/Icon";
+import Icon from "@/components/icon/Icon";
 
 const CHANNELS = [
     {

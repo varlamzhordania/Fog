@@ -6,7 +6,7 @@ import {Swiper, SwiperSlide} from "swiper/react";
 import {Button, Skeleton, Typography} from "@heroui/react";
 import {ChevronRight, ChevronLeft} from "lucide-react";
 
-import Icon from "@/components/Icon/Icon";
+import Icon from "@/components/icon/Icon";
 import ProductCard from "@/components/inventory/ProductCard";
 
 import "swiper/css";

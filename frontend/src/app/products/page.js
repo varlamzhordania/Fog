@@ -9,8 +9,8 @@ import SuspenseBoundary from "@/components/SuspenseBoundary";
 export default function ProductsPage() {
     return (
         <div className={"w-full flex flex-col items-stretch justify-start"}>
-            <BackgroundImage lightImage="/bg/bg-light-r-to-l.jpg" darkImage="/bg/bg-dark-r-to-l.jpg">
-                <div className="container relative flex min-h-[320px] flex-col justify-center lg:min-h-[380px]">
+            <BackgroundImage lightImage="/hero-light.jpg" darkImage="/hero-dark.jpg" opacity={100} objectPosition={"right"}>
+                <div className="container relative flex min-h-80 flex-col justify-center lg:min-h-95">
                     <div className="relative z-10 flex flex-col gap-5">
                         <Typography
                             type="h1"

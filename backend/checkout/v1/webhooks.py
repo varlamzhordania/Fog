@@ -9,6 +9,7 @@ from django.core.cache import cache
 from django.http import HttpResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_POST
+from constance import config
 
 from checkout.models import OrderPayment
 from checkout.payments.xcash import sign as xcash_sign
@@ -27,7 +28,7 @@ def stripe_webhook(request):
         event = stripe.Webhook.construct_event(
             request.body,
             request.META.get("HTTP_STRIPE_SIGNATURE", ""),
-            settings.STRIPE_WEBHOOK_KEY,
+            config.STRIPE_WEBHOOK_KEY,
         )
     except (ValueError, stripe.SignatureVerificationError):
         return HttpResponse(status=400)
@@ -121,8 +122,8 @@ def xcash_webhook(request):
     nonce = request.headers.get("XC-Nonce", "")
     signature = request.headers.get("XC-Signature", "")
 
-    expected_appid = getattr(settings, "XCASH_APPID", "")
-    secret_key = getattr(settings, "XCASH_HMAC_KEY", "")
+    expected_appid = getattr(config, "XCASH_APPID", "")
+    secret_key = getattr(config, "XCASH_HMAC_KEY", "")
 
     if not expected_appid or not secret_key:
         logger.error("Xcash webhook received but server credentials are not configured.")

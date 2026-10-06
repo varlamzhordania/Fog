@@ -1,7 +1,7 @@
 import {notFoundImage} from "@/lib/config";
 import {Card, Typography} from "@heroui/react";
 import Image from "@/components/Image";
-import Icon from "@/components/Icon/Icon";
+import Icon from "@/components/icon/Icon";
 import {MoveRight} from "lucide-react";
 import {cn} from "tailwind-variants";
 import Link from "next/link";

@@ -1,6 +1,6 @@
 import {Typography} from "@heroui/react";
 import {FlaskConical, Heart, Leaf, Network, ShieldCheck, Target, Users} from "lucide-react";
-import Icon from "@/components/Icon/Icon";
+import Icon from "@/components/icon/Icon";
 
 export const metadata = {
     title: "About",

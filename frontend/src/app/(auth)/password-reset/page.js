@@ -4,7 +4,7 @@ import {useState} from "react";
 import Link from "next/link";
 import {Button, Typography} from "@heroui/react";
 import {AlertCircle, ArrowLeft, CheckCircle, Mail} from "lucide-react";
-import Icon from "@/components/Icon/Icon";
+import Icon from "@/components/icon/Icon";
 import {useRequestPasswordReset} from "@/queries/auth";
 
 const INPUT_CLASS =

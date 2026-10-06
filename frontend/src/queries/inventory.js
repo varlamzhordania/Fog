@@ -12,7 +12,7 @@ import {API_ENDPOINTS} from "@/lib/config";
 export function useHome() {
     return useQuery({
         queryKey: ["inventory", "home"],
-        queryFn: async () => (await apiClient().get(API_ENDPOINTS.inventory.home)).data,
+        queryFn: async () => (await apiClient.get(API_ENDPOINTS.inventory.home)).data,
         staleTime: 2 * 60 * 1000,
     });
 }

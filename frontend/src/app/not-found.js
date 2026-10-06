@@ -1,7 +1,7 @@
 import {Typography} from "@heroui/react";
 import Link from "next/link";
 import {ArrowLeft, Home, SearchX} from "lucide-react";
-import Icon from "@/components/Icon/Icon";
+import Icon from "@/components/icon/Icon";
 
 export const metadata = {
     title: "404 — Page Not Found",

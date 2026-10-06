@@ -11,7 +11,7 @@ import {
     ArrowRight, Check, ChevronDown, Coins, CreditCard, Lock, LogIn, Package,
     ShieldCheck, ShoppingCart,
 } from "lucide-react";
-import Icon from "@/components/Icon/Icon";
+import Icon from "@/components/icon/Icon";
 import Image from "@/components/Image";
 import {useAuthStore} from "@/stores/auth";
 import {useCartStore} from "@/stores/cart";

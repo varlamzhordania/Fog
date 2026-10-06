@@ -2,7 +2,7 @@
 
 import {Button} from "@heroui/react";
 import {Download, ShoppingBag, Trash2, Plus, Minus} from "lucide-react";
-import Icon from "@/components/Icon/Icon";
+import Icon from "@/components/icon/Icon";
 import {useCartActions} from "@/hooks/useCartActions";
 
 export default function CartQuantityControl({

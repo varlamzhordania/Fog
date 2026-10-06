@@ -1,6 +1,6 @@
 import {Typography} from "@heroui/react";
 import {Ban, CreditCard, FileText, Globe, Package, RefreshCw, Scale, TriangleAlert} from "lucide-react";
-import Icon from "@/components/Icon/Icon";
+import Icon from "@/components/icon/Icon";
 
 export const metadata = {
     title: "Terms of Service",

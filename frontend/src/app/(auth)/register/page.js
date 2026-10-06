@@ -16,7 +16,7 @@ import {
     toast, InputGroup,
 } from "@heroui/react";
 import {AlertCircle, Eye, EyeOff, LogIn, UserPlus} from "lucide-react";
-import Icon from "@/components/Icon/Icon";
+import Icon from "@/components/icon/Icon";
 import {useRegister} from "@/queries/auth";
 import {validateEmail, validatePassword} from "@/lib/utils";
 import {useAuthStore} from "@/stores/auth";
