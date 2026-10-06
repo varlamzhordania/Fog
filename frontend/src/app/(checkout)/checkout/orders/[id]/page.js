@@ -53,7 +53,10 @@ const formatClock = (ms) => {
 };
 
 const formatDate = (value) =>
-    value ? new Date(value).toLocaleString(undefined, {dateStyle: "medium", timeStyle: "short"}) : "";
+    value ? new Date(value).toLocaleString(undefined, {
+        dateStyle: "medium",
+        timeStyle: "short"
+    }) : "";
 
 export default function OrderPage() {
     const {id} = useParams();
@@ -98,7 +101,8 @@ export default function OrderPage() {
 
     if (isError || !order) {
         return (
-            <div className="container flex min-h-[50vh] flex-col items-center justify-center gap-3 text-center">
+            <div
+                className="container flex min-h-[50vh] flex-col items-center justify-center gap-3 text-center">
                 <Typography type="h2">We couldn't find this order</Typography>
                 <Typography type="body-sm" className="text-muted">
                     It may belong to another account, or the link is wrong.
@@ -145,33 +149,38 @@ export default function OrderPage() {
                     <Typography type="body-sm" className="text-muted">
                         Placed {formatDate(order.created_at)}
                     </Typography>
-                    <Typography type="h1" className="text-3xl font-light tracking-tight sm:text-4xl">
+                    <Typography type="h1"
+                                className="text-3xl font-light tracking-tight sm:text-4xl">
                         Order #{order.id}
                     </Typography>
                 </div>
                 <Chip color={status.color} size="lg"><Chip.Label>{status.label}</Chip.Label></Chip>
             </header>
 
-            {order.status === "cancelled" ? (
-                <Card className="border border-danger/30 bg-danger/5">
-                    <Card.Content className="flex items-start gap-3 p-5">
-                        <Icon icon={XCircle} className="mt-0.5 size-5 shrink-0 text-danger"/>
-                        <div>
-                            <Typography type="body-sm" className="font-medium">This order was cancelled</Typography>
-                            <Typography type="body-xs" className="mt-1 text-muted">
-                                Reserved items were released back to stock.
-                                {order.notes ? ` ${order.notes.split("\n").pop()}` : ""} If you sent a payment,
-                                contact support with your order number.
-                            </Typography>
-                        </div>
-                    </Card.Content>
-                </Card>
-            ) : (
-                <Tracker status={order.status}/>
-            )}
+            {order.status !== "cancelled" && <Tracker status={order.status}/>}
+
 
             <div className="grid grid-cols-12 items-start gap-8">
                 <section className="col-span-12 flex flex-col gap-6 lg:col-span-8">
+
+                    {order.status === "cancelled" &&
+                        <Card className="border border-danger/30 bg-danger/5">
+                            <Card.Content className="flex items-start gap-3 p-5">
+                                <Icon icon={XCircle}
+                                      className="mt-0.5 size-5 shrink-0 text-danger"/>
+                                <div>
+                                    <Typography type="body-sm" className="font-medium">This order
+                                        was cancelled</Typography>
+                                    <Typography type="body-xs" className="mt-1 text-muted">
+                                        Reserved items were released back to stock.
+                                        {order.notes ? ` ${order.notes.split("\n").pop()}` : ""} If
+                                        you sent a payment,
+                                        contact support with your order number.
+                                    </Typography>
+                                </div>
+                            </Card.Content>
+                        </Card>}
+
                     {awaiting && instructions && (
                         <PaymentPanel
                             order={order}
@@ -188,7 +197,8 @@ export default function OrderPage() {
                         <Card>
                             <Card.Content className="p-6">
                                 <Typography type="body-sm" className="text-muted">
-                                    Payment details are being prepared. This page refreshes automatically.
+                                    Payment details are being prepared. This page refreshes
+                                    automatically.
                                 </Typography>
                             </Card.Content>
                         </Card>
@@ -202,7 +212,8 @@ export default function OrderPage() {
                                         Pay with something else
                                     </Typography>
                                     <Typography type="body-xs" className="mt-1 text-muted">
-                                        Switching creates new payment details. Don't send anything to the
+                                        Switching creates new payment details. Don't send anything
+                                        to the
                                         old address afterwards.
                                     </Typography>
                                 </div>
@@ -246,7 +257,8 @@ export default function OrderPage() {
                         <Card className="border border-success/30 bg-success/5">
                             <Card.Content className="flex flex-col gap-3 p-5 sm:p-6">
                                 <div className="flex items-start gap-3">
-                                    <Icon icon={CheckCircle2} className="mt-0.5 size-5 shrink-0 text-success"/>
+                                    <Icon icon={CheckCircle2}
+                                          className="mt-0.5 size-5 shrink-0 text-success"/>
                                     <div>
                                         <Typography type="body-sm" className="font-medium">
                                             Payment confirmed
@@ -259,12 +271,14 @@ export default function OrderPage() {
                                     </div>
                                 </div>
                                 {order.payment?.transaction_id && (
-                                    <div className="flex items-center justify-between gap-3 rounded-lg bg-background/60 px-3 py-2">
+                                    <div
+                                        className="flex items-center justify-between gap-3 rounded-lg bg-background/60 px-3 py-2">
                                         <div className="min-w-0">
                                             <p className="text-xs text-muted">Transaction ID</p>
                                             <p className="truncate font-mono text-xs">{order.payment.transaction_id}</p>
                                         </div>
-                                        <CopyButton value={order.payment.transaction_id} label="transaction ID"/>
+                                        <CopyButton value={order.payment.transaction_id}
+                                                    label="transaction ID"/>
                                     </div>
                                 )}
                             </Card.Content>
@@ -280,11 +294,13 @@ export default function OrderPage() {
                 <aside className="col-span-12 lg:sticky lg:top-28 lg:col-span-4">
                     <Card>
                         <Card.Content className="flex flex-col gap-5 p-5 sm:p-6">
-                            <Typography type="h3" className="text-lg font-medium">Order summary</Typography>
+                            <Typography type="h3" className="text-lg font-medium">Order
+                                summary</Typography>
 
                             <ul className="flex flex-col gap-3">
                                 {order.items.map((item) => (
-                                    <li key={item.id} className="flex justify-between gap-3 text-sm">
+                                    <li key={item.id}
+                                        className="flex justify-between gap-3 text-sm">
                                         {item.product_slug ? (
                                             <Link
                                                 href={`/products/${item.product_slug}/`}
@@ -297,7 +313,8 @@ export default function OrderPage() {
                                                 {item.quantity} × {item.product_name ?? "Removed product"}
                                             </span>
                                         )}
-                                        <span className="shrink-0">{formatPrice(item.total_price)}</span>
+                                        <span
+                                            className="shrink-0">{formatPrice(item.total_price)}</span>
                                     </li>
                                 ))}
                             </ul>
@@ -306,14 +323,16 @@ export default function OrderPage() {
 
                             <div className="flex items-baseline justify-between">
                                 <span className="font-medium">Total</span>
-                                <span className="text-2xl font-semibold">{formatPrice(order.total_price)}</span>
+                                <span
+                                    className="text-2xl font-semibold">{formatPrice(order.total_price)}</span>
                             </div>
 
                             <Separator/>
 
                             <div className="flex flex-col gap-1 text-sm">
                                 <span className="text-xs text-muted">Delivering to</span>
-                                <span className="font-medium">{order.delivery_address?.full_name}</span>
+                                <span
+                                    className="font-medium">{order.delivery_address?.full_name}</span>
                                 <span className="text-muted">
                                     {[
                                         order.delivery_address?.line1,
@@ -362,7 +381,8 @@ export default function OrderPage() {
                                 </>
                             )}
 
-                            <Link href="/contact" className="text-xs text-muted no-underline hover:text-foreground">
+                            <Link href="/contact"
+                                  className="text-xs text-muted no-underline hover:text-foreground">
                                 Need help with this order? Contact support
                             </Link>
                         </Card.Content>
@@ -384,7 +404,8 @@ function Tracker({status}) {
                 const done = i < index || (i === index && status === "delivered");
                 const active = i === index && !done;
                 return (
-                    <li key={step.key} className="relative flex flex-col items-center gap-2 text-center"
+                    <li key={step.key}
+                        className="relative flex flex-col items-center gap-2 text-center"
                         aria-current={active ? "step" : undefined}>
                         {i > 0 && (
                             <span
@@ -403,7 +424,8 @@ function Tracker({status}) {
                         >
                             {done ? <Icon icon={Check} className="size-3.5"/> : i + 1}
                         </span>
-                        <span className={`text-xs sm:text-sm ${i <= index ? "font-medium" : "text-muted"}`}>
+                        <span
+                            className={`text-xs sm:text-sm ${i <= index ? "font-medium" : "text-muted"}`}>
                             {step.label}
                         </span>
                     </li>
@@ -443,7 +465,15 @@ function Spinner() {
     );
 }
 
-function PaymentPanel({order, instructions, remaining, invoiceRemaining, invoiceExpired, refreshing, onRefresh}) {
+function PaymentPanel({
+                          order,
+                          instructions,
+                          remaining,
+                          invoiceRemaining,
+                          invoiceExpired,
+                          refreshing,
+                          onRefresh
+                      }) {
     const hasAddress = Boolean(instructions.address);
     const detected = Boolean(instructions.tx_hash);
     const network = chainLabel(instructions.chain);
@@ -477,10 +507,12 @@ function PaymentPanel({order, instructions, remaining, invoiceRemaining, invoice
                         </span>
                     </div>
                     <div className="h-1.5 w-full overflow-hidden rounded-full bg-default"
-                         role="progressbar" aria-valuenow={Math.round(percent)} aria-valuemin={0} aria-valuemax={100}
+                         role="progressbar" aria-valuenow={Math.round(percent)} aria-valuemin={0}
+                         aria-valuemax={100}
                          aria-label="Payment time remaining">
-                        <div className={`h-full rounded-full transition-all duration-1000 ${barColor}`}
-                             style={{width: `${percent}%`}}/>
+                        <div
+                            className={`h-full rounded-full transition-all duration-1000 ${barColor}`}
+                            style={{width: `${percent}%`}}/>
                     </div>
                 </div>
 
@@ -497,7 +529,8 @@ function PaymentPanel({order, instructions, remaining, invoiceRemaining, invoice
                                     ≈ {formatPrice(instructions.amount)} · {instructions.method}
                                 </Typography>
                             </div>
-                            {network && <Chip variant="secondary"><Chip.Label>{network}</Chip.Label></Chip>}
+                            {network &&
+                                <Chip variant="secondary"><Chip.Label>{network}</Chip.Label></Chip>}
                         </div>
 
                         <LiveStatus
@@ -509,11 +542,14 @@ function PaymentPanel({order, instructions, remaining, invoiceRemaining, invoice
                         />
 
                         {invoiceExpired ? (
-                            <div className="flex flex-col items-start gap-3 rounded-xl border border-warning/40 bg-warning/5 p-4">
+                            <div
+                                className="flex flex-col items-start gap-3 rounded-xl border border-warning/40 bg-warning/5 p-4">
                                 <div className="flex items-start gap-2.5">
-                                    <Icon icon={AlertTriangle} className="mt-0.5 size-4 shrink-0 text-warning"/>
+                                    <Icon icon={AlertTriangle}
+                                          className="mt-0.5 size-4 shrink-0 text-warning"/>
                                     <Typography type="body-xs" className="leading-relaxed">
-                                        This payment request has expired, so don't send anything to it. Your items are
+                                        This payment request has expired, so don't send anything to
+                                        it. Your items are
                                         still reserved — create a new request to keep going.
                                     </Typography>
                                 </div>
@@ -542,16 +578,20 @@ function PaymentPanel({order, instructions, remaining, invoiceRemaining, invoice
                                 <dl className="flex min-w-0 flex-col gap-4">
                                     <DetailRow label="Amount to send"
                                                value={`${instructions.crypto_amount} ${instructions.asset}`}
-                                               copy={instructions.crypto_amount} copyLabel="amount" strong/>
+                                               copy={instructions.crypto_amount} copyLabel="amount"
+                                               strong/>
                                     <DetailRow label="Deposit address" value={instructions.address}
-                                               copy={instructions.address} copyLabel="address" mono/>
+                                               copy={instructions.address} copyLabel="address"
+                                               mono/>
                                     <div className="flex gap-6">
                                         <DetailRow label="Network" value={network || "—"}/>
-                                        <DetailRow label="Reference" value={instructions.reference}/>
+                                        <DetailRow label="Reference"
+                                                   value={instructions.reference}/>
                                     </div>
                                     {instructions.invoice_expires_at && invoiceRemaining > 0 && (
                                         <p className="text-xs text-muted">
-                                            This payment request is valid for another {formatClock(invoiceRemaining)}.
+                                            This payment request is valid for
+                                            another {formatClock(invoiceRemaining)}.
                                         </p>
                                     )}
                                 </dl>
@@ -561,13 +601,17 @@ function PaymentPanel({order, instructions, remaining, invoiceRemaining, invoice
                         {!invoiceExpired && (
                             <div className="flex flex-col gap-3">
                                 <Note icon={AlertTriangle} tone="warning">
-                                    Send exactly {instructions.crypto_amount} {instructions.asset} on {network || "the network shown"}.
-                                    Other amounts or networks may not be detected and can't be recovered.
+                                    Send
+                                    exactly {instructions.crypto_amount} {instructions.asset} on {network || "the network shown"}.
+                                    Other amounts or networks may not be detected and can't be
+                                    recovered.
                                 </Note>
                                 {instructions.settlement === "smart_contract" && (
                                     <Note icon={ShieldCheck} tone="accent">
-                                        This address is created for this order only and is backed by a smart contract
-                                        that forwards your payment straight to the store wallet. Don't reuse it for
+                                        This address is created for this order only and is backed by
+                                        a smart contract
+                                        that forwards your payment straight to the store wallet.
+                                        Don't reuse it for
                                         another order.
                                     </Note>
                                 )}
@@ -613,8 +657,9 @@ function LiveStatus({detected, expired, progress, explorer, hash}) {
 
     if (detected) {
         return (
-            <div className="flex flex-wrap items-center gap-x-3 gap-y-1 rounded-xl border border-accent/30 bg-accent/5 px-4 py-3 text-sm"
-                 role="status">
+            <div
+                className="flex flex-wrap items-center gap-x-3 gap-y-1 rounded-xl border border-accent/30 bg-accent/5 px-4 py-3 text-sm"
+                role="status">
                 <span className="flex items-center gap-2 font-medium text-accent">
                     <Spinner/> Payment detected
                 </span>
@@ -632,7 +677,8 @@ function LiveStatus({detected, expired, progress, explorer, hash}) {
     }
 
     return (
-        <div className="flex items-center gap-2.5 rounded-xl bg-default/60 px-4 py-3 text-sm" role="status">
+        <div className="flex items-center gap-2.5 rounded-xl bg-default/60 px-4 py-3 text-sm"
+             role="status">
             <span className="relative flex size-2.5">
                 <span
                     className="absolute inline-flex size-full animate-ping rounded-full bg-warning opacity-60 motion-reduce:animate-none"/>
@@ -649,7 +695,8 @@ function DetailRow({label, value, copy, copyLabel, mono = false, strong = false}
         <div className="min-w-0">
             <dt className="text-xs text-muted">{label}</dt>
             <dd className="mt-1 flex items-center justify-between gap-2">
-                <span className={`min-w-0 break-all ${mono ? "font-mono text-sm" : ""} ${strong ? "text-lg font-semibold" : ""}`}>
+                <span
+                    className={`min-w-0 break-all ${mono ? "font-mono text-sm" : ""} ${strong ? "text-lg font-semibold" : ""}`}>
                     {value}
                 </span>
                 {copy && <CopyButton value={copy} label={copyLabel}/>}
@@ -687,10 +734,13 @@ function ShipmentCard({shipment}) {
                     <dl className="grid gap-4 sm:grid-cols-2">
                         <DetailRow label="Carrier" value={shipment.carrier || "—"}/>
                         <DetailRow label="Tracking number" value={shipment.tracking_number}
-                                   copy={shipment.tracking_number} copyLabel="tracking number" mono/>
-                        {shipment.shipped_at && <DetailRow label="Shipped" value={formatDate(shipment.shipped_at)}/>}
+                                   copy={shipment.tracking_number} copyLabel="tracking number"
+                                   mono/>
+                        {shipment.shipped_at &&
+                            <DetailRow label="Shipped" value={formatDate(shipment.shipped_at)}/>}
                         {shipment.delivered_at &&
-                            <DetailRow label="Delivered" value={formatDate(shipment.delivered_at)}/>}
+                            <DetailRow label="Delivered"
+                                       value={formatDate(shipment.delivered_at)}/>}
                     </dl>
                 ) : (
                     <Typography type="body-sm" className="text-muted">

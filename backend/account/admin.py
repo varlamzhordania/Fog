@@ -24,10 +24,10 @@ class AddressInline(admin.StackedInline):
     model = Address
     extra = 0
     fields = [
-        ("full_name", "is_default"),
+        ("full_name",),
         ("line1", "line2"),
         ("city", "state", "postal_code"),
-        "country",
+        "country","is_default","is_active",
     ]
 
 

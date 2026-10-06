@@ -7,7 +7,7 @@ export function LastFew() {
     if (!isLoading && !data?.last_few?.length) return null;
 
     return (
-        <section className="container container-space">
+        <section className="container">
             <ProductSlider title="Last few left" productData={data?.last_few ?? []}
                            isLoading={isLoading}/>
         </section>

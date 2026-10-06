@@ -74,6 +74,7 @@ const STEPS = [{
 export default function Home() {
     return (
         <>
+
             <HeroSection/>
 
             <TrustStrip/>
@@ -99,10 +100,10 @@ export default function Home() {
             <Story/>
 
             <Research/>
+            <FinalCta/>
 
             <LastFew/>
 
-            <FinalCta/>
         </>
     );
 }
@@ -245,7 +246,7 @@ function HowItWorks() {
 }
 
 function Research() {
-    return (<section className="container container-space max-w-7xl">
+    return (<section className="container  max-w-7xl">
         <div
             className="grid items-center gap-8 overflow-hidden rounded-3xl border border-border bg-surface p-6 sm:p-10 lg:grid-cols-2">
             {/* Image: immersive macro photography of mycelium spreading across agar */}
@@ -291,23 +292,26 @@ function Research() {
 }
 
 function FinalCta() {
-    return (<BackgroundImage svg={<ContourBackground/>}>
-            <section className="relative isolate overflow-hidden text-accent">
-                <div
-                    className="container flex flex-col items-center gap-5 py-20 text-center text-foreground">
-                    <Typography type="h2" className="text-4xl uppercase tracking-tight sm:text-5xl">
-                        Ready when you are
-                    </Typography>
-                    <Typography type="body" className="max-w-md text-muted">
-                        Pick your products, pay privately, and we pack it plain.
-                    </Typography>
-                    <Link href="/products" className={btnPrimary}>
-                        Browse the shop <Icon icon={ArrowRight} className="size-4"/>
-                    </Link>
-                </div>
-            </section>
-        </BackgroundImage>
-
+    return (
+        <div className={"container-space"}>
+            <BackgroundImage svg={<ContourBackground/>}>
+                <section className="relative isolate overflow-hidden text-accent">
+                    <div
+                        className="container flex flex-col items-center gap-5 py-20 text-center text-foreground">
+                        <Typography type="h2"
+                                    className="text-4xl uppercase tracking-tight sm:text-5xl">
+                            Ready when you are
+                        </Typography>
+                        <Typography type="body" className="max-w-md text-muted">
+                            Pick your products, pay privately, and we pack it plain.
+                        </Typography>
+                        <Link href="/products" className={btnPrimary}>
+                            Browse the shop <Icon icon={ArrowRight} className="size-4"/>
+                        </Link>
+                    </div>
+                </section>
+            </BackgroundImage>
+        </div>
     );
 }
 
@@ -315,7 +319,8 @@ function Story() {
     return (
         <section className="container container-space max-w-7xl">
             <div className="grid items-stretch gap-8 lg:grid-cols-12">
-                <div className="relative min-h-105 overflow-hidden rounded-xl border-2 bg-default lg:col-span-5">
+                <div
+                    className="relative min-h-105 overflow-hidden rounded-xl border-2 bg-default lg:col-span-5">
                     <Image
                         src="/story.webp"
                         alt="Mycologist working with fungal cultures in a small research laboratory"
@@ -325,13 +330,14 @@ function Story() {
                     />
                 </div>
 
-                <div className="flex h-full flex-col items-start gap-6 rounded-xl border bg-accent-soft/40 p-6 lg:col-span-7 lg:p-8">
+                <div
+                    className="flex h-full flex-col items-start gap-6 rounded-xl border bg-background-secondary p-6 lg:col-span-7 lg:p-8">
                     <Typography
                         type="h3"
                         className="text-2xl font-bold lg:text-4xl"
                     >
                         Grown by one mycologist,
-                        <br />
+                        <br/>
                         not a warehouse
                     </Typography>
 
@@ -359,7 +365,7 @@ function Story() {
                                 title: "Documented",
                                 text: "Batch records are kept for every lot we produce.",
                             },
-                        ].map(({ title, text }) => (
+                        ].map(({title, text}) => (
                             <div
                                 key={title}
                                 className="border-l-2 pl-4"

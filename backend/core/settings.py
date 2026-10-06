@@ -903,7 +903,7 @@ UNFOLD = UNFOLD_SETTINGS
 UNFOLD["SITE_URL"] = FRONTEND_URL
 
 # Base log configuration
-LOG_LEVEL = env("LOG_LEVEL", default="INFO").upper()
+LOG_LEVEL = env("LOG_LEVEL", default="DEBUG").upper()
 LOGS_DIR = BASE_DIR / "logs"
 LOGS_DIR.mkdir(exist_ok=True)
 

@@ -62,8 +62,12 @@ export async function fetchProducts({
                                         min_price,
                                         max_price,
                                         stock,
-                                        is_featured,
                                         product_type,
+                                        is_featured,
+                                        discounted,
+                                        min_discount,
+                                        max_discount,
+                                        ids,
                                         ordering,
                                     } = {}) {
     const params = {
@@ -76,8 +80,12 @@ export async function fetchProducts({
         min_price,
         max_price,
         stock,
-        is_featured,
         product_type,
+        is_featured,
+        discounted,
+        min_discount,
+        max_discount,
+        ids,
         ordering,
     };
 

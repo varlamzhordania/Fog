@@ -4,7 +4,7 @@ from account.v1.helpers import send_password_reset_email
 
 import logging
 
-logger = logging.getLogger("celery")
+logger = logging.getLogger("fog")
 
 
 @shared_task
@@ -12,8 +12,9 @@ def send_password_reset_email_task(user_id: int):
     try:
         user = User.objects.get(pk=user_id)
         send_password_reset_email(user)
+        logger.info(f"[CELERY][PASSWORD RESET EMAIL]: Email sent successfully for user: {user_id}")
     except User.DoesNotExist:
-        logger.error(f"[CELERY][PASSWORD RESET EMAIL]: User with id {user_id} does not exist.")
+        logger.debug(f"[CELERY][PASSWORD RESET EMAIL]: User with id {user_id} does not exist.")
 
     except Exception as error:
         logger.error(f"[CELERY][PASSWORD RESET EMAIL]: Something went wrong, {error}")

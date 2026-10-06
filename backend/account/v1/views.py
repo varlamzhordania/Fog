@@ -1,3 +1,4 @@
+import logging
 from drf_spectacular.utils import extend_schema, OpenApiResponse
 from rest_framework import status
 from rest_framework.exceptions import PermissionDenied
@@ -21,6 +22,7 @@ from .serializers import (
 )
 from account.tasks import send_password_reset_email_task
 
+logger = logging.getLogger("fog")
 
 @extend_schema(tags=["Account"])
 class UserView(RetrieveUpdateAPIView):
@@ -165,6 +167,8 @@ class PasswordResetRequestView(APIView):
             data=request.data,
             context={'request': request}
         )
+        email = serializer.validated_data['email']
+
         if serializer.is_valid():
             user = User.objects.get(
                 email=serializer.validated_data['email']
@@ -176,6 +180,7 @@ class PasswordResetRequestView(APIView):
                 {"message": "Password reset link sent to your email."},
                 status=status.HTTP_200_OK
             )
+        logger.error(f"[DJANGO][PASSWORD RESET VIEW]: Requested Email: {email} errors: s%",serializer.errors)
         return Response(
             {
                 "message": "If your email exists in our system, you will receive a reset link."}

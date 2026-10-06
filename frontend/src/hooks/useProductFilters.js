@@ -17,6 +17,9 @@ const FILTER_KEYS = [
     "stock",
     "product_type",
     "is_featured",
+    "discounted",
+    "min_discount",
+    "max_discount",
 ]
 
 const parseText = (value) => {
@@ -25,19 +28,41 @@ const parseText = (value) => {
 }
 
 const parseList = (value) => {
-    const items = [...new Set((value ?? "").split(",").map((item) => item.trim()).filter(Boolean))]
+    const items = [
+        ...new Set(
+            (value ?? "")
+                .split(",")
+                .map((item) => item.trim())
+                .filter(Boolean),
+        ),
+    ]
+
     return items.length ? items : undefined
 }
 
 const parseNumber = (value) => {
-    if (value === null || value === undefined || value === "") return undefined
+    if (value === null || value === undefined || value === "") {
+        return undefined
+    }
 
     const number = Number(value)
-    return Number.isFinite(number) && number >= 0 ? number : undefined
+
+    return Number.isFinite(number) && number >= 0
+        ? number
+        : undefined
 }
 
 const parseChoice = (value, options) => {
-    return options.some((option) => option.value === value) ? value : undefined
+    return options.some((option) => option.value === value)
+        ? value
+        : undefined
+}
+
+const parseBoolean = (value) => {
+    if (value === "true") return true
+    if (value === "false") return false
+
+    return undefined
 }
 
 const isEmpty = (value) => {
@@ -53,15 +78,47 @@ const isEmpty = (value) => {
 /**
  * useProductFilters — the URL is the single source of truth for the products page.
  *
- * Every filter (search, category, tags, price, stock, type, featured, ordering, page)
- * is read from and written to the query string, always merged with the params that are
- * already there, so filters can be combined freely and survive refresh / sharing.
+ * Every filter is read from and written to the query string, always merged with
+ * the params that are already there, so filters can be combined freely and
+ * survive refresh / sharing.
+ *
+ * Supported filters:
+ *   - search
+ *   - category
+ *   - tags
+ *   - min_price
+ *   - max_price
+ *   - stock
+ *   - product_type
+ *   - is_featured
+ *   - discounted
+ *   - min_discount
+ *   - max_discount
+ *   - ordering
+ *   - page
  *
  * Usage:
- *   const {filters, setFilters, resetFilters, activeCount} = useProductFilters()
- *   setFilters({category: ["spores", "kits"]}) // keeps every other filter, resets page
- *   setFilters({page: 3}, {resetPage: false}) // only changes the page
- *   <ProductList {...filters} />              // keys match the `useProducts` hook
+ *
+ *   const {
+ *       filters,
+ *       setFilters,
+ *       resetFilters,
+ *       activeCount,
+ *   } = useProductFilters()
+ *
+ *   setFilters({
+ *       category: ["spores", "kits"],
+ *       discounted: true,
+ *   })
+ *
+ *   setFilters(
+ *       {
+ *           page: 3,
+ *       },
+ *       {
+ *           resetPage: false,
+ *       },
+ *   )
  */
 export const useProductFilters = () => {
     const router = useRouter()
@@ -71,63 +128,150 @@ export const useProductFilters = () => {
 
     const filters = useMemo(() => {
         const params = new URLSearchParams(query)
+
         const page = parseNumber(params.get("page"))
 
         return {
             search: parseText(params.get("search")),
-            category: parseList(params.get("category")),
-            tags: parseList(params.get("tags")),
-            min_price: parseNumber(params.get("min_price")),
-            max_price: parseNumber(params.get("max_price")),
-            stock: parseChoice(params.get("stock"), STOCK_OPTIONS),
-            product_type: parseChoice(params.get("product_type"), PRODUCT_TYPE_OPTIONS),
-            is_featured: params.get("is_featured") === "true" ? true : undefined,
-            ordering: parseChoice(params.get("ordering"), ORDERING_OPTIONS),
-            page: page && page >= 1 ? Math.floor(page) : 1,
+
+            category: parseList(
+                params.get("category"),
+            ),
+
+            tags: parseList(
+                params.get("tags"),
+            ),
+
+            min_price: parseNumber(
+                params.get("min_price"),
+            ),
+
+            max_price: parseNumber(
+                params.get("max_price"),
+            ),
+
+            stock: parseChoice(
+                params.get("stock"),
+                STOCK_OPTIONS,
+            ),
+
+            product_type: parseChoice(
+                params.get("product_type"),
+                PRODUCT_TYPE_OPTIONS,
+            ),
+
+            is_featured: parseBoolean(
+                params.get("is_featured"),
+            ),
+
+            discounted: parseBoolean(
+                params.get("discounted"),
+            ),
+
+            min_discount: parseNumber(
+                params.get("min_discount"),
+            ),
+
+            max_discount: parseNumber(
+                params.get("max_discount"),
+            ),
+
+            // Useful for internal/product-selection URLs.
+            ids: parseList(
+                params.get("ids"),
+            ),
+
+            ordering: parseChoice(
+                params.get("ordering"),
+                ORDERING_OPTIONS,
+            ),
+
+            page: page && page >= 1
+                ? Math.floor(page)
+                : 1,
         }
     }, [query])
 
     const activeCount = useMemo(() => {
-        return FILTER_KEYS.filter((key) => !isEmpty(filters[key])).length
+        return FILTER_KEYS.filter(
+            (key) => !isEmpty(filters[key]),
+        ).length
     }, [filters])
 
-    const setFilters = useCallback((updates = {}, {resetPage = true} = {}) => {
-        const params = new URLSearchParams(query)
+    const setFilters = useCallback(
+        (
+            updates = {},
+            {resetPage = true} = {},
+        ) => {
+            const params = new URLSearchParams(query)
 
-        Object.entries(updates).forEach(([key, value]) => {
-            if (isEmpty(value)) {
-                params.delete(key)
-                return
+            Object.entries(updates).forEach(
+                ([key, value]) => {
+                    if (isEmpty(value)) {
+                        params.delete(key)
+                        return
+                    }
+
+                    params.set(
+                        key,
+                        Array.isArray(value)
+                            ? value.join(",")
+                            : String(value),
+                    )
+                },
+            )
+
+            if (resetPage && !("page" in updates)) {
+                params.delete("page")
             }
 
-            params.set(key, Array.isArray(value) ? value.join(",") : String(value))
-        })
+            // Keep the URL clean by omitting the default page.
+            if (params.get("page") === "1") {
+                params.delete("page")
+            }
 
-        if (resetPage && !("page" in updates)) {
-            params.delete("page")
-        }
+            const nextQuery = params.toString()
 
-        if (params.get("page") === "1") {
-            params.delete("page")
-        }
-
-        const nextQuery = params.toString()
-
-        router.push(nextQuery ? `${pathname}?${nextQuery}` : pathname, {scroll: false})
-    }, [query, pathname, router])
+            router.push(
+                nextQuery
+                    ? `${pathname}?${nextQuery}`
+                    : pathname,
+                {
+                    scroll: false,
+                },
+            )
+        },
+        [query, pathname, router],
+    )
 
     const resetFilters = useCallback(() => {
         const params = new URLSearchParams(query)
 
-        FILTER_KEYS.forEach((key) => params.delete(key))
+        FILTER_KEYS.forEach((key) => {
+            params.delete(key)
+        })
+
         params.delete("page")
 
         const nextQuery = params.toString()
 
-        router.push(nextQuery ? `${pathname}?${nextQuery}` : pathname, {scroll: false})
+        router.push(
+            nextQuery
+                ? `${pathname}?${nextQuery}`
+                : pathname,
+            {
+                scroll: false,
+            },
+        )
     }, [query, pathname, router])
 
-    return {filters, setFilters, resetFilters, activeCount}
+    return {
+        filters,
+        setFilters,
+        resetFilters,
+        activeCount,
+    }
 }
 
 export default useProductFilters
+

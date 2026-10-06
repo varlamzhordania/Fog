@@ -96,7 +96,7 @@ class ProductFilter(django_filters.FilterSet):
             return queryset
 
         return self._with_discount_percentage(queryset).filter(
-            discount_percentage__gte=value,
+            _filter_discount_percentage__gte=value,
         )
 
     def filter_max_discount(self, queryset, name, value):
@@ -104,7 +104,7 @@ class ProductFilter(django_filters.FilterSet):
             return queryset
 
         return self._with_discount_percentage(queryset).filter(
-            discount_percentage__lte=value,
+            _filter_discount_percentage__lte=value,
         )
 
     @staticmethod
@@ -135,7 +135,7 @@ class ProductFilter(django_filters.FilterSet):
         )
 
         return queryset.annotate(
-            discount_percentage=rounded_discount,
+            _filter_discount_percentage=rounded_discount,
         )
 
     def filter_stock(self, queryset, name, value):
@@ -143,7 +143,7 @@ class ProductFilter(django_filters.FilterSet):
             return queryset.filter(
                 product_stock__is_available=True,
                 product_stock__quantity__gt=F(
-                    "product_stock__reserved_quantity"
+                    "product_stock__reserved_quantity",
                 ),
             )
 
@@ -152,8 +152,8 @@ class ProductFilter(django_filters.FilterSet):
                 Q(product_stock__is_available=False)
                 | Q(
                     product_stock__quantity__lte=F(
-                        "product_stock__reserved_quantity"
-                    )
+                        "product_stock__reserved_quantity",
+                    ),
                 )
             )
 

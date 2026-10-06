@@ -7,6 +7,7 @@ import {serverFetch} from "@/lib/api/server";
 import {API_ENDPOINTS} from "@/lib/config";
 import Footer from "@/components/Footer";
 import {AnnouncementBar} from "@/components/AnnouncementBar";
+import GoToTop from "@/components/GoToTop";
 
 const atomicAge = Atomic_Age({
     weight: "400",
@@ -100,6 +101,7 @@ export default function RootLayout({children}) {
                     {children}
                 </main>
                 <Footer/>
+                <GoToTop />
             </AppInitializer>
         </RootProvider>
         </body>

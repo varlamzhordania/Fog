@@ -3,7 +3,8 @@
 import {Avatar, Button, Drawer, Dropdown, Label, Separator, Typography} from "@heroui/react";
 import Link from "next/link";
 import {
-    ClipboardList, LogOut, MapPinHouse, Menu, Moon, Search, ShoppingCart, Sun, UserRound
+    ClipboardList,
+    LayoutDashboard, LogOut, MapPinHouse, Menu, Moon, Search, ShoppingCart, Sun, UserRound
 } from "lucide-react";
 import {useState} from "react";
 import Icon from "@/components/icon/Icon";
@@ -96,13 +97,19 @@ const Navbar = () => {
                             </div>
                             <Dropdown.Menu onAction={(key) => console.log(`Selected: ${key}`)}>
                                 <Dropdown.Section/>
+                                <Dropdown.Item id="Dashboard" textValue="Dashboard">
+                                    <Link href={"/dashboard/"}
+                                          className={"w-full flex justify-between items-center"}>
+                                        <Label>Dashboard</Label>
+                                        <Icon icon={LayoutDashboard}/>
+                                    </Link>
+                                </Dropdown.Item>
                                 <Dropdown.Item id="Account" textValue="Account">
                                     <Link href={"/dashboard/account"}
                                           className={"w-full flex justify-between items-center"}>
                                         <Label>Account</Label>
                                         <Icon icon={UserRound}/>
                                     </Link>
-
                                 </Dropdown.Item>
                                 <Dropdown.Item id="Orders" textValue="Orders">
                                     <Link href={"/dashboard/orders"}
