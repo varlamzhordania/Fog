@@ -6,6 +6,7 @@ import Navbar from "@/components/Navbar";
 import {serverFetch} from "@/lib/api/server";
 import {API_ENDPOINTS} from "@/lib/config";
 import Footer from "@/components/Footer";
+import {AnnouncementBar} from "@/components/AnnouncementBar";
 
 const atomicAge = Atomic_Age({
     weight: "400",
@@ -93,6 +94,7 @@ export default function RootLayout({children}) {
         <body className="min-h-screen font-sans antialiased" suppressHydrationWarning>
         <RootProvider>
             <AppInitializer>
+                <AnnouncementBar/>
                 <Navbar/>
                 <main>
                     {children}

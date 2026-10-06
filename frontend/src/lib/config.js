@@ -6,6 +6,7 @@ const API_BASE = `${API_BASE_URL}/api/v1`;
 
 export const API_ENDPOINTS = {
     inventory: {
+        home: `${API_BASE}/inventory/home/`,
         products: `${API_BASE}/inventory/products/`,
         productDetail: (slug) =>
             `${API_BASE}/inventory/products/${slug}/`,

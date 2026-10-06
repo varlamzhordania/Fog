@@ -6,6 +6,16 @@ import {
     fetchProductBySlug,
     fetchPriceRange,
 } from "@/lib/api/inventory";
+import apiClient from "@/lib/api/client";
+import {API_ENDPOINTS} from "@/lib/config";
+
+export function useHome() {
+    return useQuery({
+        queryKey: ["inventory", "home"],
+        queryFn: async () => (await apiClient().get(API_ENDPOINTS.inventory.home)).data,
+        staleTime: 2 * 60 * 1000,
+    });
+}
 
 export function useCategories({
                                   page = 1,
