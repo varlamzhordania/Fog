@@ -299,7 +299,6 @@ XCASH_API_URL = env("XCASH_API_URL", default="https://pay.xca.sh")
 XCASH_NOTIFY_URL = env("XCASH_NOTIFY_URL", default="http://localhost:8000/api/v1/checkout/webhooks/xcash/")
 XCASH_APPID = env("XCASH_APPID", default="")
 XCASH_HMAC_KEY = env("XCASH_HMAC_KEY", default="")
-XCASH_INVOICE_DURATION = env.int("XCASH_INVOICE_DURATION", default=20)
 # Optional restricted methods dict: e.g. {"USDT": ["ethereum", "base", "arbitrum-one"], "ETH": ["ethereum", "base"]}
 XCASH_METHODS = env.json("XCASH_METHODS", default=None)
 # SECURE_REDIRECT_EXEMPT = [r"^api/v1/checkout/webhooks/shkeeper/$"]
