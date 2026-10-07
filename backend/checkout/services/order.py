@@ -1,4 +1,3 @@
-import logging
 from datetime import timedelta
 from decimal import Decimal
 
@@ -8,6 +7,8 @@ from django.db.models import F
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
 
+from core.logging import get_logger
+from core.logging.audit import audit
 from account.models import Address
 from checkout.models import (
     Order, OrderItem, OrderPayment, OrderShipment, PaymentMethod,
@@ -22,7 +23,7 @@ from inventory.models import (
     ProductStock, StockReservation, StockTransactionLog,
 )
 
-logger = logging.getLogger("fog")
+log = get_logger(__name__)
 
 S = Order.StatusChoices
 P = OrderPayment.StatusChoices
@@ -47,7 +48,7 @@ def _cancel_remote(provider_code, reference):
     try:
         get_provider(provider_code).cancel(reference)
     except Exception:
-        logger.exception(
+        log.exception(
             "Remote cancel failed (%s %s)",
             provider_code,
             reference
@@ -122,28 +123,57 @@ class OrderService:
             method
         )
 
-    # ------------------------------------------------------------------
-    # Create
-    # ------------------------------------------------------------------
     @classmethod
-    @transaction.atomic
     def create_order(
             cls, user, payment_method_code, address_id=None,
             address_data=None, save_address=True, notes=""
-    ):
+            ):
         if getattr(config, "STORE_MAINTENANCE_MODE", False):
             raise CheckoutError(
                 "Checkout is temporarily disabled for maintenance."
-            )
+                )
 
         method = cls._get_method(payment_method_code)
 
+        with transaction.atomic():
+            order, payment = cls._place_order(
+                user, method, address_id, address_data, save_address, notes
+            )
+
+        try:
+            instructions = cls._initiate(order, payment, method)
+        except Exception:
+            cls.cancel_order(
+                order.pk,
+                "Payment gateway unavailable.",
+                notify=False
+                )
+            raise
+
+        CartService.clear_cart(user)
+        events.order_event(order.id, "order_created")
+        audit(
+            "order.created", order_id=order.id, user_id=user.pk,
+            total=str(order.total_price), method=method.code
+            )
+        return order, instructions
+
+    @classmethod
+    def _place_order(
+            cls,
+            user,
+            method,
+            address_id,
+            address_data,
+            save_address,
+            notes
+            ):
+        """Validate the cart, reserve stock, create the order. DB work only, no gateway calls."""
         cart = CartService.get_or_create_cart(user)
         items = list(cart.items.select_related("product"))
         if not items:
             raise CheckoutError("Your cart is empty.")
 
-        # Lock stock rows so two checkouts can't oversell the same units.
         stocks = {
             s.product_id: s
             for s in ProductStock.objects.select_for_update().filter(
@@ -157,7 +187,7 @@ class OrderService:
             if not product.is_active or not stock or not stock.is_available:
                 raise CheckoutError(
                     f"“{product.name}” is no longer available."
-                )
+                    )
             if stock.available_quantity < item.quantity:
                 raise CheckoutError(
                     f"Only {stock.available_quantity} of “{product.name}” left in stock."
@@ -166,19 +196,19 @@ class OrderService:
 
         minimum = Decimal(
             str(getattr(config, "MINIMUM_ORDER_AMOUNT_USD", 0) or 0)
-        )
+            )
         if total < minimum:
             raise CheckoutError(
                 f"The minimum order amount is ${minimum:.2f}."
-            )
+                )
         cls._check_min(method, total)
 
-        # Address: saved one, or a new one (kept inactive if the user
-        # doesn't want it saved; the FK on Order is required).
         if address_id:
             address = Address.objects.filter(
-                pk=address_id, user=user, is_active=True
-            ).first()
+                pk=address_id,
+                user=user,
+                is_active=True
+                ).first()
             if not address:
                 raise CheckoutError("Selected address was not found.")
         else:
@@ -229,11 +259,7 @@ class OrderService:
                 quantity=item.quantity,
                 note=f"Reservation {reservation.id} created for Order #{order.id}",
             )
-
-        cart.items.all().delete()
-        instructions = cls._initiate(order, payment, method)
-        events.order_event(order.id, "order_created")
-        return order, instructions
+        return order, payment
 
     # ------------------------------------------------------------------
     # (Re)start payment with a provider while the window is open
@@ -317,7 +343,7 @@ class OrderService:
     # ------------------------------------------------------------------
     @classmethod
     @transaction.atomic
-    def cancel_order(cls, order_id, reason):
+    def cancel_order(cls, order_id, reason,notify=True):
         """Cancel an unpaid order and release its stock. Returns True if cancelled."""
         order = _lock(order_id)
         if order.status != S.PAYMENT:
@@ -350,7 +376,75 @@ class OrderService:
             order_id,
             "order_expired" if expired else "order_cancelled"
         )
+
+        if notify:
+            events.order_event(
+                order_id,
+                "order_expired" if expired else "order_cancelled"
+                )
         return True
+
+    @staticmethod
+    def _assert_refundable(order):
+        payment = getattr(order, "payment", None)
+        if order.status not in (S.PENDING, S.PROCESSING) or not payment \
+                or payment.status != P.COMPLETED:
+            raise CheckoutError(
+                "Only paid orders that have not shipped can be refunded."
+                )
+
+    @classmethod
+    def refund_order(cls, order_id, performed_by=None):
+        """Refund a paid order before dispatch and return the units to stock."""
+        order = get_object_or_404(
+            Order.objects.select_related("payment"),
+            pk=order_id
+            )
+        cls._assert_refundable(order)
+        # Gateway first, with no DB lock held. The idempotency key makes a retry safe.
+        automatic = get_provider(order.payment.provider).refund(
+            order.payment
+            )
+
+        with transaction.atomic():
+            order = _lock(order_id)
+            cls._assert_refundable(order)
+            payment = order.payment
+
+            for item in order.items.all():
+                stock = ProductStock.objects.filter(
+                    product_id=item.product_id
+                    ).first()
+                if not stock:
+                    continue
+                ProductStock.objects.filter(pk=stock.pk).update(
+                    quantity=F("quantity") + item.quantity
+                )
+                StockTransactionLog.objects.create(
+                    product_stock=stock,
+                    action=StockTransactionLog.ActionChoices.RESTOCK,
+                    quantity=item.quantity, performed_by=performed_by,
+                    note=f"Order #{order.id} refunded before dispatch: units returned to stock.",
+                )
+
+            payment.status = P.REFUNDED
+            payment.save(update_fields=["status", "updated_at"])
+            order.status = S.CANCELLED
+            _append_note(order, "Refunded before dispatch.")
+            if not automatic:
+                _append_note(
+                    order,
+                    "ACTION: refund the customer manually (provider has no refund API)."
+                    )
+            order.save(update_fields=["status", "notes", "updated_at"])
+            attempts.mark_refunded(payment)
+            events.order_event(order.id, "order_refunded")
+
+        audit(
+            "order.refunded", order_id=order_id, automatic=automatic,
+            by=getattr(performed_by, "pk", None)
+            )
+        return order
 
     @classmethod
     def customer_cancel(cls, order_id, user):
@@ -384,7 +478,7 @@ class OrderService:
             try:
                 count += bool(cls.cancel_order(order_id, EXPIRED_REASON))
             except Exception:
-                logger.exception("Failed to expire order %s", order_id)
+                log.exception("Failed to expire order %s", order_id)
         return count
 
     # ------------------------------------------------------------------
@@ -478,26 +572,28 @@ class OrderService:
         """Idempotent. Returns 'confirmed' | 'duplicate' | 'late' | 'unknown'."""
         order = Order.objects.select_related("payment").filter(
             pk=order_id
-        ).first()
+            ).first()
         payment = getattr(order, "payment", None) if order else None
         if not payment:
-            logger.error("Payment callback for unknown order %s", order_id)
+            log.error(
+                "payment.unknown_order",
+                extra={"order_id": order_id}
+                )
             return "unknown"
         if payment.status == P.COMPLETED:
             return "duplicate"
         if data:
             payment.provider_data = {**payment.provider_data, **data}
             payment.save(update_fields=["provider_data", "updated_at"])
-            attempts.mark_late(payment, transaction_id)
-            events.order_event(
-                order_id,
-                "late_payment",
-                extra={"transaction_id": transaction_id}
-            )
         try:
             cls.confirm_payment(order_id, transaction_id)
         except CheckoutError:
             return cls.record_late_payment(order_id, transaction_id)
+        audit(
+            "payment.confirmed",
+            order_id=order_id,
+            transaction_id=transaction_id
+            )
         return "confirmed"
 
     @classmethod
@@ -511,21 +607,28 @@ class OrderService:
         if payment.provider_data.get("late_payment"):
             return "late"
         payment.provider_data = {
-            **payment.provider_data, "late_payment": True,
+            **payment.provider_data,
+            "late_payment": True,
             "late_transaction_id": transaction_id,
         }
         payment.save(update_fields=["provider_data", "updated_at"])
+        attempts.mark_late(payment, transaction_id)
         _append_note(
             order,
             f"LATE PAYMENT received ({transaction_id or 'no tx id'}) "
-            "after the order was closed. Refund or re-open manually."
+            "after the order was closed. Refund or re-open manually.",
         )
         order.save(update_fields=["notes", "updated_at"])
-        logger.error(
-            "Late payment for order %s (%s)",
+        events.order_event(
             order_id,
-            transaction_id
-        )
+            "late_payment",
+            extra={"transaction_id": transaction_id}
+            )
+        audit(
+            "payment.late",
+            order_id=order_id,
+            transaction_id=transaction_id
+            )
         return "late"
 
     @classmethod

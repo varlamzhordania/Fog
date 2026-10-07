@@ -335,20 +335,11 @@ class Product(BaseModel):
 
     @property
     def primary_image(self) -> Media | None:
-        """Returns the marked thumbnail or the first associated image file."""
-        featured = self.product_media_items.filter(
-            is_featured=True,
-            media__media_type=Media.TypeChoices.IMAGE,
-        ).select_related("media").first()
-
-        if featured:
-            return featured.media
-
-        first = self.product_media_items.filter(
-            media__media_type=Media.TypeChoices.IMAGE,
-        ).select_related("media").first()
-
-        return first.media if first else None
+        images = [i for i in self.product_media_items.all()
+                  if i.media.media_type == Media.TypeChoices.IMAGE]
+        if not images:
+            return None
+        return next((i for i in images if i.is_featured), images[0]).media
 
     @property
     def final_price(self) -> Decimal:

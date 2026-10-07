@@ -1,10 +1,10 @@
 from django.contrib.auth.password_validation import validate_password
-from django.contrib.auth.tokens import PasswordResetTokenGenerator
+from django.contrib.auth.tokens import default_token_generator
+from django.core.exceptions import ValidationError as DjangoValidationError
 from django.utils.encoding import force_str
 from django.utils.http import urlsafe_base64_decode
 from rest_framework import serializers
 from django.utils.translation import gettext_lazy as _
-from rest_framework.exceptions import ValidationError
 
 from account.models import User, Address
 
@@ -116,41 +116,35 @@ class ListAddressSerializer(serializers.ModelSerializer):
 class PasswordResetRequestSerializer(serializers.Serializer):
     email = serializers.EmailField()
 
-    def validate_email(self, value):
-        if not User.objects.filter(email=value).exists():
-            raise serializers.ValidationError(
-                _("User with this email does not exist.")
-            )
-        return value
-
 
 class PasswordResetConfirmSerializer(serializers.Serializer):
-    new_password1 = serializers.CharField(write_only=True)
-    new_password2 = serializers.CharField(write_only=True)
     uid = serializers.CharField(write_only=True)
     token = serializers.CharField(write_only=True)
-
-    def validate_new_password(self, value):
-        validate_password(value)
+    new_password1 = serializers.CharField(write_only=True)
+    new_password2 = serializers.CharField(write_only=True)
 
     def validate(self, attrs):
         try:
-            uid = force_str(urlsafe_base64_decode(attrs['uid']))
-            user = User.objects.get(pk=uid)
+            user = User.objects.get(pk=force_str(urlsafe_base64_decode(attrs["uid"])), is_active=True)
         except (TypeError, ValueError, OverflowError, User.DoesNotExist):
-            raise serializers.ValidationError(_('Invalid user or UID.'))
+            raise serializers.ValidationError({"uid": _("Invalid reset link.")})
 
-        if not PasswordResetTokenGenerator().check_token(
-                user,
-                attrs['token']
-        ):
-            raise serializers.ValidationError(
-                _('Invalid or expired token.')
-            )
+        if not default_token_generator.check_token(user, attrs["token"]):
+            raise serializers.ValidationError({"token": _("Invalid or expired token.")})
 
-        # everything valid → reset password
-        user.set_password(attrs['new_password1'])
-        user.save()
+        if attrs["new_password1"] != attrs["new_password2"]:
+            raise serializers.ValidationError({"new_password2": _("Passwords do not match.")})
 
-        attrs['user'] = user  # return user if needed
+        try:
+            validate_password(attrs["new_password1"], user)
+        except DjangoValidationError as exc:
+            raise serializers.ValidationError({"new_password1": list(exc.messages)})
+
+        attrs["user"] = user
         return attrs
+
+    def save(self, **kwargs):
+        user = self.validated_data["user"]
+        user.set_password(self.validated_data["new_password1"])
+        user.save(update_fields=["password"])
+        return user

@@ -1,4 +1,3 @@
-import logging
 from drf_spectacular.utils import extend_schema, OpenApiResponse
 from rest_framework import status
 from rest_framework.exceptions import PermissionDenied
@@ -11,7 +10,9 @@ from django.db import transaction
 
 from account.models import Address, User
 from checkout.models import Order
-from core.mixins import OptionalPaginationMixin
+from core.api.mixins import OptionalPaginationMixin
+from core.logging import get_logger
+from core.logging.audit import audit
 
 from .serializers import (
     UserSerializer,
@@ -22,7 +23,9 @@ from .serializers import (
 )
 from account.tasks import send_password_reset_email_task
 
-logger = logging.getLogger("fog")
+
+log = get_logger(__name__)
+_RESET_SENT = {"message": "If an account with that email exists, a password reset link has been sent."}
 
 @extend_schema(tags=["Account"])
 class UserView(RetrieveUpdateAPIView):
@@ -159,32 +162,18 @@ class AddressViewSet(OptionalPaginationMixin, ModelViewSet):
 )
 class PasswordResetRequestView(APIView):
     permission_classes = [AllowAny]
-    serializer_class = PasswordResetRequestSerializer
 
-    @transaction.atomic
-    def post(self, request, *args, **kwargs):
-        serializer = self.serializer_class(
-            data=request.data,
-            context={'request': request}
-        )
-        email = serializer.validated_data['email']
-
-        if serializer.is_valid():
-            user = User.objects.get(
-                email=serializer.validated_data['email']
-            )
-            transaction.on_commit(
-                lambda: send_password_reset_email_task.delay(user.id)
-            )
-            return Response(
-                {"message": "Password reset link sent to your email."},
-                status=status.HTTP_200_OK
-            )
-        logger.error(f"[DJANGO][PASSWORD RESET VIEW]: Requested Email: {email} errors: s%",serializer.errors)
-        return Response(
-            {
-                "message": "If your email exists in our system, you will receive a reset link."}
-        )
+    def post(self, request):
+        serializer = PasswordResetRequestSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        user = User.objects.filter(
+            email__iexact=serializer.validated_data["email"], is_active=True
+        ).first()
+        if user:
+            send_password_reset_email_task.delay(user.id)
+        else:
+            log.info("account.password_reset.unknown_email")
+        return Response(_RESET_SENT)
 
 
 @extend_schema(
@@ -203,20 +192,10 @@ class PasswordResetRequestView(APIView):
 )
 class PasswordResetConfirmView(APIView):
     permission_classes = [AllowAny]
-    serializer_class = PasswordResetConfirmSerializer
 
-    @transaction.atomic
-    def post(self, request, *args, **kwargs):
-        serializer = self.serializer_class(data=request.data)
-        if serializer.is_valid():
-            return Response(
-                {
-                    "message": "Password has been reset successfully.",
-                    "user_id": serializer.validated_data['user'].id
-                },
-                status=status.HTTP_200_OK
-            )
-        return Response(
-            serializer.errors,
-            status=status.HTTP_400_BAD_REQUEST
-        )
+    def post(self, request):
+        serializer = PasswordResetConfirmSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        user = serializer.save()
+        audit("account.password_reset", user_id=user.pk)
+        return Response({"message": "Password has been reset successfully."})

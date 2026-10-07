@@ -1,21 +1,16 @@
 from celery import shared_task
 from account.models import User
 from account.v1.helpers import send_password_reset_email
+from core.logging import get_logger
 
-import logging
-
-logger = logging.getLogger("fog")
+log = get_logger(__name__)
 
 
-@shared_task
+@shared_task(
+    autoretry_for=(Exception,), dont_autoretry_for=(User.DoesNotExist,),
+    retry_backoff=30, retry_backoff_max=900, max_retries=5,
+)
 def send_password_reset_email_task(user_id: int):
-    try:
-        user = User.objects.get(pk=user_id)
-        send_password_reset_email(user)
-        logger.info(f"[CELERY][PASSWORD RESET EMAIL]: Email sent successfully for user: {user_id}")
-    except User.DoesNotExist:
-        logger.debug(f"[CELERY][PASSWORD RESET EMAIL]: User with id {user_id} does not exist.")
-
-    except Exception as error:
-        logger.error(f"[CELERY][PASSWORD RESET EMAIL]: Something went wrong, {error}")
-        pass
+    user = User.objects.get(pk=user_id)
+    send_password_reset_email(user)
+    log.info("account.password_reset.email_sent", extra={"user_id": user_id})

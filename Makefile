@@ -3,7 +3,7 @@ PROD  := docker compose -f docker-compose.prod.yml  --env-file env/prod/compose.
 
 .DEFAULT_GOAL := help
 .PHONY: help secret \
-    init-local local-up local-down local-reset local-logs local-ps local-shell \
+    init-local local-up local-up-build local-down local-reset local-logs local-ps local-shell \
     local-superuser local-fixtures local-restart-workers \
     init-prod prod-up prod-down prod-logs prod-ps prod-superuser prod-backup
 
@@ -23,6 +23,9 @@ init-local:
 	done
 
 local-up: init-local
+	$(LOCAL) up -d
+
+local-up-build: init-local
 	$(LOCAL) up --build -d
 
 local-down:

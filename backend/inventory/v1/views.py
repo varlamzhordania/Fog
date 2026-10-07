@@ -12,7 +12,7 @@ from drf_spectacular.utils import extend_schema
 
 from checkout.models import Order, OrderPayment
 from inventory.models import Category, Tag, Product
-from core.mixins import OptionalPaginationMixin
+from core.api.mixins import OptionalPaginationMixin
 
 from .serializers import (
     CategorySerializer, TagSerializer,
@@ -165,8 +165,8 @@ class ProductPriceRangeView(APIView):
 
     def get(self, request):
         prices = Product.objects.filter(is_active=True).aggregate(
-            min_price=Min("base_price"),
-            max_price=Max("base_price"),
+            min_price=Min("store_price"),
+            max_price=Max("store_price"),
         )
         min_price = prices["min_price"]
         max_price = prices["max_price"]

@@ -68,46 +68,6 @@ def stripe_webhook(request):
     return HttpResponse(status=200)
 
 
-@csrf_exempt
-@require_POST
-def shkeeper_webhook(request):
-    key = request.headers.get("X-Shkeeper-Api-Key", "")
-    expected = settings.SHKEEPER_API_KEY
-    if not expected or not hmac.compare_digest(
-            key.encode(),
-            expected.encode()
-    ):
-        return HttpResponse(status=403)
-
-    try:
-        payload = json.loads(request.body)
-        order_id = int(str(payload["external_id"]).removeprefix("FOG-"))
-    except (ValueError, KeyError):
-        logger.error("Malformed SHKeeper callback")
-        return HttpResponse(status=202)  # never retry garbage
-
-    txs = payload.get("transactions") or []
-    data = {
-        "shkeeper_status": payload.get("status"),
-        "balance_fiat": str(payload.get("balance_fiat")),
-        "balance_crypto": str(payload.get("balance_crypto")),
-        "overpaid_fiat": str(payload.get("overpaid_fiat")),
-        "transactions": txs,
-    }
-    if payload.get("paid"):
-        OrderService.settle_payment(
-            order_id,
-            transaction_id=(txs[0].get("txid") if txs else None),
-            data=data
-        )
-    else:
-        OrderService.update_provider_data(
-            order_id,
-            data
-        )  # partial payment etc.
-    return HttpResponse(status=202)  # SHKeeper retries until it gets 202
-
-
 def _xcash_ok():
     # Xcash needs HTTP 200 with the body "ok". Anything else 2xx/3xx/4xx is
     # treated as final (not retried); only 5xx and network errors are retried.

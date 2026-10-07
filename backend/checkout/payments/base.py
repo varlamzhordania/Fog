@@ -20,3 +20,7 @@ class PaymentProvider:
 
     def cancel(self, reference: str) -> None:
         """Best-effort: close the open invoice/session. Default: nothing."""
+
+    def refund(self, payment) -> bool:
+        """Refund through the gateway. True = money moved; False = staff must refund by hand."""
+        return False

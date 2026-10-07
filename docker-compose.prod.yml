@@ -8,6 +8,7 @@ x-backend: &backend
   env_file: env/prod/backend.env
   environment:
     DJANGO_DEBUG: "False"
+    DJANGO_ENV: "prod"
     DJANGO_ALLOWED_HOSTS: ${SITE_DOMAIN:?set SITE_DOMAIN in env/prod/compose.env},backend,localhost
     SERVER_DOMAIN: ${SITE_DOMAIN}
     FRONTEND_DOMAIN: ${SITE_DOMAIN}
@@ -20,9 +21,6 @@ x-backend: &backend
     CELERY_BROKER_URL: redis://redis:6379/0
     CELERY_RESULT_BACKEND: redis://redis:6379/1
     REDIS_HOST: redis://redis:6379/2
-    SHKEEPER_URL: http://shkeeper:5000
-    SHKEEPER_CALLBACK_BASE: http://backend:8000
-  networks: [default, shkeeper]
   restart: unless-stopped
 
 services:
@@ -106,10 +104,5 @@ services:
       - media:/srv/media:ro
     depends_on: [backend, frontend]
     restart: unless-stopped
-
-networks:
-  shkeeper:
-    external: true
-    name: shkeeper_net
 
 volumes: {pgdata: {}, redisdata: {}, media: {}, static: {}}

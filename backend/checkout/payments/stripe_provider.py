@@ -80,3 +80,16 @@ class StripeProvider(PaymentProvider):
         except stripe.StripeError:
             pass  # already completed or expired
 
+    def refund(self, payment):
+        _configure()
+        if not payment.transaction_id:
+            raise CheckoutError("This payment has no Stripe payment intent to refund.")
+        try:
+            stripe.Refund.create(
+                payment_intent=payment.transaction_id,
+                idempotency_key=f"refund-order-{payment.order_id}",
+            )
+        except stripe.StripeError:
+            logger.exception("Stripe refund failed for order %s", payment.order_id)
+            raise CheckoutError("Stripe refused the refund. Check the Stripe dashboard.")
+        return True

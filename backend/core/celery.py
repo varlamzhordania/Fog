@@ -1,5 +1,5 @@
 import os
-
+import core.logging.signals
 from celery import Celery
 
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'core.settings')

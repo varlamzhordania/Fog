@@ -105,43 +105,16 @@ class OrderCancelView(APIView):
         order = OrderService.customer_cancel(pk, request.user)
         return Response(_order_payload(order.pk, request))
 
-@extend_schema(tags=["Checkout"])
 class ShoppingCartAPIView(APIView):
     permission_classes = [IsAuthenticated]
 
-    def get(self, request: Request) -> Response:
-        try:
-            cart = CartService.get_or_create_cart(request.user)
-            return Response(
-                ShoppingCartSerializer(
-                    cart,
-                    context={"request": request}
-                ).data,
-                status=status.HTTP_200_OK,
-            )
-        except Exception as exc:
-            logger.exception(
-                "Failed to load cart for user %s",
-                request.user.id
-            )
-            return Response(
-                {"detail": str(exc)},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
+    def get(self, request):
+        cart = CartService.get_or_create_cart(request.user)
+        return Response(ShoppingCartSerializer(cart, context={"request": request}).data)
 
-    def delete(self, request: Request) -> Response:
-        try:
-            CartService.clear_cart(request.user)
-            return Response(status=status.HTTP_204_NO_CONTENT)
-        except Exception as exc:
-            logger.exception(
-                "Failed to clear cart for user %s",
-                request.user.id
-            )
-            return Response(
-                {"detail": str(exc)},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
+    def delete(self, request):
+        CartService.clear_cart(request.user)
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
 
 @extend_schema(tags=["Checkout"])
