@@ -17,7 +17,6 @@ class PaymentMethod(BaseModel):
     class PaymentProviderChoices(models.TextChoices):
         MANUAL = "manual", _("Manual (staff confirmed)")
         STRIPE = "stripe", _("Stripe")
-        SHKEEPER = "shkeeper", _("SHKeeper (crypto)")
         XCASH = "xcash", _("XCash (crypto)")
 
     name = models.CharField(
