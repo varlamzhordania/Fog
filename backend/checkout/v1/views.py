@@ -1,5 +1,3 @@
-import logging
-
 from django.http import Http404
 from drf_spectacular.utils import extend_schema
 from rest_framework import status
@@ -10,9 +8,13 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.viewsets import ReadOnlyModelViewSet
 
-from checkout.models import Order, PaymentMethod
+from core.logging import get_logger
+from checkout.models import PaymentMethod
+from checkout.selectors.orders import order_detail, orders_for_user
 from checkout.services.cart import CartService
-from checkout.services.order import OrderService
+from checkout.services.checkout import CheckoutService
+from checkout.services.orders import OrderService
+from checkout.services.payments import PaymentService
 
 from .serializers import (
     OrderSerializer,
@@ -22,7 +24,7 @@ from .serializers import (
     OrderCreateSerializer, OrderPaySerializer,
 )
 
-logger = logging.getLogger("fog")
+log = get_logger(__name__)
 
 
 @extend_schema(tags=["Checkout"])
@@ -39,23 +41,16 @@ class UserOrderView(ReadOnlyModelViewSet):
     serializer_class = OrderSerializer
 
     def get_queryset(self):
-        # Lazy safety net: cancel this user's overdue orders before reading.
         OrderService.expire_due_orders(user=self.request.user)
-        return (
-            Order.objects.filter(user=self.request.user)
-            .select_related("delivery_address", "payment", "shipment")
-            .prefetch_related("items__product", "stock_reservations")
-        )
+        return orders_for_user(self.request.user)
 
 
 def _order_payload(order_id, request, instructions=None):
-    order = (
-        Order.objects.select_related("delivery_address", "payment", "shipment")
-        .prefetch_related("items__product", "stock_reservations")
-        .get(pk=order_id)
-    )
     return {
-        "order": OrderSerializer(order, context={"request": request}).data,
+        "order": OrderSerializer(
+            order_detail(order_id),
+            context={"request": request}
+            ).data,
         "payment_instructions": instructions,
     }
 
@@ -69,11 +64,13 @@ class OrderCreateView(APIView):
         serializer.is_valid(raise_exception=True)
         data = serializer.validated_data
 
-        order, instructions = OrderService.create_order(
+        order, instructions = CheckoutService.create_order(
             user=request.user,
             payment_method_code=data["payment_method"],
             address_id=data.get("address_id"),
-            address_data=dict(data["address"]) if data.get("address") else None,
+            address_data=dict(data["address"]) if data.get(
+                "address"
+                ) else None,
             save_address=data["save_address"],
             notes=data.get("notes", ""),
         )
@@ -91,7 +88,7 @@ class OrderPayView(APIView):
     def post(self, request: Request, pk: int) -> Response:
         serializer = OrderPaySerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        order, instructions = OrderService.start_payment(
+        order, instructions = PaymentService.start_payment(
             pk, request.user, serializer.validated_data["payment_method"]
         )
         return Response(_order_payload(order.pk, request, instructions))
@@ -105,12 +102,15 @@ class OrderCancelView(APIView):
         order = OrderService.customer_cancel(pk, request.user)
         return Response(_order_payload(order.pk, request))
 
+@extend_schema(tags=["Checkout"])
 class ShoppingCartAPIView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
         cart = CartService.get_or_create_cart(request.user)
-        return Response(ShoppingCartSerializer(cart, context={"request": request}).data)
+        return Response(
+            ShoppingCartSerializer(cart, context={"request": request}).data
+            )
 
     def delete(self, request):
         CartService.clear_cart(request.user)

@@ -1,10 +1,8 @@
 import time
 import hmac
 import json
-import logging
 
 import stripe
-from django.conf import settings
 from django.core.cache import cache
 from django.http import HttpResponse
 from django.views.decorators.csrf import csrf_exempt
@@ -13,10 +11,11 @@ from constance import config
 
 from checkout.models import OrderPayment
 from checkout.payments.xcash import sign as xcash_sign
-from checkout.services.order import OrderService
+from checkout.services.payments import PaymentService
 from checkout import events
+from core.logging import get_logger
 
-logger = logging.getLogger("fog")
+log = get_logger(__name__)
 
 XCASH_NONCE_TTL = 15 * 60  # longer than the 300s timestamp window
 
@@ -44,14 +43,15 @@ def stripe_webhook(request):
                 order_id=order_id
             ).first()
             if not payment:
-                logger.error(
-                    "Stripe paid session for unknown order %s",
-                    order_id
+                log.error(
+                    "stripe.unknown_order",
+                    extra={"order_id": order_id}
                 )
+
             elif session.get("amount_total") != int(payment.amount * 100):
-                logger.error(
-                    "Stripe amount mismatch on order %s",
-                    order_id
+                log.error(
+                    "stripe.amount_mismatch",
+                    extra={"order_id": order_id}
                 )
                 events.order_event(
                     order_id, "payment_mismatch", extra={
@@ -60,7 +60,7 @@ def stripe_webhook(request):
                     }
                 )
             else:
-                OrderService.settle_payment(
+                PaymentService.settle_payment(
                     order_id,
                     transaction_id=session.get("payment_intent"),
                     data={"stripe_session": session.get("id")},
@@ -86,7 +86,8 @@ def xcash_webhook(request):
     secret_key = getattr(config, "XCASH_HMAC_KEY", "")
 
     if not expected_appid or not secret_key:
-        logger.error("Xcash webhook received but server credentials are not configured.")
+        log.error("xcash.webhook_unconfigured")
+
         return HttpResponse(status=403)
 
     if not all([appid, timestamp, nonce, signature]):
@@ -107,7 +108,10 @@ def xcash_webhook(request):
         return HttpResponse(status=403)
 
     expected_sig = xcash_sign(secret_key, nonce, timestamp, raw_body)
-    if not hmac.compare_digest(expected_sig.lower().encode(), signature.lower().encode()):
+    if not hmac.compare_digest(
+            expected_sig.lower().encode(),
+            signature.lower().encode()
+    ):
         return HttpResponse(status=403)
 
     # --- authenticated from here on ------------------------------------
@@ -123,7 +127,7 @@ def xcash_webhook(request):
             event_type = payload.get("type")
             data = payload.get("data") or {}
         except (ValueError, AttributeError):
-            logger.error("Malformed Xcash callback payload")
+            log.error("xcash.malformed_payload")
             return _xcash_ok()
 
         if event_type != "invoice":
@@ -134,29 +138,25 @@ def xcash_webhook(request):
             # Format: FOG-{order_id}-{payment_id}-{suffix}
             order_id = int(out_no.split("-")[1])
         except (IndexError, ValueError):
-            logger.error("Malformed out_no in Xcash callback: %s", out_no)
+            log.error("xcash.malformed_out_no", extra={"out_no": out_no})
             return _xcash_ok()
 
         payment = OrderPayment.objects.filter(order_id=order_id).first()
         if not payment:
-            logger.error("Xcash callback for unknown order %s", order_id)
+            log.error("xcash.unknown_order", extra={"order_id": order_id})
             return _xcash_ok()
 
         if payment.provider != "xcash":
-            # The customer switched to another provider; the stray invoice is
-            # logged for staff instead of settling the order with a mismatch.
-            logger.error(
-                "Xcash callback for order %s, but its payment provider is %s",
-                order_id, payment.provider,
+            log.error(
+                "xcash.provider_mismatch",
+                extra={"order_id": order_id, "provider": payment.provider}
             )
             return _xcash_ok()
 
         if data.get("sys_no") != payment.provider_reference:
-            # Paid an older invoice of the same order (e.g. before refreshing it).
-            # The money is real and the amount is the same, so we still settle.
-            logger.warning(
-                "Xcash invoice %s paid for order %s, current invoice is %s",
-                data.get("sys_no"), order_id, payment.provider_reference,
+            log.warning(
+                "xcash.old_invoice_paid",
+                extra={"order_id": order_id, "sys_no": data.get("sys_no")}
             )
 
         tx_hash = data.get("hash")
@@ -177,12 +177,18 @@ def xcash_webhook(request):
         }
 
         if confirmed:
-            OrderService.settle_payment(order_id, transaction_id=tx_hash, data=provider_data)
+            PaymentService.settle_payment(
+                order_id,
+                transaction_id=tx_hash,
+                data=provider_data
+            )
         else:
-            OrderService.update_provider_data(order_id, provider_data)
+            PaymentService.update_provider_data(order_id, provider_data)
     except Exception:
         cache.delete(nonce_key)
-        logger.exception("Xcash webhook processing failed")
-        return HttpResponse(status=500)  # 5xx -> Xcash retries with backoff
+        log.exception("xcash.webhook_failed")
+        return HttpResponse(
+            status=500
+        )
 
     return _xcash_ok()

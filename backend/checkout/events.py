@@ -1,8 +1,7 @@
-import logging
-
 from django.db import transaction
+from core.logging import get_logger
 
-logger = logging.getLogger("fog")
+log = get_logger(__name__)
 
 
 def order_event(order_id, event, *, extra=None, countdown=0):
@@ -16,10 +15,14 @@ def order_event(order_id, event, *, extra=None, countdown=0):
         try:
             for audience in audiences:
                 send_order_email.apply_async(
-                    args=[order_id, event, audience, extra], countdown=countdown
+                    args=[order_id, event, audience, extra],
+                    countdown=countdown
                 )
         except Exception:  # a broker outage must never fail a payment
-            logger.exception("Could not queue %s email for order %s", event, order_id)
+            log.exception(
+                "email.queue_failed",
+                extra={"order_id": order_id, "event": event}
+            )
 
     transaction.on_commit(dispatch)
 
@@ -31,6 +34,9 @@ def order_paid(order_id):
         try:
             process_paid_order.delay(order_id)
         except Exception:
-            logger.exception("Could not queue fulfilment for order %s", order_id)
+            log.exception(
+                "fulfilment.queue_failed",
+                extra={"order_id": order_id}
+            )
 
     transaction.on_commit(dispatch)

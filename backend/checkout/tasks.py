@@ -1,4 +1,3 @@
-import logging
 from datetime import timedelta
 
 from celery import shared_task
@@ -9,10 +8,14 @@ from django.utils import timezone
 from checkout import emails, events
 from checkout.models import Order, OrderPayment, OrderShipment
 from checkout.payments import stripe_provider
-from checkout.services.order import OrderService
+from checkout.services.orders import OrderService
+from checkout.services.payments import PaymentService
 from inventory.models import ProductStock, StockReservation
 
-logger = logging.getLogger("fog")
+from core.logging import get_logger
+
+log = get_logger(__name__)
+
 S, P = Order.StatusChoices, OrderPayment.StatusChoices
 
 
@@ -76,10 +79,10 @@ def reconcile_stripe_payments():
         try:
             paid, amount, intent = stripe_provider.fetch_status(payment.provider_reference)
         except Exception:
-            logger.exception("Stripe lookup failed for order %s", payment.order_id)
+            log.exception("stripe.reconcile_lookup_failed", extra={"order_id": payment.order_id})
             continue
         if paid and amount == int(payment.amount * 100):
-            OrderService.settle_payment(payment.order_id, transaction_id=intent)
+            PaymentService.settle_payment(payment.order_id, transaction_id=intent)
 
 
 @shared_task

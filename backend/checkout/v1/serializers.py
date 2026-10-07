@@ -2,8 +2,8 @@ from django.utils.translation import gettext_lazy as _
 from rest_framework import serializers
 
 from account.models import Address
-from checkout.services.order import OrderService
-from checkout.payments import get_provider
+from checkout.services.orders import OrderService
+from checkout.services.payments import PaymentService
 from inventory.models import Product
 from checkout.models import (
     PaymentMethod,
@@ -187,7 +187,7 @@ class OrderSerializer(serializers.ModelSerializer):
         return OrderService.expires_at(obj)
 
     def get_payment_instructions(self, obj):
-        return OrderService.payment_instructions(obj)
+        return PaymentService.instructions(obj)
 
 
 class CheckoutAddressSerializer(serializers.ModelSerializer):

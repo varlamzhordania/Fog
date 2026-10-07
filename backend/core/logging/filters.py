@@ -21,12 +21,14 @@ def scrub(text: str) -> str:
 
 
 class ContextFilter(logging.Filter):
-    """Copy request_id / user_id / task_id from the context onto every record."""
+    """Copy request_id / user_id / task_id / order_id from the context onto every record."""
 
     def filter(self, record):
-        record.request_id = "-"
         for key, value in current().items():
-            setattr(record, key, value)
+            if not hasattr(record, key):
+                setattr(record, key, value)
+        if not hasattr(record, "request_id"):
+            record.request_id = "-"
         return True
 
 

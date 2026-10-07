@@ -7,7 +7,9 @@ from unfold import admin
 from unfold.decorators import display, action
 from django.contrib import messages
 from rest_framework.exceptions import APIException
-from checkout.services.order import OrderService
+from checkout.services.fulfilment import FulfilmentService
+from checkout.services.orders import OrderService
+from checkout.services.payments import PaymentService
 
 from inventory.models import StockReservation
 from core.admin import UnfoldImportExportHistoryAdmin
@@ -347,7 +349,7 @@ class OrderAdmin(UnfoldImportExportHistoryAdmin):
             self,
             request,
             [o.pk for o in queryset],
-            OrderService.confirm_payment,
+            PaymentService.confirm_payment,
             "Confirmed payment on {n} order(s)."
         )
 
@@ -355,28 +357,28 @@ class OrderAdmin(UnfoldImportExportHistoryAdmin):
     def mark_processing(self, request, queryset):
         run_on_orders(
             self, request, [o.pk for o in queryset],
-            OrderService.start_processing, "{n} order(s) now processing."
+            FulfilmentService.start_processing, "{n} order(s) now processing."
         )
 
     @action(description=_("Mark as shipped"))
     def mark_shipped(self, request, queryset):
         run_on_orders(
             self, request, [o.pk for o in queryset],
-            OrderService.mark_shipped, "{n} order(s) shipped."
+            FulfilmentService.mark_shipped, "{n} order(s) shipped."
         )
 
     @action(description=_("Mark as delivered"))
     def mark_delivered(self, request, queryset):
         run_on_orders(
             self, request, [o.pk for o in queryset],
-            OrderService.mark_delivered, "{n} order(s) delivered."
+            FulfilmentService.mark_delivered, "{n} order(s) delivered."
         )
 
     @action(description=_("Refund (before dispatch) and restock"))
     def refund_orders(self, request, queryset):
         run_on_orders(
             self, request, [o.pk for o in queryset],
-            lambda pk: OrderService.refund_order(
+            lambda pk: PaymentService.refund_order(
                 pk,
                 performed_by=request.user
             ),
@@ -478,7 +480,7 @@ class OrderPaymentAdmin(UnfoldImportExportHistoryAdmin):
     def mark_as_completed(self, request, queryset):
         run_on_orders(
             self, request, [p.order_id for p in queryset],
-            OrderService.confirm_payment, "Confirmed {n} payment(s)."
+            PaymentService.confirm_payment, "Confirmed {n} payment(s)."
         )
 
     @action(
@@ -589,7 +591,7 @@ class OrderShipmentAdmin(UnfoldImportExportHistoryAdmin):
             self,
             request,
             [s.order_id for s in queryset],
-            OrderService.mark_delivered,
+            FulfilmentService.mark_delivered,
             "Marked {n} shipment(s) as delivered."
         )
 

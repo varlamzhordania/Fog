@@ -1,10 +1,19 @@
+from dataclasses import dataclass, field
 from datetime import timedelta
+
 from django.utils import timezone
 
 
 def payment_deadline(order):
     times = [r.expires_at for r in order.stock_reservations.filter(status="active")]
     return max(times) if times else timezone.now() + timedelta(minutes=60)
+
+
+@dataclass(frozen=True)
+class Session:
+    """What a gateway returned for a new payment. Nothing is saved until the service persists it."""
+    reference: str = ""
+    data: dict = field(default_factory=dict)
 
 
 class PaymentProvider:
@@ -14,13 +23,13 @@ class PaymentProvider:
         """Pure: built only from stored payment data. Safe on every fetch."""
         raise NotImplementedError
 
-    def initiate(self, order, payment, method) -> dict:
-        """May call the gateway. Must fill provider_reference/provider_data."""
-        return self.instructions(order, payment, method)
+    def create_session(self, order, payment, method) -> Session:
+        """Call the gateway. Must NOT save anything: the service persists the result."""
+        return Session()
 
     def cancel(self, reference: str) -> None:
         """Best-effort: close the open invoice/session. Default: nothing."""
 
     def refund(self, payment) -> bool:
-        """Refund through the gateway. True = money moved; False = staff must refund by hand."""
+        """True = money moved; False = staff must refund by hand."""
         return False
