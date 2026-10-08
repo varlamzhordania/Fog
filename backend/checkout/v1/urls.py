@@ -3,7 +3,8 @@ from rest_framework.routers import SimpleRouter
 
 from .views import (
     PaymentMethodListView, UserOrderView, ShoppingCartAPIView,
-    ShoppingCartItemAPIView, OrderCreateView, OrderPayView, OrderCancelView,
+    ShoppingCartItemAPIView, OrderCreateView, OrderPayView,
+    OrderCancelView, ShippingMethodListView,
 )
 from .webhooks import stripe_webhook,xcash_webhook
 
@@ -14,6 +15,7 @@ router.register('orders', UserOrderView, basename='order')
 
 urlpatterns = [
     path('payment-methods/', PaymentMethodListView.as_view(), name='payment_methods'),
+    path('shipping-methods/', ShippingMethodListView.as_view(), name='shipping_methods'),
     path('cart/', ShoppingCartAPIView.as_view(), name='cart_detail'),
     path('cart/items/', ShoppingCartItemAPIView.as_view(), name='cart_item_add'),
     path('cart/items/<int:product_id>/', ShoppingCartItemAPIView.as_view(), name='cart_item_modify'),

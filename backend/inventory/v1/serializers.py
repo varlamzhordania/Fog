@@ -1,7 +1,7 @@
 from rest_framework import serializers
 
 from inventory.models import (
-    Media, Category, Tag, ProductMedia, Product,
+    Media, Category, Tag, ProductMedia, Product, ProductReview,
 )
 
 
@@ -39,7 +39,7 @@ class CategorySerializer(serializers.ModelSerializer):
             kids,
             many=True,
             context=self.context
-            ).data
+        ).data
 
 
 class CategoryMinimalSerializer(serializers.ModelSerializer):
@@ -117,6 +117,8 @@ class ProductSerializer(serializers.ModelSerializer):
     discount_percentage = serializers.IntegerField(
         read_only=True,
     )
+    rating_average = serializers.FloatField(read_only=True)
+    rating_count = serializers.IntegerField(read_only=True)
 
     class Meta:
         model = Product
@@ -132,6 +134,8 @@ class ProductSerializer(serializers.ModelSerializer):
             "base_price",
             "store_price",
             "discount_percentage",
+            "rating_average",
+            "rating_count",
 
             "is_active",
             "is_featured",
@@ -147,3 +151,37 @@ class ProductSerializer(serializers.ModelSerializer):
             "updated_at",
         ]
         read_only_fields = fields
+
+
+class ProductReviewSerializer(serializers.ModelSerializer):
+    author = serializers.SerializerMethodField()
+    is_mine = serializers.SerializerMethodField()
+
+    class Meta:
+        model = ProductReview
+        fields = ["id", "rating", "comment", "author", "is_mine",
+                  "created_at", "updated_at"]
+        read_only_fields = fields
+
+    def get_author(self, obj):
+        first = (obj.user.first_name or "").strip()
+        last = (obj.user.last_name or "").strip()
+        if not first:
+            return "Verified customer"
+        return f"{first} {last[0]}." if last else first
+
+    def get_is_mine(self, obj):
+        request = self.context.get("request")
+        return bool(
+            request and request.user.is_authenticated and obj.user_id == request.user.pk
+        )
+
+
+class ProductReviewWriteSerializer(serializers.Serializer):
+    rating = serializers.IntegerField(min_value=1, max_value=5)
+    comment = serializers.CharField(
+        required=False,
+        allow_blank=True,
+        max_length=2000,
+        default=""
+    )

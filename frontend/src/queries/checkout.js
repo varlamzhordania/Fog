@@ -1,7 +1,7 @@
 import {useMutation, useQuery, useQueryClient} from "@tanstack/react-query";
 import {
     fetchCart, fetchPaymentMethods, createOrder, fetchOrders,
-    fetchOrderDetail, payOrder, cancelOrder,
+    fetchOrderDetail, payOrder, cancelOrder, fetchShippingMethods,
 } from "@/lib/api/checkout";
 import {useAuthStore} from "@/stores/auth";
 
@@ -15,6 +15,15 @@ export function usePaymentMethods() {
         queryKey: ["checkout", "payment-methods"],
         queryFn: fetchPaymentMethods,
         enabled: loggedIn,
+    });
+}
+
+export function useShippingMethods(enabled = true) {
+    return useQuery({
+        queryKey: ["checkout", "shipping-methods"],
+        queryFn: fetchShippingMethods,
+        enabled,
+        staleTime: 5 * 60 * 1000,
     });
 }
 

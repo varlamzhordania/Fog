@@ -5,7 +5,10 @@ from django.db import models
 from django.utils.translation import gettext_lazy as _
 from django.contrib.auth import get_user_model
 from django.utils import timezone
-from django.core.exceptions import ObjectDoesNotExist
+from django.core.exceptions import (
+    ObjectDoesNotExist,
+    ValidationError as DjangoValidationError,
+)
 from rest_framework.exceptions import ValidationError
 
 from core.models import BaseModel, UploadPath
@@ -75,6 +78,104 @@ class PaymentMethod(BaseModel):
 
     def __str__(self):
         return self.name
+
+
+class ShippingMethod(BaseModel):
+    name = models.CharField(max_length=100, verbose_name=_("Name"))
+    code = models.SlugField(
+        max_length=50, unique=True, verbose_name=_("Code"),
+        help_text=_("Short identifier, e.g. standard, express."),
+    )
+    description = models.CharField(
+        max_length=255,
+        blank=True,
+        default="",
+        verbose_name=_("Description")
+        )
+    price = models.DecimalField(
+        max_digits=12,
+        decimal_places=2,
+        default=Decimal("0.00"),
+        validators=[MinValueValidator(Decimal("0.00"))],
+        verbose_name=_("Price (USD)"),
+        help_text=_("0 makes this method free."),
+    )
+    free_over = models.DecimalField(
+        max_digits=12,
+        decimal_places=2,
+        null=True,
+        blank=True,
+        validators=[MinValueValidator(Decimal("0.00"))],
+        verbose_name=_("Free over (USD)"),
+        help_text=_(
+            "Shipping becomes free when the product subtotal reaches this amount. Leave empty to never discount."
+            ),
+    )
+    min_days = models.PositiveSmallIntegerField(
+        null=True,
+        blank=True,
+        verbose_name=_("Min. business days")
+        )
+    max_days = models.PositiveSmallIntegerField(
+        null=True,
+        blank=True,
+        verbose_name=_("Max. business days")
+        )
+    includes_tracking = models.BooleanField(
+        default=False,
+        verbose_name=_("Includes tracking")
+        )
+    countries = models.TextField(
+        blank=True, default="", verbose_name=_("Countries"),
+        help_text=_(
+            "Comma-separated. Empty = ships everywhere. Must match what customers enter as the country, "
+            "so list the variants, e.g. US, USA, United States."
+        ),
+    )
+    display_order = models.PositiveIntegerField(
+        default=0,
+        verbose_name=_("Display order")
+        )
+
+    class Meta:
+        verbose_name = _("Shipping Method")
+        verbose_name_plural = _("Shipping Methods")
+        ordering = ["display_order", "price", "name"]
+
+    def __str__(self):
+        return self.name
+
+    def clean(self):
+        if self.min_days and self.max_days and self.min_days > self.max_days:
+            raise DjangoValidationError(
+                {"max_days": _("Max days must be at least the min days.")}
+                )
+
+    @property
+    def country_list(self):
+        return [c.strip() for c in
+                self.countries.replace(";", ",").split(",") if c.strip()]
+
+    def serves(self, country) -> bool:
+        allowed = {c.lower() for c in self.country_list}
+        return not allowed or (country or "").strip().lower() in allowed
+
+    def cost_for(self, subtotal) -> Decimal:
+        if self.free_over is not None and Decimal(
+                subtotal
+                ) >= self.free_over:
+            return Decimal("0.00")
+        return self.price
+
+    @property
+    def estimate(self) -> str:
+        lo, hi = self.min_days, self.max_days
+        if lo and hi and lo != hi:
+            return f"{lo}–{hi} business days"
+        days = hi or lo
+        if not days:
+            return ""
+        return f"{days} business day{'s' if days != 1 else ''}"
 
 
 class ShoppingCart(BaseModel):
@@ -227,6 +328,52 @@ class Order(BaseModel):
         max_digits=12,
         decimal_places=2,
         verbose_name=_('Total Price'),
+    )
+    subtotal = models.DecimalField(
+        max_digits=12,
+        decimal_places=2,
+        null=True,
+        blank=True,
+        verbose_name=_('Subtotal'),
+        help_text=_('Sum of product prices before tax.'),
+    )
+    tax_amount = models.DecimalField(
+        max_digits=12,
+        decimal_places=2,
+        default=Decimal("0.00"),
+        verbose_name=_('Tax'),
+    )
+    tax_rate = models.DecimalField(
+        max_digits=5,
+        decimal_places=2,
+        default=Decimal("0.00"),
+        verbose_name=_('Tax rate (%)'),
+    )
+    tax_name = models.CharField(
+        max_length=30,
+        blank=True,
+        default="",
+        verbose_name=_('Tax name')
+    )
+    tax_included = models.BooleanField(
+        default=False,
+        verbose_name=_('Prices included tax')
+    )
+    shipping_method = models.ForeignKey(
+        ShippingMethod, on_delete=models.SET_NULL, null=True, blank=True,
+        related_name="orders", verbose_name=_("Shipping method"),
+    )
+    shipping_method_name = models.CharField(
+        max_length=100,
+        blank=True,
+        default="",
+        verbose_name=_("Shipping method name")
+        )
+    shipping_cost = models.DecimalField(
+        max_digits=12,
+        decimal_places=2,
+        default=Decimal("0.00"),
+        verbose_name=_("Shipping cost"),
     )
     notes = models.TextField(
         blank=True,
@@ -489,18 +636,36 @@ class PaymentAttempt(BaseModel):
         LATE = "late", _("Paid after the order closed")
         REFUNDED = "refunded", _("Refunded")
 
-    payment = models.ForeignKey(OrderPayment, on_delete=models.CASCADE, related_name="attempts")
+    payment = models.ForeignKey(
+        OrderPayment,
+        on_delete=models.CASCADE,
+        related_name="attempts"
+    )
     number = models.PositiveSmallIntegerField(default=1)
-    provider = models.CharField(max_length=20, choices=PaymentMethod.PaymentProviderChoices.choices)
+    provider = models.CharField(
+        max_length=20,
+        choices=PaymentMethod.PaymentProviderChoices.choices
+    )
     method = models.CharField(max_length=50)
     method_code = models.CharField(max_length=50, blank=True, default="")
     asset = models.CharField(max_length=30, blank=True, default="")
     amount = models.DecimalField(max_digits=12, decimal_places=2)
-    status = models.CharField(max_length=20, choices=StatusChoices.choices,
-                              default=StatusChoices.INITIATED, db_index=True)
-    provider_reference = models.CharField(max_length=128, blank=True, default="", db_index=True)
+    status = models.CharField(
+        max_length=20, choices=StatusChoices.choices,
+        default=StatusChoices.INITIATED, db_index=True
+    )
+    provider_reference = models.CharField(
+        max_length=128,
+        blank=True,
+        default="",
+        db_index=True
+    )
     provider_data = models.JSONField(default=dict, blank=True)
-    transaction_id = models.CharField(max_length=100, blank=True, null=True)
+    transaction_id = models.CharField(
+        max_length=100,
+        blank=True,
+        null=True
+    )
     error = models.TextField(blank=True, default="")
     finished_at = models.DateTimeField(null=True, blank=True)
 
@@ -523,12 +688,20 @@ class OrderNotification(BaseModel):
         FAILED = "failed", _("Failed")
         SKIPPED = "skipped", _("Skipped")
 
-    order = models.ForeignKey(Order, on_delete=models.CASCADE, related_name="notifications")
+    order = models.ForeignKey(
+        Order,
+        on_delete=models.CASCADE,
+        related_name="notifications"
+    )
     event = models.CharField(max_length=40)
     audience = models.CharField(max_length=10, choices=Audience.choices)
     recipients = models.TextField(blank=True, default="")
     subject = models.CharField(max_length=255, blank=True, default="")
-    status = models.CharField(max_length=10, choices=Status.choices, default=Status.PENDING)
+    status = models.CharField(
+        max_length=10,
+        choices=Status.choices,
+        default=Status.PENDING
+    )
     error = models.TextField(blank=True, default="")
     sent_at = models.DateTimeField(null=True, blank=True)
 

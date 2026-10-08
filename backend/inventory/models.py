@@ -5,7 +5,7 @@ from datetime import timedelta
 from django.db import models
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
-from django.core.validators import MinValueValidator
+from django.core.validators import MinValueValidator, MaxValueValidator
 from django.contrib.auth import get_user_model
 from django_ckeditor_5.fields import CKEditor5Field
 from treebeard.mp_tree import MP_Node
@@ -317,6 +317,13 @@ class Product(BaseModel):
             "When enabled, the product can appear in featured product sections on the storefront."
         ),
     )
+    rating_average = models.DecimalField(
+        max_digits=3, decimal_places=2, default=Decimal("0.00"),
+        editable=False, verbose_name=_("Average Rating"),
+    )
+    rating_count = models.PositiveIntegerField(
+        default=0, editable=False, verbose_name=_("Reviews Count"),
+    )
 
     class Meta:
         verbose_name = _("Product")
@@ -455,6 +462,30 @@ class ProductStock(BaseModel):
     def is_below_threshold(self) -> bool:
         return self.available_quantity <= self.low_stock_threshold
 
+class ProductReview(BaseModel):
+    product = models.ForeignKey(
+        Product, on_delete=models.CASCADE, related_name="reviews",
+        verbose_name=_("Product"),
+    )
+    user = models.ForeignKey(
+        User, on_delete=models.CASCADE, related_name="product_reviews",
+        verbose_name=_("Customer"),
+    )
+    rating = models.PositiveSmallIntegerField(
+        validators=[MinValueValidator(1), MaxValueValidator(5)],
+        verbose_name=_("Rating"),
+    )
+    comment = models.TextField(blank=True, default="", verbose_name=_("Comment"))
+
+    class Meta:
+        verbose_name = _("Product Review")
+        verbose_name_plural = _("Product Reviews")
+        ordering = ["-created_at"]
+        unique_together = ("product", "user")
+        indexes = [models.Index(fields=["product", "is_active"])]
+
+    def __str__(self):
+        return f"{self.product.name}: {self.rating}/5 by {self.user.email}"
 
 class StockReservation(BaseModel):
     class ReservationStatus(models.TextChoices):

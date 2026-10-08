@@ -6,6 +6,11 @@ export async function fetchPaymentMethods() {
     return response.data
 }
 
+export async function fetchShippingMethods() {
+    const response = await apiClient.get(API_ENDPOINTS.checkout.shippingMethods);
+    return response.data;
+}
+
 export async function fetchCart() {
     const response = await apiClient.get(API_ENDPOINTS.checkout.cart);
     return response.data;

@@ -6,6 +6,7 @@ import {MoveRight} from "lucide-react";
 import {cn} from "tailwind-variants";
 import Link from "next/link";
 import CartQuantityControl from "@/components/inventory/CartQuantityControl";
+import Stars from "@/components/inventory/Stars";
 
 const getProductHref = (slug) => {
     if (!slug) return "/products/";
@@ -102,24 +103,31 @@ const ProductCard = ({
                 </Typography>
             </div>
 
-
             {!featured && (
-                <div className="flex items-center gap-2">
-                    {isOnSale && (
+                <div className={"flex flex-row justify-between items-center"}>
+                    <div className="flex items-center gap-2">
+                        {isOnSale && (
+                            <Typography
+                                type="span"
+                                className="text-foreground/50 text-sm font-medium line-through"
+                            >
+                                ${formattedBasePrice}
+                            </Typography>
+                        )}
+
                         <Typography
                             type="span"
-                            className="text-foreground/50 text-sm font-medium line-through"
+                            className="text-foreground text-lg font-bold"
                         >
-                            ${formattedBasePrice}
+                            ${formattedPrice}
                         </Typography>
+                    </div>
+                    {!featured && data.rating_count > 0 && (
+                        <div className="mt-1 flex items-center gap-1.5">
+                            <Stars value={data.rating_average}/>
+                            {/*<span className="text-xs text-muted">({data.rating_count})</span>*/}
+                        </div>
                     )}
-
-                    <Typography
-                        type="span"
-                        className="text-foreground text-lg font-bold"
-                    >
-                        ${formattedPrice}
-                    </Typography>
                 </div>
             )}
 

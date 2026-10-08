@@ -139,6 +139,13 @@ function ProductJsonLd({product}) {
         ...(product.category?.name && {
             category: product.category.name,
         }),
+        ...(product.rating_count > 0 && {
+            aggregateRating: {
+                "@type": "AggregateRating",
+                ratingValue: product.rating_average,
+                reviewCount: product.rating_count,
+            },
+        }),
 
         offers: {
             "@type": "Offer",

@@ -185,6 +185,16 @@ def _create_invoice(payload: dict) -> dict:
         )
         raise CheckoutError(_GENERIC)
 
+def _allowed_methods():
+    raw = (getattr(config, "XCASH_METHODS", "") or "").strip()
+    if not raw:
+        return None
+    try:
+        data = json.loads(raw)
+    except ValueError:
+        log.error("xcash.invalid_methods_json")
+        return None
+    return data if isinstance(data, dict) and data else None
 
 @register
 class XcashProvider(PaymentProvider):
@@ -231,11 +241,7 @@ class XcashProvider(PaymentProvider):
 
     def create_session(self, order, payment, method):
         crypto, chain = parse_asset(getattr(method, "asset", ""))
-        methods = {crypto: [chain]} if crypto else getattr(
-            config,
-            "XCASH_METHODS",
-            None
-        )
+        methods = {crypto: [chain]} if crypto else _allowed_methods()
 
         order_url = f"{settings.FRONTEND_URL.rstrip('/')}/checkout/orders/{order.id}/"
         # out_no must be unique per project; the suffix keeps retries and switches from hitting error 1007.

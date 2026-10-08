@@ -327,6 +327,11 @@ UNFOLD_SETTINGS = {
                         "checkout.shoppingcart",
                     ),
                     nav_item(
+                        _("Shipping Methods"),
+                        "route",
+                        "checkout.shippingmethod"
+                    ),
+                    nav_item(
                         _("Payment Methods"), "credit_card",
                         "checkout.paymentmethod",
                     ),
@@ -358,6 +363,11 @@ UNFOLD_SETTINGS = {
                         "inventory.category"
                     ),
                     nav_item(_("Tags"), "sell", "inventory.tag"),
+                    nav_item(
+                        _("Reviews"),
+                        "star",
+                        "inventory.productreview"
+                    ),
                     nav_item(
                         _("General Media"),
                         "perm_media",

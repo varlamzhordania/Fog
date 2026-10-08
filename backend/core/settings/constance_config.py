@@ -1,4 +1,10 @@
 from collections import OrderedDict
+import os
+
+
+def _env(name, default=""):
+    return os.environ.get(name, default)
+
 
 CONSTANCE_CONFIG = OrderedDict(
     [
@@ -193,22 +199,6 @@ CONSTANCE_CONFIG = OrderedDict(
                 int,
             ),
         ),
-        (
-            "CRYPTO_REQUIRED_CONFIRMATIONS",
-            (
-                2,
-                "Number of on-chain confirmations required before marking an order confirmed.",
-                int,
-            ),
-        ),
-        (
-            "CRYPTO_EXCHANGE_BUFFER_PERCENT",
-            (
-                2.0,
-                "Volatility buffer percentage added to crypto order estimates.",
-                float,
-            ),
-        ),
 
         # -------------------------------------------------------------------------
         # 7. Stripe Payment
@@ -216,7 +206,7 @@ CONSTANCE_CONFIG = OrderedDict(
         (
             "STRIPE_SECRET_KEY",
             (
-                "sk_***",
+                _env("STRIPE_SECRET_KEY", "sk_***"),
                 "Stripe secret API key used by the backend to create and manage payments.",
                 str,
             ),
@@ -224,7 +214,7 @@ CONSTANCE_CONFIG = OrderedDict(
         (
             "STRIPE_PUBLISHABLE_KEY",
             (
-                "pk_***",
+                _env("STRIPE_PUBLISHABLE_KEY", "pk_***"),
                 "Stripe publishable key exposed to the storefront for client-side Stripe integration.",
                 str,
             ),
@@ -232,7 +222,7 @@ CONSTANCE_CONFIG = OrderedDict(
         (
             "STRIPE_WEBHOOK_KEY",
             (
-                "whsec_***",
+                _env("STRIPE_WEBHOOK_KEY", "whsec_***"),
                 "Stripe webhook signing secret used to verify incoming webhook requests.",
                 str,
             ),
@@ -241,38 +231,39 @@ CONSTANCE_CONFIG = OrderedDict(
         # -------------------------------------------------------------------------
         # 8. Xcash Payment
         # -------------------------------------------------------------------------
-        (
-            "XCASH_API_URL",
-            (
-                "http://localhost",
-                "Base URL of the Xcash payment server API.",
-                str,
-            ),
-        ),
-        (
+        ("XCASH_API_URL", (_env("XCASH_API_URL", "https://pay.xca.sh"),
+                           "Base URL of the Xcash payment server API.",
+                           str)),
+        ("XCASH_NOTIFY_URL", (_env(
             "XCASH_NOTIFY_URL",
-            (
-                "http://localhost/api/v1/checkout/webhooks/xcash/",
-                "Webhook URL that Xcash uses to notify FOG about payment events.",
-                str,
-            ),
+            "http://localhost/api/v1/checkout/webhooks/xcash/"
         ),
-        (
-            "XCASH_APPID",
-            (
-                "",
-                "Xcash application ID used to authenticate payment API requests.",
-                str,
-            ),
-        ),
-        (
-            "XCASH_HMAC_KEY",
-            (
-                "",
-                "Secret HMAC key used to authenticate and verify Xcash payment requests.",
-                str,
-            ),
-        ),
+                              "Webhook URL that Xcash uses to notify FOG about payment events.",
+                              str)),
+        ("XCASH_APPID", (_env("XCASH_APPID"),
+                         "Xcash application ID used to authenticate payment API requests.",
+                         str)),
+        ("XCASH_HMAC_KEY", (_env("XCASH_HMAC_KEY"),
+                            "Secret HMAC key used to authenticate and verify Xcash payment requests.",
+                            str)),
+        # (
+        #     "XCASH_METHODS",
+        #     (
+        #         "",
+        #         'Optional JSON limiting the coins offered when a payment method has no asset set, '
+        #         'e.g. {"USDT": ["ethereum", "tron"]}. Empty lets the customer choose on the gateway.',
+        #         str,
+        #     ),
+        # ),
+        # (
+        #     "XCASH_CONTRACT_CHAINS",
+        #     (
+        #         "",
+        #         "Comma-separated chains where Xcash uses a smart-contract deposit address "
+        #         "(shows an extra notice on the order page), e.g. ethereum,bsc.",
+        #         str,
+        #     ),
+        # ),
 
         # -------------------------------------------------------------------------
         # 7. Store Operations
@@ -291,6 +282,15 @@ CONSTANCE_CONFIG = OrderedDict(
                 15.0,
                 "Minimum cart value required to initiate anonymous crypto checkout.",
                 float,
+            ),
+        ),
+        (
+            "PRODUCT_REVIEWS_ENABLED",
+            (
+                True,
+                "Allow verified buyers to post and edit product ratings and comments. "
+                "Existing reviews stay visible when turned off.",
+                bool,
             ),
         ),
 
@@ -326,6 +326,14 @@ CONSTANCE_CONFIG = OrderedDict(
             (
                 False,
                 "Whether displayed product prices already include the configured tax.",
+                bool,
+            ),
+        ),
+        (
+            "TAX_ON_SHIPPING",
+            (
+                True,
+                "Apply the tax to the shipping cost as well (common for VAT/GST).",
                 bool,
             ),
         ),
@@ -423,6 +431,8 @@ CONSTANCE_CONFIG_FIELDSETS = OrderedDict(
                     "XCASH_NOTIFY_URL",
                     "XCASH_APPID",
                     "XCASH_HMAC_KEY",
+                    # "XCASH_METHODS",
+                    # "XCASH_CONTRACT_CHAINS",
                 ),
                 "collapse": True,
             },
@@ -433,8 +443,6 @@ CONSTANCE_CONFIG_FIELDSETS = OrderedDict(
             {
                 "fields": (
                     "CRYPTO_PAYMENT_WINDOW_MINUTES",
-                    "CRYPTO_REQUIRED_CONFIRMATIONS",
-                    "CRYPTO_EXCHANGE_BUFFER_PERCENT",
                 ),
             },
         ),
@@ -444,6 +452,7 @@ CONSTANCE_CONFIG_FIELDSETS = OrderedDict(
                 "fields": (
                     "STORE_MAINTENANCE_MODE",
                     "MINIMUM_ORDER_AMOUNT_USD",
+                    "PRODUCT_REVIEWS_ENABLED",
                 ),
             },
         ),
@@ -456,6 +465,7 @@ CONSTANCE_CONFIG_FIELDSETS = OrderedDict(
                     "TAX_RATE",
                     "TAX_NAME",
                     "PRICES_INCLUDE_TAX",
+                    "TAX_ON_SHIPPING",
                 ),
                 "collapse": True,
             },
@@ -483,8 +493,10 @@ CONSTANCE_PUBLIC_KEYS = {
     "COMMUNITY_TWITTER_URL",
     "STORE_MAINTENANCE_MODE",
     "MINIMUM_ORDER_AMOUNT_USD",
+    "PRODUCT_REVIEWS_ENABLED",
     "TAX_ENABLED",
     "TAX_RATE",
     "TAX_NAME",
     "PRICES_INCLUDE_TAX",
+    "TAX_ON_SHIPPING",
 }

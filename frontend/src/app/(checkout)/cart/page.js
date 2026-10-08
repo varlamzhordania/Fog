@@ -5,39 +5,28 @@ import {useCartStore} from "@/stores/cart";
 import CartQuantityControl from "@/components/inventory/CartQuantityControl";
 import Icon from "@/components/icon/Icon";
 import {
-    ArrowRight,
-    ShoppingCart,
-    Trash2,
+    ArrowRight, ShoppingCart, Trash2,
 } from "lucide-react";
 import {
-    toast,
-    Button,
-    Card,
-    Separator,
-    Typography,
+    toast, Button, Card, Separator, Typography,
 } from "@heroui/react";
 import {notFoundImage} from "@/lib/config";
 import Image from "@/components/Image";
 import {useCartActions} from "@/hooks/useCartActions";
 import {useRouter} from "next/navigation";
 import {useAuthStore} from "@/stores/auth";
+import {useConfig} from "@/queries/config";
+import {computeTotals, taxLabel} from "@/lib/pricing";
 
 
-const formatPrice = (value) =>
-    new Intl.NumberFormat("en-US", {
-        style: "currency",
-        currency: "USD",
-        minimumFractionDigits: 2,
-        maximumFractionDigits: 2,
-    }).format(Number(value || 0));
+const formatPrice = (value) => new Intl.NumberFormat("en-US", {
+    style: "currency", currency: "USD", minimumFractionDigits: 2, maximumFractionDigits: 2,
+}).format(Number(value || 0));
 
 
 export default function CartPage() {
     const {
-        items,
-        getTotalQuantity,
-        getTotalPrice,
-        clearCart,
+        items, getTotalQuantity, getTotalPrice, clearCart,
     } = useCartStore();
 
     const totalQuantity = getTotalQuantity();
@@ -49,17 +38,14 @@ export default function CartPage() {
             toast.success("Cart cleared successfully.");
         } catch (error) {
             console.log(error)
-            const errorMessage =
-                error?.response?.data?.detail ||
-                "Failed to clear cart.";
+            const errorMessage = error?.response?.data?.detail || "Failed to clear cart.";
 
             toast.danger(errorMessage);
         }
     };
 
     if (totalQuantity === 0) {
-        return (
-            <div
+        return (<div
                 className="container min-h-[70vh] flex items-center justify-center px-4 py-12 sm:px-6">
                 <div className="flex w-full max-w-md flex-col items-center text-center">
 
@@ -98,12 +84,10 @@ export default function CartPage() {
                         />
                     </Link>
                 </div>
-            </div>
-        );
+            </div>);
     }
 
-    return (
-        <div className="flex w-full flex-col">
+    return (<div className="flex w-full flex-col">
 
             {/* Header */}
             <header className="container pb-6 pt-6 sm:pb-8 sm:pt-8">
@@ -145,12 +129,10 @@ export default function CartPage() {
                 {/* Products */}
                 <section className="col-span-12 lg:col-span-8 xl:col-span-9">
                     <div className="flex flex-col">
-                        {items.map((item) => (
-                            <ProductItem
+                        {items.map((item) => (<ProductItem
                                 key={item.product.id}
                                 data={item}
-                            />
-                        ))}
+                            />))}
                     </div>
                 </section>
 
@@ -163,8 +145,7 @@ export default function CartPage() {
                 </aside>
 
             </main>
-        </div>
-    );
+        </div>);
 }
 
 
@@ -174,10 +155,7 @@ function ProductItem({data}) {
 
     const {handleRemove} = useCartActions(product);
 
-    const image =
-        product.primary_image ||
-        product.image ||
-        notFoundImage;
+    const image = product.primary_image || product.image || notFoundImage;
 
     const storePrice = Number(product.store_price || 0);
     const basePrice = Number(product.base_price || 0);
@@ -185,8 +163,7 @@ function ProductItem({data}) {
 
     const lineTotal = storePrice * quantity;
 
-    return (
-        <article className="w-full border-b py-5 first:pt-0 sm:py-6">
+    return (<article className="w-full border-b py-5 first:pt-0 sm:py-6">
             <div className="flex min-w-0 gap-3 sm:gap-5">
                 {/* Product Image */}
                 <Link
@@ -237,14 +214,12 @@ function ProductItem({data}) {
                                 {discount > 0 && basePrice > storePrice && (
                                     <Typography type="small" className="text-muted line-through">
                                         {formatPrice(basePrice)}
-                                    </Typography>
-                                )}
+                                    </Typography>)}
 
                                 {discount > 0 && (
                                     <span className="text-[11px] text-accent sm:text-xs">
                                         -{discount}%
-                                    </span>
-                                )}
+                                    </span>)}
                             </div>
                         </div>
 
@@ -280,26 +255,31 @@ function ProductItem({data}) {
                     </div>
                 </div>
             </div>
-        </article>
-    );
+        </article>);
 }
 
 function OrderSummary({totalQuantity, totalPrice}) {
     const router = useRouter()
     const isAuthenticated = useAuthStore().logged_in
     const {availabilityCheck} = useCartStore(state => state)
+    const {data: config} = useConfig();
+
+    const totals = computeTotals(totalPrice, config);
+    const minimum = Number(config?.MINIMUM_ORDER_AMOUNT_USD ?? 0);
+    const belowMinimum = totals.subtotal < minimum;
+    const maintenance = Boolean(config?.STORE_MAINTENANCE_MODE);
 
     const handleCheckout = () => {
         if (!isAuthenticated) {
             toast.danger("Please sign in before continue with your checkout")
+            return
         }
         if (availabilityCheck()) {
             router.push("/checkout")
         }
     }
 
-    return (
-        <Card className="lg:sticky lg:top-30">
+    return (<Card className="lg:sticky lg:top-30">
             <Card.Content className="p-5 sm:p-6">
                 <Typography
                     type="h3"
@@ -323,19 +303,6 @@ function OrderSummary({totalQuantity, totalPrice}) {
                         </Typography>
                     </div>
 
-                    <div className="flex items-center justify-between gap-4">
-                        <Typography
-                            type="body-sm"
-                            className="text-muted"
-                        >
-                            Subtotal
-                        </Typography>
-
-                        <Typography type="body-sm">
-                            {formatPrice(totalPrice)}
-                        </Typography>
-                    </div>
-
                     <div className="flex items-start justify-between gap-4">
                         <Typography
                             type="body-sm"
@@ -352,6 +319,18 @@ function OrderSummary({totalQuantity, totalPrice}) {
                         </Typography>
                     </div>
 
+                    <div className="flex items-center justify-between gap-4">
+                        <Typography type="body-sm" className="text-muted">Subtotal</Typography>
+                        <Typography type="body-sm">{formatPrice(totals.subtotal)}</Typography>
+                    </div>
+
+                    {totals.tax > 0 && (<div className="flex items-center justify-between gap-4">
+                            <Typography type="body-sm"
+                                        className="text-muted">{taxLabel(totals)}</Typography>
+                            <Typography type="body-sm">{formatPrice(totals.tax)}</Typography>
+                        </div>)}
+
+
                 </div>
 
                 <Separator className="my-5"/>
@@ -366,17 +345,23 @@ function OrderSummary({totalQuantity, totalPrice}) {
                         type="h2"
                         className="font-normal"
                     >
-                        {formatPrice(totalPrice)}
+                        {formatPrice(totals.total)}
                     </Typography>
 
                 </div>
 
-                <Button
-                    size="lg"
-                    fullWidth
-                    className="group"
-                    onPress={handleCheckout}
-                >
+                {maintenance && (<Typography type="body-xs" className="mb-3 text-danger">
+                        Checkout is temporarily disabled for maintenance. Your cart is saved.
+                    </Typography>)}
+                {!maintenance && belowMinimum && (
+                    <Typography type="body-xs" className="mb-3 text-danger">
+                        The minimum order is {formatPrice(minimum)}.
+                        Add {formatPrice(minimum - totals.subtotal)} more to continue.
+                    </Typography>)}
+
+                <Button size="lg" fullWidth className="group"
+                        isDisabled={maintenance || belowMinimum}
+                        onPress={handleCheckout}>
                     Proceed to Checkout
                     <Icon
                         icon={ArrowRight}
@@ -394,6 +379,5 @@ function OrderSummary({totalQuantity, totalPrice}) {
                 </Typography>
 
             </Card.Content>
-        </Card>
-    );
+        </Card>);
 }

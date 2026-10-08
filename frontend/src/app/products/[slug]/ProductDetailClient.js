@@ -1,11 +1,11 @@
 "use client";
 
 import {
-    Breadcrumbs, Button, Chip, Separator, toast, Typography,
+    Breadcrumbs, Chip, Separator, Typography,
 } from "@heroui/react";
 
 import {
-    CloudDownload, Download, ShoppingBag, Warehouse,
+    CloudDownload, Warehouse,
 } from "lucide-react";
 
 import ProductGallery from "@/components/Sliders/ProductGallery";
@@ -14,11 +14,15 @@ import Icon from "@/components/icon/Icon";
 import ProductSlider from "@/components/Sliders/ProductSlider";
 import {useProducts} from "@/queries/inventory";
 import {useCartStore} from "@/stores/cart";
+import {useConfig} from "@/queries/config";
 import CartQuantityControl from "@/components/inventory/CartQuantityControl";
+import ProductReviews from "@/components/inventory/ProductReviews";
+import Stars from "@/components/inventory/Stars";
 
 
 export default function ProductDetailClient({product: initialProduct}) {
     const {incrementItem} = useCartStore(state => state)
+    const {data: config} = useConfig();
     const product = initialProduct;
 
     const {
@@ -111,6 +115,15 @@ export default function ProductDetailClient({product: initialProduct}) {
                         {product.name}
                     </Typography>
 
+                    {product.rating_count > 0 && (
+                        <a href="#reviews" className="mb-4 flex items-center gap-2 no-underline">
+                            <Stars value={product.rating_average}/>
+                            <span className="text-sm text-muted">
+                                {product.rating_average.toFixed(1)} ({product.rating_count})
+                            </span>
+                        </a>
+                    )}
+
                     {/* Short description */}
                     {product.short_description && (<Typography type="body">
                         {product.short_description}
@@ -185,10 +198,18 @@ export default function ProductDetailClient({product: initialProduct}) {
                     __html: product.description || "",
                 }}
             />
+
+            {config?.LEGAL_RESEARCH_DISCLAIMER && (
+                <p className="mt-10 max-w-4xl rounded-xl border border-border bg-surface p-4 text-xs leading-relaxed text-muted">
+                    {config.LEGAL_RESEARCH_DISCLAIMER}
+                </p>
+            )}
         </section>
 
         {/* Information */}
         <ProductInformation product={product}/>
+
+        <div id="reviews"><ProductReviews product={product}/></div>
 
         {/* Related */}
         <section className={"container-space pb-0"}>

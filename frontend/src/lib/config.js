@@ -13,6 +13,8 @@ export const API_ENDPOINTS = {
         priceRange: `${API_BASE}/inventory/price-range/`,
         categories: `${API_BASE}/inventory/categories/`,
         tags: `${API_BASE}/inventory/tags/`,
+        reviews: (slug) => `${API_BASE}/inventory/products/${slug}/reviews/`,
+        myReview: (slug) => `${API_BASE}/inventory/products/${slug}/reviews/me/`,
     },
 
     auth: {
@@ -54,6 +56,7 @@ export const API_ENDPOINTS = {
 
     checkout: {
         paymentMethods: `${API_BASE}/checkout/payment-methods/`,
+        shippingMethods: `${API_BASE}/checkout/shipping-methods/`,
         cart: `${API_BASE}/checkout/cart/`,
         cartItem: `${API_BASE}/checkout/cart/items/`,
         cartItemDetail: (id) => `${API_BASE}/checkout/cart/items/${id}/`,

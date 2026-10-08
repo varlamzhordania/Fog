@@ -20,7 +20,7 @@ from .models import (
     ProductMedia,
     ProductStock,
     StockReservation,
-    StockTransactionLog,
+    StockTransactionLog, ProductReview,
 )
 from .resources import (
     ProductResource, ProductStockResource, TagResource,
@@ -393,6 +393,34 @@ class ProductAdmin(
                 '</span>', {}
             )
 
+@django_admin.register(ProductReview)
+class ProductReviewAdmin(SimpleHistoryAdmin, admin.ModelAdmin):
+    list_display = ["product", "user", "rating", "short_comment", "is_active", "created_at"]
+    list_filter = ["rating", "is_active", "created_at"]
+    search_fields = ["product__name", "user__email", "comment"]
+    readonly_fields = ["product", "user", "rating", "comment", "created_at", "updated_at"]
+    actions = ["hide_reviews", "show_reviews"]
+
+    def has_add_permission(self, request):
+        return False
+
+    @django_admin.display(description=_("Comment"))
+    def short_comment(self, obj):
+        return (obj.comment[:60] + "…") if len(obj.comment) > 60 else obj.comment or "—"
+
+    def _toggle(self, request, queryset, value):
+        for review in queryset:  # save() so the rating stats refresh
+            review.is_active = value
+            review.save(update_fields=["is_active", "updated_at"])
+        self.message_user(request, f"Updated {queryset.count()} review(s).")
+
+    @django_admin.action(description=_("Hide selected reviews"))
+    def hide_reviews(self, request, queryset):
+        self._toggle(request, queryset, False)
+
+    @django_admin.action(description=_("Show selected reviews"))
+    def show_reviews(self, request, queryset):
+        self._toggle(request, queryset, True)
 
 @django_admin.register(ProductStock)
 class ProductStockAdmin(UnfoldImportExportHistoryAdmin):

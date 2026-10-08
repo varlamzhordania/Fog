@@ -107,6 +107,18 @@ def _order_context(order, audience, extra):
 
     rows = [("Order", f"#{order.id}"),
             ("Total", _money(order.total_price))]
+
+    if order.shipping_method_name:
+        cost = _money(order.shipping_cost) if order.shipping_cost else "Free"
+        rows.append(("Shipping", f"{order.shipping_method_name} · {cost}"))
+
+    if order.tax_amount:
+        prefix = "Includes " if order.tax_included else ""
+        rows.append(
+            (f"{prefix}{order.tax_name or 'Tax'} ({order.tax_rate.normalize():f}%)",
+             _money(order.tax_amount))
+            )
+
     if payment:
         rows.append(
             ("Payment",

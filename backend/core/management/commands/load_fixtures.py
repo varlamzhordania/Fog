@@ -16,12 +16,12 @@ FIXTURES = [
     ("inventory", "products"),
     ("inventory", "product_stocks"),
     ("checkout", "payment_methods"),
+    ("checkout", "shipping_methods"),
     ("checkout", "orders"),
     ("inventory", "stock_reservations"),
     ("inventory", "stock_logs"),
     ("checkout", "shopping_carts"),
 ]
-
 
 # Fixtures each fixture references. `--only` loads these too, so a partial
 # load never fails on a missing foreign key.
@@ -51,7 +51,9 @@ def resolve_dependencies(names):
 
 
 def fixture_path(app_label, name):
-    return Path(apps.get_app_config(app_label).path) / "fixtures" / f"{name}.json"
+    return Path(
+        apps.get_app_config(app_label).path
+        ) / "fixtures" / f"{name}.json"
 
 
 class Command(BaseCommand):
@@ -110,7 +112,9 @@ class Command(BaseCommand):
                 "Missing fixture files:\n  " + "\n  ".join(missing)
             )
 
-        self.stdout.write(f"Loading {len(names)} fixtures: {', '.join(names)}")
+        self.stdout.write(
+            f"Loading {len(names)} fixtures: {', '.join(names)}"
+            )
 
         # A single loaddata call runs in one transaction and checks foreign keys
         # once at the end, so a failure leaves the database untouched.
@@ -121,13 +125,16 @@ class Command(BaseCommand):
             verbosity=options["verbosity"],
         )
 
-        self.stdout.write(self.style.SUCCESS("Fixtures loaded successfully."))
+        self.stdout.write(
+            self.style.SUCCESS("Fixtures loaded successfully.")
+            )
 
     def select_fixtures(self, only):
         if not only:
             return FIXTURES
 
-        known = {name for _, name in FIXTURES} | {app for app, _ in FIXTURES}
+        known = {name for _, name in FIXTURES} | {app for app, _ in
+                                                  FIXTURES}
         unknown = [item for item in only if item not in known]
         if unknown:
             raise CommandError(
@@ -140,7 +147,8 @@ class Command(BaseCommand):
         }
         resolved = resolve_dependencies(requested)
 
-        added = [name for _, name in FIXTURES if name in resolved - requested]
+        added = [name for _, name in FIXTURES if
+                 name in resolved - requested]
         if added:
             self.stdout.write(
                 f"Also loading required dependencies: {', '.join(added)}"

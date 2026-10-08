@@ -5,14 +5,18 @@ from django.db import connection
 from django.test import TestCase
 from django.test.utils import CaptureQueriesContext
 from django.utils import timezone
+from rest_framework.test import APITestCase
+from constance.test import override_config
 
 from account.models import Address, User
 from checkout.models import Order
+from checkout.models import OrderItem, OrderPayment
 from inventory.models import (
     Product,
     Category, ProductStock, StockReservation, StockTransactionLog,
 )
 from inventory.services.stock import StockService
+
 
 
 class StockServiceTests(TestCase):
@@ -109,3 +113,46 @@ class CategoryQueryTests(TestCase):
             "/api/v1/inventory/categories/?pagination=false"
         ).json()]
         self.assertNotIn("Child", names)
+
+
+
+
+class ReviewTests(APITestCase):
+    def setUp(self):
+        self.user = User.objects.create_user(email="r@x.com", password="GOOD")
+        self.product = Product.objects.create(name="P", sku="R1", base_price=10, store_price=10)
+        self.url = f"/api/v1/inventory/products/{self.product.slug}/reviews/"
+        self.client.force_authenticate(self.user)
+
+    def _buy(self, status="COMPLETED", order_status=Order.StatusChoices.DELIVERED):
+        address = Address.objects.create(user=self.user, full_name="A", line1="1", city="C",
+                                         postal_code="1", country="X")
+        order = Order.objects.create(user=self.user, delivery_address=address,
+                                     total_price=10, status=order_status)
+        OrderItem.objects.create(order=order, product=self.product, quantity=1,
+                                 unit_price=10, total_price=10)
+        OrderPayment.objects.create(order=order, amount=10, method="m", status=status)
+
+    def test_shipped_but_not_delivered_does_not_count(self):
+        self._buy(order_status=Order.StatusChoices.SHIPPED)
+        self.assertEqual(self.client.post(self.url, {"rating": 5}).status_code, 403)
+
+    def test_non_buyer_cannot_review(self):
+        self.assertEqual(self.client.post(self.url, {"rating": 5}).status_code, 403)
+
+    def test_unpaid_order_does_not_count(self):
+        self._buy("PENDING")
+        self.assertEqual(self.client.post(self.url, {"rating": 5}).status_code, 403)
+
+    def test_buyer_reviews_once_and_stats_update(self):
+        self._buy()
+        self.assertEqual(self.client.post(self.url, {"rating": 4, "comment": "ok"}).status_code, 201)
+        self.assertEqual(self.client.post(self.url, {"rating": 5}).status_code, 400)
+        self.product.refresh_from_db()
+        self.assertEqual((float(self.product.rating_average), self.product.rating_count), (4.0, 1))
+
+    @override_config(PRODUCT_REVIEWS_ENABLED=False)
+    def test_disabled_flag_blocks_posting_but_not_reading(self):
+        self._buy()
+        self.assertEqual(self.client.post(self.url, {"rating": 5}).status_code, 403)
+        self.assertEqual(self.client.get(self.url).status_code, 200)

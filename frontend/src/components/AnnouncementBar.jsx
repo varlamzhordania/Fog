@@ -21,7 +21,7 @@ export function AnnouncementBar() {
                             {text}
                         </Typography>
                     </Link>) :
-                    <Typography type={"body-sm"} className={"text-white"}>text</Typography>}
+                    <Typography type={"body-sm"} className={"text-white"}>{text}</Typography>}
             </div>
             <Button isIconOnly onPress={() => setClosed(true)}
                     aria-label="Dismiss announcement">

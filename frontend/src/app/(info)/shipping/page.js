@@ -1,32 +1,22 @@
 import {Typography} from "@heroui/react";
 import {AlertTriangle, Clock, CreditCard, Globe, MapPin, Package, Shield, Truck} from "lucide-react";
 import Icon from "@/components/icon/Icon";
+import {serverFetch} from "@/lib/api/server";
+import {API_ENDPOINTS} from "@/lib/config";
+import {formatPrice} from "@/lib/payments";
 
 export const metadata = {
     title: "Shipping",
     description: "Shipping information for FOG Direct — discreet packaging, processing times, and delivery details.",
 };
 
-const SHIPPING_TIERS = [
-    {
-        name: "Standard",
-        time: "5–10 business days",
-        tracking: false,
-        description: "Plain envelope or padded mailer. No external branding.",
-    },
-    {
-        name: "Priority",
-        time: "3–5 business days",
-        tracking: true,
-        description: "Expedited handling. Tracking number included.",
-    },
-    {
-        name: "Express",
-        time: "1–3 business days",
-        tracking: true,
-        description: "Fastest available. Full tracking and signature confirmation.",
-    },
-];
+async function getTiers() {
+    try {
+        return (await serverFetch(API_ENDPOINTS.checkout.shippingMethods)) ?? [];
+    } catch {
+        return [];
+    }
+}
 
 const CRYPTO_TIMES = [
     {coin: "Bitcoin (BTC)", confirmations: "2 confirmations", time: "~20–40 min"},
@@ -74,7 +64,9 @@ const INFO_CARDS = [
     },
 ];
 
-export default function ShippingPage() {
+export default async function ShippingPage() {
+    const tiers = await getTiers();
+
     return (
         <section className="container container-space">
 
@@ -136,38 +128,43 @@ export default function ShippingPage() {
             </div>
 
             {/* Shipping tiers */}
-            <div className="mb-12">
-                <div className="flex items-center gap-2 mb-5">
-                    <Icon icon={Truck} className="size-4 text-accent"/>
-                    <Typography type="span" className="text-xs uppercase tracking-widest text-muted font-mono">
-                        Shipping Tiers
-                    </Typography>
-                </div>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-                    {SHIPPING_TIERS.map((tier) => (
-                        <div
-                            key={tier.name}
-                            className="p-5 rounded-xl border border-border bg-surface flex flex-col gap-3"
-                        >
-                            <div className="flex items-center justify-between">
-                                <Typography type="h6" className="text-sm font-semibold uppercase tracking-wide">
-                                    {tier.name}
+            {tiers.length > 0 && (
+                <div className="mb-12">
+                    <div className="flex items-center gap-2 mb-5">
+                        <Icon icon={Truck} className="size-4 text-accent"/>
+                        <Typography type="span" className="text-xs uppercase tracking-widest text-muted font-mono">
+                            Shipping Options
+                        </Typography>
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+                        {tiers.map((tier) => (
+                            <div key={tier.code} className="p-5 rounded-xl border border-border bg-surface flex flex-col gap-3">
+                                <div className="flex items-center justify-between">
+                                    <Typography type="h6" className="text-sm font-semibold uppercase tracking-wide">
+                                        {tier.name}
+                                    </Typography>
+                                    <span className={`text-[10px] font-mono uppercase px-2 py-0.5 rounded-full border ${tier.includes_tracking ? "border-success/40 text-success bg-success/10" : "border-border text-muted"}`}>
+                                        {tier.includes_tracking ? "Tracking" : "No Tracking"}
+                                    </span>
+                                </div>
+                                <Typography type="body-sm" className="text-accent text-xs font-mono font-medium">
+                                    {[tier.estimate, Number(tier.price) ? formatPrice(tier.price) : "Free"].filter(Boolean).join(" · ")}
                                 </Typography>
-                                <span
-                                    className={`text-[10px] font-mono uppercase px-2 py-0.5 rounded-full border ${tier.tracking ? "border-success/40 text-success bg-success/10" : "border-border text-muted"}`}>
-                                    {tier.tracking ? "Tracking" : "No Tracking"}
-                                </span>
+                                {tier.description && (
+                                    <Typography type="body-sm" className="text-muted text-xs leading-relaxed">
+                                        {tier.description}
+                                    </Typography>
+                                )}
+                                {tier.free_over != null && (
+                                    <Typography type="body-sm" className="text-xs text-muted">
+                                        Free on orders over {formatPrice(tier.free_over)}
+                                    </Typography>
+                                )}
                             </div>
-                            <Typography type="body-sm" className="text-accent text-xs font-mono font-medium">
-                                {tier.time}
-                            </Typography>
-                            <Typography type="body-sm" className="text-muted text-xs leading-relaxed">
-                                {tier.description}
-                            </Typography>
-                        </div>
-                    ))}
+                        ))}
+                    </div>
                 </div>
-            </div>
+            )}
 
             {/* Info grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mb-10">

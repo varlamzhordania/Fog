@@ -13,6 +13,7 @@ from checkout.models import (
     OrderItem,
     OrderPayment,
     OrderShipment,
+    ShippingMethod,
 )
 
 from account.v1.serializers import ListAddressSerializer
@@ -123,6 +124,19 @@ class PaymentMethodSerializer(serializers.ModelSerializer):
         ]
 
 
+class ShippingMethodSerializer(serializers.ModelSerializer):
+    estimate = serializers.CharField(read_only=True)
+    countries = serializers.SerializerMethodField()
+
+    class Meta:
+        model = ShippingMethod
+        fields = ["code", "name", "description", "price", "free_over",
+                  "estimate", "includes_tracking", "countries"]
+
+    def get_countries(self, obj):
+        return obj.country_list
+
+
 class OrderPaymentPublicSerializer(serializers.ModelSerializer):
     class Meta:
         model = OrderPayment
@@ -174,14 +188,21 @@ class OrderSerializer(serializers.ModelSerializer):
     shipment = OrderShipmentPublicSerializer(many=False, read_only=True)
     expires_at = serializers.SerializerMethodField()
     payment_instructions = serializers.SerializerMethodField()
+    subtotal = serializers.SerializerMethodField()
 
     class Meta:
         model = Order
         fields = [
             "id", "delivery_address", "status", "total_price", "notes",
             "created_at", "updated_at", "expires_at", "items",
-            "shipment", "payment", "payment_instructions",
+            "shipment", "payment", "payment_instructions", "subtotal",
+            "tax_amount", "tax_rate", "tax_name", "tax_included",
+            "shipping_method_name", "shipping_cost",
         ]
+
+    def get_subtotal(self, obj):
+        value = obj.subtotal if obj.subtotal is not None else obj.total_price - obj.tax_amount - obj.shipping_cost
+        return str(value)
 
     def get_expires_at(self, obj):
         return OrderService.expires_at(obj)
@@ -202,7 +223,15 @@ class OrderCreateSerializer(serializers.Serializer):
     address_id = serializers.IntegerField(required=False)
     address = CheckoutAddressSerializer(required=False)
     save_address = serializers.BooleanField(default=True)
-    notes = serializers.CharField(required=False, allow_blank=True, max_length=1000)
+    notes = serializers.CharField(
+        required=False,
+        allow_blank=True,
+        max_length=1000
+    )
+    shipping_method = serializers.CharField(
+        required=False,
+        allow_blank=True
+        )
 
     def validate(self, attrs):
         if bool(attrs.get("address_id")) == bool(attrs.get("address")):

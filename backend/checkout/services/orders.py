@@ -11,6 +11,8 @@ from checkout import events
 from checkout.exceptions import CheckoutError
 from checkout.models import Order, OrderItem, OrderPayment
 from checkout.services import attempts
+from checkout.services.pricing import compute_totals
+from checkout.services.shipping import ShippingService
 from checkout.services._common import (
     ACTIVE, P, S, append_note, cancel_remote, check_minimum, lock_order,
 )
@@ -44,7 +46,7 @@ class OrderService:
     @transaction.atomic
     def place(
             cls, user, method, *, address_id=None, address_data=None,
-            save_address=True, notes=""
+            save_address=True, notes="", shipping_method_code=None
     ):
         """Validate the cart, reserve stock, create order + payment. DB work only."""
         cart = CartService.get_or_create_cart(user)
@@ -56,14 +58,14 @@ class OrderService:
         stocks = StockService.lock([i.product_id for i in items])
 
         total = cls._price(items, stocks)
+        subtotal = cls._price(items, stocks)
         minimum = Decimal(
             str(getattr(config, "MINIMUM_ORDER_AMOUNT_USD", 0) or 0)
         )
-        if total < minimum:
+        if subtotal < minimum:  # store minimum applies to goods
             raise CheckoutError(
                 f"The minimum order amount is ${minimum:.2f}."
             )
-        check_minimum(method, total)
 
         address = cls._resolve_address(
             user,
@@ -71,9 +73,28 @@ class OrderService:
             address_data,
             save_address
         )
+
+        shipping_method, shipping_cost = None, Decimal("0.00")
+        if ShippingService.requires_shipping(i.product for i in items):
+            shipping_method, shipping_cost = ShippingService.resolve(
+                shipping_method_code, address.country, subtotal
+            )
+
+        totals = compute_totals(subtotal, shipping_cost)
+        check_minimum(
+            method,
+            totals.total
+        )  # method minimum applies to what is actually paid
+
         order = Order.objects.create(
             user=user, delivery_address=address, status=S.PAYMENT,
-            total_price=total, notes=notes or None,
+            total_price=totals.total, subtotal=totals.subtotal,
+            tax_amount=totals.tax_amount, tax_rate=totals.tax_rate,
+            tax_name=totals.tax_name, tax_included=totals.tax_included,
+            shipping_method=shipping_method,
+            shipping_method_name=shipping_method.name if shipping_method else "",
+            shipping_cost=totals.shipping,
+            notes=notes or None,
         )
         OrderItem.objects.bulk_create(
             [
@@ -86,7 +107,7 @@ class OrderService:
         )
         payment = OrderPayment.objects.create(
             order=order,
-            amount=total,
+            amount=totals.total,
             method=method.name,
             status=P.PENDING,
             provider=method.provider,
@@ -144,7 +165,7 @@ class OrderService:
 
         for reservation in order.stock_reservations.select_related(
                 "product_stock"
-                ).filter(status=ACTIVE):
+        ).filter(status=ACTIVE):
             StockService.release(reservation, reason)
 
         order.status = S.CANCELLED

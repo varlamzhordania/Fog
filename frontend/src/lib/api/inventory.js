@@ -135,3 +135,18 @@ export async function fetchProductBySlug(slug) {
 
     return response.data;
 }
+
+export const fetchReviews = async (slug, page = 1) =>
+    (await apiClient.get(API_ENDPOINTS.inventory.reviews(slug), {params: {page, page_size: 10}})).data;
+
+export const fetchMyReview = async (slug) =>
+    (await apiClient.get(API_ENDPOINTS.inventory.myReview(slug))).data;
+
+export const createReview = async (slug, data) =>
+    (await apiClient.post(API_ENDPOINTS.inventory.reviews(slug), data)).data;
+
+export const updateReview = async (slug, data) =>
+    (await apiClient.patch(API_ENDPOINTS.inventory.myReview(slug), data)).data;
+
+export const deleteReview = async (slug) =>
+    (await apiClient.delete(API_ENDPOINTS.inventory.myReview(slug))).data;

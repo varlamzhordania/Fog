@@ -1,0 +1,59 @@
+[
+  {
+    "model": "checkout.shippingmethod",
+    "pk": 1,
+    "fields": {
+      "name": "Standard",
+      "code": "standard",
+      "description": "Plain envelope or padded mailer. No external branding.",
+      "price": "5.00",
+      "free_over": "100.00",
+      "min_days": 5,
+      "max_days": 10,
+      "includes_tracking": false,
+      "countries": "",
+      "display_order": 1,
+      "is_active": true,
+      "created_at": "2026-08-01T09:00:00Z",
+      "updated_at": "2026-08-01T09:00:00Z"
+    }
+  },
+  {
+    "model": "checkout.shippingmethod",
+    "pk": 2,
+    "fields": {
+      "name": "Priority",
+      "code": "priority",
+      "description": "Expedited handling with a tracking number.",
+      "price": "12.00",
+      "free_over": null,
+      "min_days": 3,
+      "max_days": 5,
+      "includes_tracking": true,
+      "countries": "",
+      "display_order": 2,
+      "is_active": true,
+      "created_at": "2026-08-01T09:00:00Z",
+      "updated_at": "2026-08-01T09:00:00Z"
+    }
+  },
+  {
+    "model": "checkout.shippingmethod",
+    "pk": 3,
+    "fields": {
+      "name": "Express",
+      "code": "express",
+      "description": "Fastest available. Full tracking and signature confirmation.",
+      "price": "25.00",
+      "free_over": null,
+      "min_days": 1,
+      "max_days": 3,
+      "includes_tracking": true,
+      "countries": "",
+      "display_order": 3,
+      "is_active": true,
+      "created_at": "2026-08-01T09:00:00Z",
+      "updated_at": "2026-08-01T09:00:00Z"
+    }
+  }
+]

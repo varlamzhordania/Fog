@@ -16,10 +16,12 @@ import Image from "@/components/Image";
 import {useAuthStore} from "@/stores/auth";
 import {useCartStore} from "@/stores/cart";
 import {useAddresses} from "@/queries/account";
-import {useCreateOrder, usePaymentMethods} from "@/queries/checkout";
 import {getApiErrorMessage} from "@/lib/utils";
 import {describeMethod, formatPrice} from "@/lib/payments";
 import {notFoundImage} from "@/lib/config";
+import {useConfig} from "@/queries/config";
+import {useCreateOrder, usePaymentMethods, useShippingMethods} from "@/queries/checkout";
+import {computeTotals, shippingCost, servesCountry, taxLabel} from "@/lib/pricing";
 
 const EMPTY_ADDRESS = {
     full_name: "", line1: "", line2: "", city: "", state: "", postal_code: "", country: "",
@@ -49,24 +51,44 @@ export default function CheckoutPage() {
 
     const [addressChoice, setAddressChoice] = useState(null);
     const [methodChoice, setMethodChoice] = useState(null);
+    const [shippingChoice, setShippingChoice] = useState(null);
     const [newAddress, setNewAddress] = useState(EMPTY_ADDRESS);
     const [saveAddress, setSaveAddress] = useState(true);
     const [notes, setNotes] = useState("");
     const [summaryOpen, setSummaryOpen] = useState(false);
 
+    const {data: config} = useConfig();
     const totalQuantity = getTotalQuantity();
-    const totalPrice = Number(getTotalPrice());
+    const goodsTotal = Number(getTotalPrice());
+    const minimum = Number(config?.MINIMUM_ORDER_AMOUNT_USD ?? 0);
+    const maintenance = Boolean(config?.STORE_MAINTENANCE_MODE);
+    const paymentWindow = config?.CRYPTO_PAYMENT_WINDOW_MINUTES ?? 60;
 
-    const isTooSmall = (m) => totalPrice < Number(m.min_amount || 0);
-
-    // Derived defaults (no effects needed)
     const defaultAddress = addresses.find((a) => a.is_default) ?? addresses[0];
     const selectedAddress = addressChoice ?? (defaultAddress ? String(defaultAddress.id) : "new");
+    const country = selectedAddress === "new"
+        ? newAddress.country
+        : addresses.find((a) => String(a.id) === selectedAddress)?.country;
+
+    const needsShipping = items.some((i) => ["physical", "other"].includes(i.product.product_type));
+    const {data: shippingData, isLoading: shippingLoading} = useShippingMethods(needsShipping);
+    const shippingOptions = (shippingData ?? []).filter((m) => servesCountry(m, country));
+    const selectedShipping =
+        shippingOptions.find((m) => m.code === shippingChoice) ?? shippingOptions[0] ?? null;
+    const shippingPrice = needsShipping ? shippingCost(selectedShipping, goodsTotal) : 0;
+
+    const totals = computeTotals(goodsTotal, config, shippingPrice);
+    const totalPrice = totals.total;
+
+    const isTooSmall = (m) => totalPrice < Number(m.min_amount || 0);
     const firstUsable = methods.find((m) => !isTooSmall(m));
     const selectedMethod = methodChoice ?? firstUsable?.code ?? null;
     const method = methods.find((m) => m.code === selectedMethod);
     const belowMinimum = Boolean(method) && isTooSmall(method);
-    const canSubmit = Boolean(selectedMethod) && !belowMinimum && !createOrder.isPending;
+    const belowStoreMinimum = totals.subtotal < minimum;
+    const shippingMissing = needsShipping && !selectedShipping;
+    const canSubmit = Boolean(selectedMethod) && !belowMinimum && !belowStoreMinimum
+        && !maintenance && !shippingMissing && !createOrder.isPending;
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -74,6 +96,7 @@ export default function CheckoutPage() {
 
         const payload = {
             payment_method: selectedMethod,
+            ...(needsShipping && selectedShipping ? {shipping_method: selectedShipping.code} : {}),
             notes,
             ...(selectedAddress === "new"
                 ? {address: newAddress, save_address: saveAddress}
@@ -131,12 +154,15 @@ export default function CheckoutPage() {
     return (
         <div className="flex w-full flex-col">
             <header className="container pb-6 pt-6 sm:pb-8 sm:pt-8">
-                <div className="flex flex-col gap-5 border-b pb-5 sm:flex-row sm:items-end sm:justify-between">
+                <div
+                    className="flex flex-col gap-5 border-b pb-5 sm:flex-row sm:items-end sm:justify-between">
                     <div>
-                        <Typography type="h1" className="text-3xl font-light tracking-tight sm:text-4xl">
+                        <Typography type="h1"
+                                    className="text-3xl font-light tracking-tight sm:text-4xl">
                             Checkout
                         </Typography>
-                        <Typography type="body-sm" className="mt-1 flex items-center gap-1.5 text-muted">
+                        <Typography type="body-sm"
+                                    className="mt-1 flex items-center gap-1.5 text-muted">
                             <Icon icon={Lock} className="size-3.5"/>
                             Secure, private checkout
                         </Typography>
@@ -155,12 +181,14 @@ export default function CheckoutPage() {
                     <Section step={1} title="Contact">
                         <Typography type="body-sm" className="text-muted">
                             Order updates go to{" "}
-                            <span className="font-medium text-foreground">{user?.email ?? "your account email"}</span>.
+                            <span
+                                className="font-medium text-foreground">{user?.email ?? "your account email"}</span>.
                         </Typography>
                     </Section>
 
                     {/* Delivery */}
-                    <Section step={2} title="Delivery address" description="Where should we send your order?">
+                    <Section step={2} title="Delivery address"
+                             description="Where should we send your order?">
                         {addressesLoading ? (
                             <Skeleton className="h-24 w-full rounded-xl"/>
                         ) : (
@@ -180,7 +208,8 @@ export default function CheckoutPage() {
                                         <Radio.Content>
                                             <Radio.Control><Radio.Indicator/></Radio.Control>
                                             <div className="flex min-w-0 flex-col gap-0.5">
-                                                <Label className="flex items-center gap-2 font-medium">
+                                                <Label
+                                                    className="flex items-center gap-2 font-medium">
                                                     {a.full_name}
                                                     {a.is_default && (
                                                         <span
@@ -199,7 +228,8 @@ export default function CheckoutPage() {
                                         </Radio.Content>
                                     </Radio>
                                 ))}
-                                <Radio value="new" className={choiceClass(selectedAddress === "new")}>
+                                <Radio value="new"
+                                       className={choiceClass(selectedAddress === "new")}>
                                     <Radio.Content>
                                         <Radio.Control><Radio.Indicator/></Radio.Control>
                                         <Label className="font-medium">Use a new address</Label>
@@ -218,9 +248,68 @@ export default function CheckoutPage() {
                         )}
                     </Section>
 
+                    {needsShipping && (
+                        <Section step={3} title="Shipping method"
+                                 description="Choose how you want it delivered.">
+                            {shippingLoading ? (
+                                <Skeleton className="h-24 w-full rounded-xl"/>
+                            ) : shippingOptions.length === 0 ? (
+                                <Typography type="body-sm" className="text-danger">
+                                    We don't ship to this address yet. Try another address or
+                                    contact support.
+                                </Typography>
+                            ) : (
+                                <RadioGroup
+                                    name="shipping"
+                                    aria-label="Shipping method"
+                                    value={selectedShipping?.code ?? ""}
+                                    onChange={setShippingChoice}
+                                    className="gap-3"
+                                >
+                                    {shippingOptions.map((m) => {
+                                        const price = shippingCost(m, goodsTotal);
+                                        return (
+                                            <Radio key={m.code} value={m.code}
+                                                   className={choiceClass(selectedShipping?.code === m.code)}>
+                                                <Radio.Content>
+                                                    <Radio.Control><Radio.Indicator/></Radio.Control>
+                                                    <div
+                                                        className="flex min-w-0 flex-1 items-start justify-between gap-3">
+                                                        <div
+                                                            className="flex min-w-0 flex-col gap-0.5">
+                                                            <Label
+                                                                className="font-medium">{m.name}</Label>
+                                                            <span className="text-xs text-muted">
+                                                                {[m.estimate, m.includes_tracking && "Tracking included"]
+                                                                    .filter(Boolean).join(" · ")}
+                                                            </span>
+                                                            {m.description && (
+                                                                <span
+                                                                    className="text-xs text-muted">{m.description}</span>
+                                                            )}
+                                                            {m.free_over != null && price > 0 && (
+                                                                <span
+                                                                    className="text-xs text-accent">
+                                                                    Free on orders over {formatPrice(m.free_over)}
+                                                                </span>
+                                                            )}
+                                                        </div>
+                                                        <span className="shrink-0 font-medium">
+                                                            {price === 0 ? "Free" : formatPrice(price)}
+                                                        </span>
+                                                    </div>
+                                                </Radio.Content>
+                                            </Radio>
+                                        );
+                                    })}
+                                </RadioGroup>
+                            )}
+                        </Section>
+                    )}
+
                     {/* Payment */}
                     <Section
-                        step={3}
+                        step={4}
                         title="Payment method"
                         description="You'll get the payment details on the next page."
                     >
@@ -228,7 +317,8 @@ export default function CheckoutPage() {
                             <Skeleton className="h-24 w-full rounded-xl"/>
                         ) : methods.length === 0 ? (
                             <Typography type="body-sm" className="text-muted">
-                                No payment methods are available right now. Please try again shortly.
+                                No payment methods are available right now. Please try again
+                                shortly.
                             </Typography>
                         ) : (
                             <RadioGroup
@@ -250,26 +340,34 @@ export default function CheckoutPage() {
                         )}
 
                         <div className="flex gap-3 rounded-xl bg-default/60 p-4">
-                            <Icon icon={ShieldCheck} className="mt-0.5 size-5 shrink-0 text-accent"/>
+                            <Icon icon={ShieldCheck}
+                                  className="mt-0.5 size-5 shrink-0 text-accent"/>
                             <Typography type="body-xs" className="leading-relaxed text-muted">
-                                Crypto payments go straight to the store wallet and are never held by a third
-                                party. Your items are reserved while you pay (usually 60 minutes). If the
+                                Crypto payments go straight to the store wallet and are never held
+                                by a third
+                                party. Your items are reserved while you pay
+                                (usually {paymentWindow} minutes).
+                                If the
                                 time runs out, the order is cancelled and the items go back on sale.
                             </Typography>
                         </div>
                     </Section>
 
                     {/* Notes */}
-                    <Section step={4} title="Order notes" description="Optional. Anything the courier should know.">
-                        <TextField variant="secondary" name="notes" value={notes} onChange={setNotes}>
+                    <Section step={5} title="Order notes"
+                             description="Optional. Anything the courier should know.">
+                        <TextField variant="secondary" name="notes" value={notes}
+                                   onChange={setNotes}>
                             <Label className="sr-only">Order notes</Label>
-                            <TextArea rows={3} maxLength={1000} placeholder="Delivery instructions…"/>
+                            <TextArea rows={3} maxLength={1000}
+                                      placeholder="Delivery instructions…"/>
                         </TextField>
                     </Section>
                 </div>
 
                 {/* Summary */}
-                <aside className="order-first col-span-12 lg:order-last lg:col-span-5 xl:col-span-4">
+                <aside
+                    className="order-first col-span-12 lg:order-last lg:col-span-5 xl:col-span-4">
                     <Card className="lg:sticky lg:top-28">
                         <Card.Content className="p-5 sm:p-6">
                             <button
@@ -296,10 +394,12 @@ export default function CheckoutPage() {
                             <div className={`${summaryOpen ? "block" : "hidden"} lg:block`}>
                                 <ul className="mt-5 flex flex-col gap-4">
                                     {items.map((item) => (
-                                        <li key={item.product.id} className="flex items-center gap-3">
+                                        <li key={item.product.id}
+                                            className="flex items-center gap-3">
                                             <div
                                                 className="relative size-16 shrink-0 rounded-lg border bg-default">
-                                                <div className="relative size-full overflow-hidden rounded-lg">
+                                                <div
+                                                    className="relative size-full overflow-hidden rounded-lg">
                                                     <Image
                                                         src={item.product.primary_image || notFoundImage}
                                                         alt={item.product.name}
@@ -332,12 +432,23 @@ export default function CheckoutPage() {
 
                                 <div className="flex items-center justify-between text-sm">
                                     <span className="text-muted">Subtotal</span>
-                                    <span>{formatPrice(totalPrice)}</span>
+                                    <span>{formatPrice(totals.subtotal)}</span>
                                 </div>
-                                <div className="mt-3 flex items-baseline justify-between">
-                                    <span className="font-medium">Total</span>
-                                    <span className="text-2xl font-semibold">{formatPrice(totalPrice)}</span>
-                                </div>
+                                {needsShipping && (
+                                    <div className="mt-2 flex items-center justify-between text-sm">
+                                        <span className="text-muted">
+                                            Shipping{selectedShipping ? ` (${selectedShipping.name})` : ""}
+                                        </span>
+                                        <span>{selectedShipping ? (shippingPrice === 0 ? "Free" : formatPrice(shippingPrice)) : "—"}</span>
+                                    </div>
+                                )}
+
+                                {totals.tax > 0 && (
+                                    <div className="mt-2 flex items-center justify-between text-sm">
+                                        <span className="text-muted">{taxLabel(totals)}</span>
+                                        <span>{formatPrice(totals.tax)}</span>
+                                    </div>
+                                )}
 
                                 <Link
                                     href="/cart"
@@ -349,7 +460,19 @@ export default function CheckoutPage() {
 
                             {belowMinimum && (
                                 <Typography type="body-xs" className="mt-4 text-danger">
-                                    {method.name} needs an order of at least {formatPrice(method.min_amount)}.
+                                    {method.name} needs an order of at
+                                    least {formatPrice(method.min_amount)}.
+                                </Typography>
+                            )}
+
+                            {maintenance && (
+                                <Typography type="body-xs" className="mt-4 text-danger">
+                                    Checkout is temporarily disabled for maintenance.
+                                </Typography>
+                            )}
+                            {!maintenance && belowStoreMinimum && (
+                                <Typography type="body-xs" className="mt-4 text-danger">
+                                    The minimum order is {formatPrice(minimum)}.
                                 </Typography>
                             )}
 
@@ -365,23 +488,31 @@ export default function CheckoutPage() {
                                 {createOrder.isPending ? "Placing order…" : `Place order · ${formatPrice(totalPrice)}`}
                             </Button>
 
-                            <Typography type="body-xs" className="mt-4 text-center leading-relaxed text-muted">
-                                By placing this order you confirm you're 18 or older and agree to our{" "}
-                                <Link href="/terms" className="underline underline-offset-2">Terms</Link> and{" "}
-                                <Link href="/research-policy" className="underline underline-offset-2">Research Policy</Link>.
+                            <Typography type="body-xs"
+                                        className="mt-4 text-center leading-relaxed text-muted">
+                                By placing this order you confirm you're 18 or older and agree to
+                                our{" "}
+                                <Link href="/terms"
+                                      className="underline underline-offset-2">Terms</Link> and{" "}
+                                <Link href="/research-policy"
+                                      className="underline underline-offset-2">Research
+                                    Policy</Link>.
                             </Typography>
 
                             <Separator className="my-5"/>
 
                             <ul className="flex flex-col gap-2.5 text-xs text-muted">
                                 <li className="flex items-center gap-2.5">
-                                    <Icon icon={Lock} className="size-4 text-accent"/> Private checkout, no card data stored
+                                    <Icon icon={Lock} className="size-4 text-accent"/> Private
+                                    checkout, no card data stored
                                 </li>
                                 <li className="flex items-center gap-2.5">
-                                    <Icon icon={Package} className="size-4 text-accent"/> Plain, discreet packaging
+                                    <Icon icon={Package} className="size-4 text-accent"/> Plain,
+                                    discreet packaging
                                 </li>
                                 <li className="flex items-center gap-2.5">
-                                    <Icon icon={ShieldCheck} className="size-4 text-accent"/> Items reserved while you pay
+                                    <Icon icon={ShieldCheck} className="size-4 text-accent"/> Items
+                                    reserved while you pay
                                 </li>
                             </ul>
                         </Card.Content>
@@ -423,7 +554,8 @@ function Steps({current}) {
                 const done = i < current;
                 const active = i === current;
                 return (
-                    <li key={label} className="flex items-center gap-2" aria-current={active ? "step" : undefined}>
+                    <li key={label} className="flex items-center gap-2"
+                        aria-current={active ? "step" : undefined}>
                         <span
                             className={`flex size-6 items-center justify-center rounded-full text-xs font-medium ${
                                 done
@@ -436,7 +568,8 @@ function Steps({current}) {
                             {done ? <Icon icon={Check} className="size-3.5"/> : i + 1}
                         </span>
                         <span className={active ? "font-medium" : "text-muted"}>{label}</span>
-                        {i < STEPS.length - 1 && <span className="mx-1 h-px w-6 bg-border sm:w-10"/>}
+                        {i < STEPS.length - 1 &&
+                            <span className="mx-1 h-px w-6 bg-border sm:w-10"/>}
                     </li>
                 );
             })}
@@ -456,7 +589,8 @@ function Section({step, title, description, children}) {
                     <div>
                         <Typography type="h3" className="text-lg font-medium">{title}</Typography>
                         {description && (
-                            <Typography type="body-sm" className="text-muted">{description}</Typography>
+                            <Typography type="body-sm"
+                                        className="text-muted">{description}</Typography>
                         )}
                     </div>
                 </div>
@@ -470,7 +604,8 @@ function MethodTile({method, selected, disabled}) {
     const {ticker, network, isCard} = describeMethod(method);
 
     return (
-        <Radio value={method.code} isDisabled={disabled} className={choiceClass(selected, disabled)}>
+        <Radio value={method.code} isDisabled={disabled}
+               className={choiceClass(selected, disabled)}>
             <Radio.Content>
                 <Radio.Control><Radio.Indicator/></Radio.Control>
                 <div className="flex min-w-0 flex-1 items-start gap-3">
@@ -483,7 +618,8 @@ function MethodTile({method, selected, disabled}) {
                             </span>
                         )}
                         {method.description && (
-                            <span className="line-clamp-2 text-xs text-muted">{method.description}</span>
+                            <span
+                                className="line-clamp-2 text-xs text-muted">{method.description}</span>
                         )}
                         {disabled && (
                             <span className="text-xs text-danger">
@@ -523,7 +659,8 @@ function NewAddressForm({value, onChange, saveAddress, onSaveChange}) {
     const set = (name) => (v) => onChange((prev) => ({...prev, [name]: v}));
 
     const field = (name, label, props = {}) => (
-        <TextField variant="secondary" name={name} value={value[name]} onChange={set(name)} {...props}>
+        <TextField variant="secondary" name={name} value={value[name]}
+                   onChange={set(name)} {...props}>
             <Label>{label}</Label>
             <Input/>
             <FieldError/>
@@ -531,7 +668,8 @@ function NewAddressForm({value, onChange, saveAddress, onSaveChange}) {
     );
 
     return (
-        <div className="grid grid-cols-1 gap-4 rounded-xl border border-dashed border-border p-4 sm:grid-cols-2">
+        <div
+            className="grid grid-cols-1 gap-4 rounded-xl border border-dashed border-border p-4 sm:grid-cols-2">
             <div className="sm:col-span-2">
                 {field("full_name", "Full name", {isRequired: true, autoComplete: "name"})}
             </div>
@@ -560,7 +698,8 @@ function NewAddressForm({value, onChange, saveAddress, onSaveChange}) {
 
 function EmptyState({icon, title, text, href, action}) {
     return (
-        <div className="container flex min-h-[60vh] flex-col items-center justify-center gap-4 text-center">
+        <div
+            className="container flex min-h-[60vh] flex-col items-center justify-center gap-4 text-center">
             <div className="flex size-16 items-center justify-center rounded-full border">
                 <Icon icon={icon} className="size-7 text-muted"/>
             </div>

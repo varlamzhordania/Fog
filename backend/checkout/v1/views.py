@@ -2,7 +2,7 @@ from django.http import Http404
 from drf_spectacular.utils import extend_schema
 from rest_framework import status
 from rest_framework.generics import ListAPIView
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -15,13 +15,14 @@ from checkout.services.cart import CartService
 from checkout.services.checkout import CheckoutService
 from checkout.services.orders import OrderService
 from checkout.services.payments import PaymentService
+from checkout.services.shipping import ShippingService
 
 from .serializers import (
     OrderSerializer,
     PaymentMethodSerializer,
     ShoppingCartInputSerializer,
     ShoppingCartSerializer, ShoppingCartItemUpdateSerializer,
-    OrderCreateSerializer, OrderPaySerializer,
+    OrderCreateSerializer, OrderPaySerializer, ShippingMethodSerializer,
 )
 
 log = get_logger(__name__)
@@ -33,6 +34,16 @@ class PaymentMethodListView(ListAPIView):
     queryset = PaymentMethod.objects.filter(is_active=True)
     serializer_class = PaymentMethodSerializer
     pagination_class = None
+
+
+@extend_schema(tags=["Checkout"])
+class ShippingMethodListView(ListAPIView):
+    permission_classes = [AllowAny]
+    serializer_class = ShippingMethodSerializer
+    pagination_class = None
+
+    def get_queryset(self):
+        return ShippingService.available()
 
 
 @extend_schema(tags=["Checkout"])
@@ -55,7 +66,7 @@ def _order_payload(order_id, request, instructions=None):
         "order": OrderSerializer(
             order_detail(order_id),
             context={"request": request}
-            ).data,
+        ).data,
         "payment_instructions": instructions,
     }
 
@@ -75,9 +86,10 @@ class OrderCreateView(APIView):
             address_id=data.get("address_id"),
             address_data=dict(data["address"]) if data.get(
                 "address"
-                ) else None,
+            ) else None,
             save_address=data["save_address"],
             notes=data.get("notes", ""),
+            shipping_method_code=data.get("shipping_method_code"),
         )
         return Response(
             _order_payload(order.pk, request, instructions),
@@ -107,6 +119,7 @@ class OrderCancelView(APIView):
         order = OrderService.customer_cancel(pk, request.user)
         return Response(_order_payload(order.pk, request))
 
+
 @extend_schema(tags=["Checkout"])
 class ShoppingCartAPIView(APIView):
     permission_classes = [IsAuthenticated]
@@ -115,7 +128,7 @@ class ShoppingCartAPIView(APIView):
         cart = CartService.get_or_create_cart(request.user)
         return Response(
             ShoppingCartSerializer(cart, context={"request": request}).data
-            )
+        )
 
     def delete(self, request):
         CartService.clear_cart(request.user)

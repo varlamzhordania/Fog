@@ -24,7 +24,7 @@ from .models import (
     PaymentMethod,
     PaymentAttempt,
     ShoppingCart,
-    ShoppingCartItem,
+    ShoppingCartItem, ShippingMethod,
 )
 from .resources import (
     OrderResource, PaymentMethodResource,
@@ -190,6 +190,37 @@ class PaymentMethodAdmin(UnfoldImportExportHistoryAdmin):
         return f"${obj.min_amount:,.2f}"
 
 
+@django_admin.register(ShippingMethod)
+class ShippingMethodAdmin(UnfoldImportExportHistoryAdmin):
+    list_display = ["name", "code", "price_display", "free_over_display",
+                    "estimate",
+                    "includes_tracking", "display_order", "is_active"]
+    list_filter = ["is_active", "includes_tracking"]
+    search_fields = ["name", "code", "countries"]
+    readonly_fields = ["created_at", "updated_at"]
+    ordering = ["display_order", "price"]
+
+    fieldsets = [
+        (_("General"), {
+            "fields": ("name", "code", "description", "is_active",
+                       "display_order")}),
+        (_("Cost"), {"fields": (("price", "free_over"),)}),
+        (_("Delivery"), {
+            "fields": (("min_days", "max_days"), "includes_tracking",
+                       "countries")}),
+        (_("Timestamps"), {"classes": ["collapse"],
+                           "fields": (("created_at", "updated_at"),)}),
+    ]
+
+    @django_admin.display(description=_("Price"), ordering="price")
+    def price_display(self, obj):
+        return "Free" if not obj.price else f"${obj.price:,.2f}"
+
+    @django_admin.display(description=_("Free over"))
+    def free_over_display(self, obj):
+        return f"${obj.free_over:,.2f}" if obj.free_over is not None else "—"
+
+
 @django_admin.register(ShoppingCart)
 class ShoppingCartAdmin(UnfoldImportExportHistoryAdmin):
     resource_classes = [ShoppingCartResource]
@@ -247,7 +278,11 @@ class OrderAdmin(UnfoldImportExportHistoryAdmin):
         "payment__transaction_id",
         "shipment__tracking_number",
     ]
-    readonly_fields = ["id", "created_at", "updated_at"]
+    readonly_fields = ["id", "created_at", "updated_at", "subtotal",
+                       "tax_amount", "tax_rate", "tax_name",
+                       "tax_included", "shipping_method_name",
+                       "shipping_cost"
+                       ]
     ordering = ["-created_at"]
 
     fieldsets = [
@@ -260,6 +295,9 @@ class OrderAdmin(UnfoldImportExportHistoryAdmin):
                     "delivery_address",
                     "status",
                     "total_price",
+                    ("shipping_method_name", "shipping_cost"),
+                    ("subtotal", "tax_amount"),
+                    ("tax_name", "tax_rate", "tax_included")
                 )
             },
         ),

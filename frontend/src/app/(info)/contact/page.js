@@ -5,29 +5,31 @@ import {Button, Typography} from "@heroui/react";
 import {CheckCircle, Clock, Mail, MessageSquare, Send} from "lucide-react";
 import Icon from "@/components/icon/Icon";
 
-const CHANNELS = [
-    {
+const buildChannels = (config) => [
+    config?.SUPPORT_EMAIL && {
         icon: Mail,
         title: "Support Email",
         description: "For order issues, refund requests, and account matters.",
-        value: "support@fogdirect.io",
-        href: "mailto:support@fogdirect.io",
+        value: config.SUPPORT_EMAIL,
+        href: `mailto:${config.SUPPORT_EMAIL}`,
         label: "Send Email",
     },
-    {
+    config?.COMMUNITY_TELEGRAM_URL && {
         icon: MessageSquare,
         title: "Community Telegram",
         description: "Join our research community for discussions, strain sharing, and announcements.",
-        value: "t.me/fogdirect",
-        href: "https://t.me/fogdirect",
+        value: config.COMMUNITY_TELEGRAM_URL.replace(/^https?:\/\//, ""),
+        href: config.COMMUNITY_TELEGRAM_URL,
         label: "Open Telegram",
     },
-];
+].filter(Boolean);
 
 export default function ContactPage() {
     const [form, setForm] = useState({name: "", email: "", subject: "", message: ""});
     const [submitted, setSubmitted] = useState(false);
     const [loading, setLoading] = useState(false);
+    const {data: config} = useConfig();
+    const channels = buildChannels(config);
 
     const handleChange = (e) => {
         setForm(prev => ({...prev, [e.target.name]: e.target.value}));
@@ -61,7 +63,8 @@ export default function ContactPage() {
                 </Typography>
                 <Typography type="body" className="text-muted max-w-2xl leading-relaxed">
                     Whether you have a question about an order, a research inquiry, or just want
-                    to connect with the FOG community — we&apos;re reachable through multiple channels.
+                    to connect with the FOG community — we&apos;re reachable through multiple
+                    channels.
                 </Typography>
             </div>
 
@@ -79,15 +82,20 @@ export default function ContactPage() {
                     {submitted ? (
                         <div className="flex flex-col items-center gap-4 py-12 text-center">
                             <Icon icon={CheckCircle} className="size-10 text-success"/>
-                            <Typography type="h4" className="text-lg font-semibold uppercase tracking-wide">
+                            <Typography type="h4"
+                                        className="text-lg font-semibold uppercase tracking-wide">
                                 Message Received
                             </Typography>
                             <Typography type="body-sm" className="text-muted text-sm max-w-xs">
-                                We&apos;ve received your message and will respond within 24–48 hours.
+                                We&apos;ve received your message and will respond within 24–48
+                                hours.
                                 For urgent matters, use our Telegram channel.
                             </Typography>
                             <button
-                                onClick={() => {setSubmitted(false); setForm({name:"",email:"",subject:"",message:""});}}
+                                onClick={() => {
+                                    setSubmitted(false);
+                                    setForm({name: "", email: "", subject: "", message: ""});
+                                }}
                                 className="mt-2 text-xs text-accent underline underline-offset-2 hover:opacity-75 transition-opacity"
                             >
                                 Send another message
@@ -97,7 +105,8 @@ export default function ContactPage() {
                         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                 <div className="flex flex-col gap-1.5">
-                                    <label className="text-xs font-mono uppercase tracking-widest text-muted">
+                                    <label
+                                        className="text-xs font-mono uppercase tracking-widest text-muted">
                                         Name <span className="text-muted/50">(optional)</span>
                                     </label>
                                     <input
@@ -110,7 +119,8 @@ export default function ContactPage() {
                                     />
                                 </div>
                                 <div className="flex flex-col gap-1.5">
-                                    <label className="text-xs font-mono uppercase tracking-widest text-muted">
+                                    <label
+                                        className="text-xs font-mono uppercase tracking-widest text-muted">
                                         Email <span className="text-muted/50">(optional)</span>
                                     </label>
                                     <input
@@ -125,7 +135,8 @@ export default function ContactPage() {
                             </div>
 
                             <div className="flex flex-col gap-1.5">
-                                <label className="text-xs font-mono uppercase tracking-widest text-muted">
+                                <label
+                                    className="text-xs font-mono uppercase tracking-widest text-muted">
                                     Subject <span className="text-danger">*</span>
                                 </label>
                                 <input
@@ -140,7 +151,8 @@ export default function ContactPage() {
                             </div>
 
                             <div className="flex flex-col gap-1.5">
-                                <label className="text-xs font-mono uppercase tracking-widest text-muted">
+                                <label
+                                    className="text-xs font-mono uppercase tracking-widest text-muted">
                                     Message <span className="text-danger">*</span>
                                 </label>
                                 <textarea
@@ -175,18 +187,20 @@ export default function ContactPage() {
                 <div className="flex flex-col gap-5">
 
                     {/* Channels */}
-                    {CHANNELS.map((ch) => (
+                    {channels.map((ch) => (
                         <div
                             key={ch.title}
                             className="p-5 rounded-xl border border-border bg-surface flex flex-col gap-3"
                         >
                             <div className="flex items-center gap-2">
                                 <Icon icon={ch.icon} className="size-4 text-accent"/>
-                                <Typography type="h6" className="text-sm font-semibold uppercase tracking-widest">
+                                <Typography type="h6"
+                                            className="text-sm font-semibold uppercase tracking-widest">
                                     {ch.title}
                                 </Typography>
                             </div>
-                            <Typography type="body-sm" className="text-muted text-xs leading-relaxed">
+                            <Typography type="body-sm"
+                                        className="text-muted text-xs leading-relaxed">
                                 {ch.description}
                             </Typography>
                             <Typography type="small" className="text-xs font-mono text-accent/80">
@@ -204,14 +218,18 @@ export default function ContactPage() {
                     ))}
 
                     {/* Response time */}
-                    <div className="p-5 rounded-xl border border-border bg-surface flex gap-3 items-start">
+                    <div
+                        className="p-5 rounded-xl border border-border bg-surface flex gap-3 items-start">
                         <Icon icon={Clock} className="size-4 text-muted shrink-0 mt-0.5"/>
                         <div>
-                            <Typography type="h6" className="text-xs font-semibold uppercase tracking-widest mb-1">
+                            <Typography type="h6"
+                                        className="text-xs font-semibold uppercase tracking-widest mb-1">
                                 Response Time
                             </Typography>
-                            <Typography type="body-sm" className="text-muted text-xs leading-relaxed">
-                                Support messages are typically answered within <strong className="text-foreground">24–48 hours</strong>.
+                            <Typography type="body-sm"
+                                        className="text-muted text-xs leading-relaxed">
+                                Support messages are typically answered within <strong
+                                className="text-foreground">24–48 hours</strong>.
                                 For faster responses, use our Telegram community.
                                 We are not available on weekends for email support.
                             </Typography>

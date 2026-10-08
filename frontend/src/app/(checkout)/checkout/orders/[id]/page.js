@@ -68,9 +68,6 @@ export default function OrderPage() {
     const awaiting = order?.status === "payment";
     const instructions = order?.payment_instructions;
 
-    // Asks the gateway directly every few seconds, so the page flips to "paid"
-    // without waiting for the webhook and shows confirmations as they happen.
-    // useSyncPayment(id, Boolean(awaiting && order?.payment?.provider === "xcash"));
 
     const remaining = useRemaining(order?.expires_at);
     const invoiceRemaining = useRemaining(instructions?.invoice_expires_at);
@@ -80,7 +77,6 @@ export default function OrderPage() {
     const [selected, setSelected] = useState(null);
     const [confirmCancel, setConfirmCancel] = useState(false);
 
-    // Re-check the order once when the payment window runs out
     useEffect(() => {
         if (awaiting && order.expires_at && remaining === 0 && !refetched.current) {
             refetched.current = true;
@@ -321,6 +317,29 @@ export default function OrderPage() {
 
                             <Separator/>
 
+                            {(Number(order.tax_amount) > 0 || order.shipping_method_name) && (
+                                <>
+                                    <div className="flex justify-between text-sm">
+                                        <span className="text-muted">Subtotal</span>
+                                        <span>{formatPrice(order.subtotal)}</span>
+                                    </div>
+                                    {order.shipping_method_name && (
+                                        <div className="flex justify-between text-sm">
+                                            <span className="text-muted">Shipping ({order.shipping_method_name})</span>
+                                            <span>{Number(order.shipping_cost) ? formatPrice(order.shipping_cost) : "Free"}</span>
+                                        </div>
+                                    )}
+                                    {Number(order.tax_amount) > 0 && (
+                                        <div className="flex justify-between text-sm">
+                                            <span className="text-muted">
+                                                {order.tax_included ? "Includes " : ""}{order.tax_name} ({Number(order.tax_rate)}%)
+                                            </span>
+                                            <span>{formatPrice(order.tax_amount)}</span>
+                                        </div>
+                                    )}
+                                </>
+                            )}
+
                             <div className="flex items-baseline justify-between">
                                 <span className="font-medium">Total</span>
                                 <span
@@ -393,7 +412,6 @@ export default function OrderPage() {
     );
 }
 
-/* ------------------------------------------------------------------ */
 
 function Tracker({status}) {
     const index = Math.max(0, TRACK.findIndex((s) => s.key === status));
