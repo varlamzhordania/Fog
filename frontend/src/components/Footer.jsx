@@ -3,7 +3,7 @@
 import {Typography} from "@heroui/react";
 import Link from "next/link";
 import {useCategories} from "@/queries/inventory";
-import {useConfig} from "@/queries/config";
+import {useConfig} from "@/queries/settings";
 import Image from "next/image";
 import {useThemeStore} from "@/stores/theme";
 
@@ -21,7 +21,7 @@ const Footer = () => {
     const shopLinks = [
         {
             label: "All Products",
-            href: "/products",
+            href: "/products/",
         },
         ...categories.map((item) => ({
             label: item.name,
@@ -31,31 +31,31 @@ const Footer = () => {
 
     const discoverLinks = [
         {
-            label: "Research",
-            href: "/research",
+            label: "Research Policy",
+            href: "/research/",
         },
         {
             label: "Mycology",
-            href: "/mycology",
+            href: "/mycology/",
         },
         {
             label: "About",
-            href: "/about",
+            href: "/about/",
         },
     ]
 
     const supportLinks = [
         {
             label: "Contact",
-            href: "/contact",
+            href: "/contact/",
         },
         {
             label: "Shipping",
-            href: "/shipping",
+            href: "/shipping/",
         },
         {
             label: "FAQ",
-            href: "/faq",
+            href: "/faq/",
         },
     ]
 

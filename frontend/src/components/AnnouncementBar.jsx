@@ -1,7 +1,7 @@
 "use client"
 import {useState} from "react";
 import Icon from "@/components/icon/Icon";
-import {useConfig} from "@/queries/config";
+import {useConfig} from "@/queries/settings";
 import {Button, Typography, Link} from "@heroui/react";
 import {XIcon} from "lucide-react";
 

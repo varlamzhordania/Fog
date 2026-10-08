@@ -17,7 +17,7 @@ import {
 import {useState} from "react";
 import Icon from "@/components/icon/Icon";
 import {useThemeStore} from "@/stores/theme";
-import {useConfig} from "@/queries/config";
+import {useConfig} from "@/queries/settings";
 import Image from "@/components/Image";
 import {useAuthStore} from "@/stores/auth";
 import {useRouter} from "next/navigation";

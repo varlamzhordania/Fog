@@ -6,7 +6,7 @@ import {Button, Card, Form, Label, Skeleton, TextArea, TextField, toast, Typogra
 import {Star} from "lucide-react";
 import Icon from "@/components/icon/Icon";
 import Stars from "@/components/inventory/Stars";
-import {useConfig} from "@/queries/config";
+import {useConfig} from "@/queries/settings";
 import {useAuthStore} from "@/stores/auth";
 import {useDeleteReview, useMyReview, useReviews, useSaveReview} from "@/queries/inventory";
 import {getApiErrorMessage} from "@/lib/utils";

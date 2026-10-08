@@ -1,6 +1,7 @@
-import {useQuery} from "@tanstack/react-query";
+import {useMutation, useQuery} from "@tanstack/react-query";
 import {API_ENDPOINTS} from "@/lib/config";
 import apiClient from "@/lib/api/client";
+import {createContact} from "@/lib/api/settings";
 
 export const configQueryKey = ["fog_config"];
 
@@ -19,5 +20,11 @@ export function useConfig() {
         staleTime: 15 * 60 * 1000,
         gcTime: 30 * 60 * 1000,
         refetchOnWindowFocus: false,
+    });
+}
+
+export function useCreateContact() {
+    return useMutation({
+        mutationFn: createContact,
     });
 }

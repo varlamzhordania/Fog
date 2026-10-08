@@ -14,7 +14,7 @@ import Icon from "@/components/icon/Icon";
 import ProductSlider from "@/components/Sliders/ProductSlider";
 import {useProducts} from "@/queries/inventory";
 import {useCartStore} from "@/stores/cart";
-import {useConfig} from "@/queries/config";
+import {useConfig} from "@/queries/settings";
 import CartQuantityControl from "@/components/inventory/CartQuantityControl";
 import ProductReviews from "@/components/inventory/ProductReviews";
 import Stars from "@/components/inventory/Stars";

@@ -1,16 +1,30 @@
-"use client"
+"use client";
 
 import {useState} from "react";
-import {Button, Typography} from "@heroui/react";
-import {CheckCircle, Clock, Mail, MessageSquare, Send} from "lucide-react";
+import {
+    Button,
+    Card,
+    Description,
+    FieldError,
+    Form,
+    Input,
+    Label,
+    Link,
+    TextArea,
+    TextField,
+    toast,
+    Typography,
+} from "@heroui/react";
+import {Clock, Mail, MessageSquare, Send} from "lucide-react";
 import Icon from "@/components/icon/Icon";
-import {useConfig} from "@/queries/config";
+import {useConfig, useCreateContact} from "@/queries/settings";
 
 const buildChannels = (config) => [
     config?.SUPPORT_EMAIL && {
         icon: Mail,
         title: "Support Email",
-        description: "For order issues, refund requests, and account matters.",
+        description:
+            "For order questions, payment issues, refunds, account matters, and general support.",
         value: config.SUPPORT_EMAIL,
         href: `mailto:${config.SUPPORT_EMAIL}`,
         label: "Send Email",
@@ -18,227 +32,311 @@ const buildChannels = (config) => [
     config?.COMMUNITY_TELEGRAM_URL && {
         icon: MessageSquare,
         title: "Community Telegram",
-        description: "Join our research community for discussions, strain sharing, and announcements.",
-        value: config.COMMUNITY_TELEGRAM_URL.replace(/^https?:\/\//, ""),
+        description:
+            "Follow community discussions and announcements through the available Telegram channel.",
+        value: config.COMMUNITY_TELEGRAM_URL,
         href: config.COMMUNITY_TELEGRAM_URL,
         label: "Open Telegram",
     },
 ].filter(Boolean);
 
 export default function ContactPage() {
-    const [form, setForm] = useState({name: "", email: "", subject: "", message: ""});
-    const [submitted, setSubmitted] = useState(false);
-    const [loading, setLoading] = useState(false);
+    const [form, setForm] = useState({
+        name: "",
+        email: "",
+        subject: "",
+        message: "",
+    });
+
+    const createContact = useCreateContact();
     const {data: config} = useConfig();
+
     const channels = buildChannels(config);
 
-    const handleChange = (e) => {
-        setForm(prev => ({...prev, [e.target.name]: e.target.value}));
+    const handleChange = (value, name) => {
+        setForm((previous) => ({
+            ...previous,
+            [name]: value,
+        }));
     };
 
-    const handleSubmit = async (e) => {
-        e.preventDefault();
-        setLoading(true);
-        // Simulate submission — replace with real API call when available
-        await new Promise(r => setTimeout(r, 800));
-        setLoading(false);
-        setSubmitted(true);
+    const handleSubmit = (event) => {
+        event.preventDefault();
+
+        createContact.mutate(form, {
+            onSuccess: () => {
+                toast.success(
+                    "Message sent successfully. Our support team will review your message and get back to you as soon as possible."
+                );
+                setForm({
+                    name: "",
+                    email: "",
+                    subject: "",
+                    message: "",
+                });
+            },
+
+            onError: (error) => {
+                console.error("Contact form submission failed:", error);
+
+                const id = toast.danger("Message Failed", {
+                    actionProps: {
+                        children: "Dismiss",
+                        onPress: () => toast.close(id),
+                        variant: "tertiary",
+                    },
+                    description:
+                        "We could not send your message. Please try again.",
+                });
+            },
+        });
     };
 
     return (
         <section className="container container-space">
 
-            {/* Header */}
+
             <div className="mb-16 border-b border-border pb-10">
                 <Typography
                     type="span"
-                    className="text-xs uppercase tracking-widest text-muted font-mono mb-3 block"
+                    className="mb-3 block font-mono text-xs uppercase tracking-widest text-muted"
                 >
                     Support / Contact
                 </Typography>
+
                 <Typography
                     type="h1"
-                    className="text-5xl md:text-6xl font-atomic uppercase tracking-tighter mb-4"
+                    className="mb-4 text-5xl uppercase tracking-tighter md:text-6xl"
                 >
                     Get in Touch
                 </Typography>
-                <Typography type="body" className="text-muted max-w-2xl leading-relaxed">
-                    Whether you have a question about an order, a research inquiry, or just want
-                    to connect with the FOG community — we&apos;re reachable through multiple
-                    channels.
+
+                <Typography
+                    type="body"
+                    className="max-w-2xl leading-relaxed text-muted"
+                >
+                    Have a question about a product, order, payment, shipping,
+                    or the FOG project? Use one of the available support
+                    channels below.
                 </Typography>
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-[1fr_380px] gap-8">
+            <div className="grid grid-cols-1 gap-8 lg:grid-cols-[1fr_380px]">
 
-                {/* Contact form */}
-                <div className="p-6 rounded-xl border border-border bg-surface">
-                    <Typography
-                        type="span"
-                        className="text-xs uppercase tracking-widest text-muted font-mono mb-6 block"
-                    >
-                        Send a Message
-                    </Typography>
 
-                    {submitted ? (
-                        <div className="flex flex-col items-center gap-4 py-12 text-center">
-                            <Icon icon={CheckCircle} className="size-10 text-success"/>
-                            <Typography type="h4"
-                                        className="text-lg font-semibold uppercase tracking-wide">
-                                Message Received
-                            </Typography>
-                            <Typography type="body-sm" className="text-muted text-sm max-w-xs">
-                                We&apos;ve received your message and will respond within 24–48
-                                hours.
-                                For urgent matters, use our Telegram channel.
-                            </Typography>
-                            <button
-                                onClick={() => {
-                                    setSubmitted(false);
-                                    setForm({name: "", email: "", subject: "", message: ""});
-                                }}
-                                className="mt-2 text-xs text-accent underline underline-offset-2 hover:opacity-75 transition-opacity"
-                            >
-                                Send another message
-                            </button>
-                        </div>
-                    ) : (
-                        <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                <div className="flex flex-col gap-1.5">
-                                    <label
-                                        className="text-xs font-mono uppercase tracking-widest text-muted">
-                                        Name <span className="text-muted/50">(optional)</span>
-                                    </label>
-                                    <input
-                                        type="text"
-                                        name="name"
-                                        value={form.name}
-                                        onChange={handleChange}
-                                        placeholder="Anonymous"
-                                        className="w-full rounded-lg border border-field-border bg-field-background px-3.5 py-2.5 text-sm text-field-foreground placeholder:text-field-placeholder focus:outline-none focus:ring-1 focus:ring-accent transition-shadow"
-                                    />
-                                </div>
-                                <div className="flex flex-col gap-1.5">
-                                    <label
-                                        className="text-xs font-mono uppercase tracking-widest text-muted">
-                                        Email <span className="text-muted/50">(optional)</span>
-                                    </label>
-                                    <input
-                                        type="email"
-                                        name="email"
-                                        value={form.email}
-                                        onChange={handleChange}
-                                        placeholder="you@example.com"
-                                        className="w-full rounded-lg border border-field-border bg-field-background px-3.5 py-2.5 text-sm text-field-foreground placeholder:text-field-placeholder focus:outline-none focus:ring-1 focus:ring-accent transition-shadow"
-                                    />
-                                </div>
-                            </div>
+                <Card>
+                    <Card.Content className="p-5 sm:p-6">
 
-                            <div className="flex flex-col gap-1.5">
-                                <label
-                                    className="text-xs font-mono uppercase tracking-widest text-muted">
-                                    Subject <span className="text-danger">*</span>
-                                </label>
-                                <input
-                                    type="text"
-                                    name="subject"
-                                    value={form.subject}
-                                    onChange={handleChange}
-                                    required
-                                    placeholder="Order issue, research question, general inquiry..."
-                                    className="w-full rounded-lg border border-field-border bg-field-background px-3.5 py-2.5 text-sm text-field-foreground placeholder:text-field-placeholder focus:outline-none focus:ring-1 focus:ring-accent transition-shadow"
-                                />
-                            </div>
-
-                            <div className="flex flex-col gap-1.5">
-                                <label
-                                    className="text-xs font-mono uppercase tracking-widest text-muted">
-                                    Message <span className="text-danger">*</span>
-                                </label>
-                                <textarea
-                                    name="message"
-                                    value={form.message}
-                                    onChange={handleChange}
-                                    required
-                                    rows={5}
-                                    placeholder="Describe your issue or question in as much detail as possible..."
-                                    className="w-full rounded-lg border border-field-border bg-field-background px-3.5 py-2.5 text-sm text-field-foreground placeholder:text-field-placeholder focus:outline-none focus:ring-1 focus:ring-accent transition-shadow resize-none"
-                                />
-                            </div>
-
-                            <div className="flex items-center justify-between gap-4 pt-1">
-                                <Typography type="small" className="text-muted/60 text-xs">
-                                    You may submit anonymously. No account required.
-                                </Typography>
-                                <Button
-                                    type="submit"
-                                    isLoading={loading}
-                                    className="shrink-0 gap-2"
-                                >
-                                    <Icon icon={Send} className="size-4"/>
-                                    Send Message
-                                </Button>
-                            </div>
-                        </form>
-                    )}
-                </div>
-
-                {/* Sidebar */}
-                <div className="flex flex-col gap-5">
-
-                    {/* Channels */}
-                    {channels.map((ch) => (
-                        <div
-                            key={ch.title}
-                            className="p-5 rounded-xl border border-border bg-surface flex flex-col gap-3"
+                        <Typography
+                            type="span"
+                            className="mb-6 block font-mono text-xs uppercase tracking-widest text-muted"
                         >
-                            <div className="flex items-center gap-2">
-                                <Icon icon={ch.icon} className="size-4 text-accent"/>
-                                <Typography type="h6"
-                                            className="text-sm font-semibold uppercase tracking-widest">
-                                    {ch.title}
-                                </Typography>
+                            Send a Message
+                        </Typography>
+
+                        <Form
+                            onSubmit={handleSubmit}
+                            className="flex flex-col gap-5"
+                        >
+
+                            <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
+
+                                <TextField
+                                    name="name"
+                                    variant="secondary"
+                                    value={form.name}
+                                    isRequired
+                                    onChange={(value) =>
+                                        handleChange(value, "name")
+                                    }
+                                >
+                                    <Label>
+                                        Name{" "}
+                                        <span className="text-muted/50">
+
+                                    </span>
+                                    </Label>
+
+                                    <Input placeholder="Your name"/>
+                                    <FieldError/>
+                                </TextField>
+
+                                <TextField
+                                    name="email"
+                                    type="email"
+                                    variant="secondary"
+                                    value={form.email}
+                                    isRequired
+                                    onChange={(value) =>
+                                        handleChange(value, "email")
+                                    }
+                                >
+                                    <Label>
+                                        Email{" "}
+                                        <span className="text-muted/50">
+                                    </span>
+                                    </Label>
+
+                                    <Input placeholder="you@example.com"/>
+                                    <FieldError/>
+                                </TextField>
+
                             </div>
-                            <Typography type="body-sm"
-                                        className="text-muted text-xs leading-relaxed">
-                                {ch.description}
-                            </Typography>
-                            <Typography type="small" className="text-xs font-mono text-accent/80">
-                                {ch.value}
-                            </Typography>
-                            <a
-                                href={ch.href}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="text-xs font-semibold uppercase tracking-widest text-foreground border border-border rounded-lg px-4 py-2 text-center hover:border-accent hover:text-accent transition-colors"
+
+                            <TextField
+                                isRequired
+                                name="subject"
+                                variant="secondary"
+                                value={form.subject}
+                                onChange={(value) =>
+                                    handleChange(value, "subject")
+                                }
                             >
-                                {ch.label}
-                            </a>
-                        </div>
+                                <Label>Subject</Label>
+
+                                <Input
+                                    placeholder="Order issue, payment question, general inquiry..."
+                                />
+
+                                <FieldError/>
+                            </TextField>
+
+                            <TextField
+                                isRequired
+                                name="message"
+                                variant="secondary"
+                                value={form.message}
+                                onChange={(value) =>
+                                    handleChange(value, "message")
+                                }
+                            >
+                                <Label>Message</Label>
+
+                                <TextArea
+                                    placeholder="Describe your question or issue..."
+                                    rows={7}
+                                />
+
+                                <Description>
+                                    Please do not include passwords, wallet
+                                    seed phrases, private keys, or complete
+                                    payment credentials.
+                                </Description>
+
+                                <FieldError/>
+                            </TextField>
+
+                            <Button
+                                type="submit"
+                                isPending={createContact.isPending}
+                                isDisabled={createContact.isPending}
+                            >
+                                <Icon icon={Send} className="size-4"/>
+
+                                {createContact.isPending
+                                    ? "Sending..."
+                                    : "Send Message"}
+                            </Button>
+
+                        </Form>
+
+                    </Card.Content>
+                </Card>
+
+
+                <div className="flex flex-col gap-4">
+
+                    {channels.map((channel) => (
+                        <Card key={channel.title}>
+                            <Card.Content className="p-5">
+
+                                <Icon
+                                    icon={channel.icon}
+                                    className="mb-3 size-5 text-accent"
+                                />
+
+                                <Typography
+                                    type="h6"
+                                    className="mb-2 text-sm font-semibold uppercase tracking-wider"
+                                >
+                                    {channel.title}
+                                </Typography>
+
+                                <Typography
+                                    type="body-sm"
+                                    className="mb-4 text-xs leading-relaxed text-muted"
+                                >
+                                    {channel.description}
+                                </Typography>
+
+                                <Link
+                                    href={channel.href}
+                                    target={
+                                        channel.href.startsWith("http")
+                                            ? "_blank"
+                                            : undefined
+                                    }
+                                    rel={
+                                        channel.href.startsWith("http")
+                                            ? "noreferrer"
+                                            : undefined
+                                    }
+                                    className="break-all text-xs text-accent"
+                                >
+                                    {channel.value}
+                                </Link>
+
+                            </Card.Content>
+                        </Card>
                     ))}
 
-                    {/* Response time */}
-                    <div
-                        className="p-5 rounded-xl border border-border bg-surface flex gap-3 items-start">
-                        <Icon icon={Clock} className="size-4 text-muted shrink-0 mt-0.5"/>
-                        <div>
-                            <Typography type="h6"
-                                        className="text-xs font-semibold uppercase tracking-widest mb-1">
+                    <Card>
+                        <Card.Content className="p-5">
+
+                            <Icon
+                                icon={Clock}
+                                className="mb-3 size-5 text-accent"
+                            />
+
+                            <Typography
+                                type="h6"
+                                className="mb-2 text-sm font-semibold uppercase tracking-wider"
+                            >
                                 Response Time
                             </Typography>
-                            <Typography type="body-sm"
-                                        className="text-muted text-xs leading-relaxed">
-                                Support messages are typically answered within <strong
-                                className="text-foreground">24–48 hours</strong>.
-                                For faster responses, use our Telegram community.
-                                We are not available on weekends for email support.
+
+                            <Typography
+                                type="body-sm"
+                                className="text-xs leading-relaxed text-muted"
+                            >
+                                Response times can vary depending on the type
+                                and volume of requests. For order-related
+                                questions, include your order number whenever
+                                possible.
                             </Typography>
-                        </div>
-                    </div>
+
+                        </Card.Content>
+                    </Card>
+
                 </div>
 
             </div>
+
+
+            <Card className="mt-8">
+                <Card.Content className="p-5">
+                    <Typography
+                        type="small"
+                        className="text-xs leading-relaxed text-muted/70"
+                    >
+                        Please do not send passwords, wallet seed phrases,
+                        private keys, complete payment credentials, or other
+                        sensitive security information through the contact form.
+                    </Typography>
+                </Card.Content>
+            </Card>
+
         </section>
     );
+
 }

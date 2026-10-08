@@ -1,5 +1,13 @@
 import {Typography} from "@heroui/react";
-import {AlertTriangle, Clock, CreditCard, Globe, MapPin, Package, Shield, Truck} from "lucide-react";
+import {
+    AlertTriangle,
+    Clock,
+    Globe,
+    MapPin,
+    Package,
+    Shield,
+    Truck,
+} from "lucide-react";
 import Icon from "@/components/icon/Icon";
 import {serverFetch} from "@/lib/api/server";
 import {API_ENDPOINTS} from "@/lib/config";
@@ -7,7 +15,8 @@ import {formatPrice} from "@/lib/payments";
 
 export const metadata = {
     title: "Shipping",
-    description: "Shipping information for FOG Direct — discreet packaging, processing times, and delivery details.",
+    description:
+        "Shipping information for FOG Direct, including available methods, processing, delivery, and international orders.",
 };
 
 async function getTiers() {
@@ -18,49 +27,42 @@ async function getTiers() {
     }
 }
 
-const CRYPTO_TIMES = [
-    {coin: "Bitcoin (BTC)", confirmations: "2 confirmations", time: "~20–40 min"},
-    {coin: "Monero (XMR)", confirmations: "10 confirmations", time: "~20 min"},
-    {coin: "Ethereum (ETH)", confirmations: "12 confirmations", time: "~3–5 min"},
-    {coin: "Litecoin (LTC)", confirmations: "3 confirmations", time: "~8–15 min"},
-];
-
 const INFO_CARDS = [
     {
         icon: Package,
-        title: "Discreet Packaging",
+        title: "Order Processing",
         description:
-            "Every order ships in plain, unmarked packaging. No logos, brand names, or content descriptors appear on the outside of any shipment. Return addresses are generic and do not reference FOG Direct.",
+            "Orders are processed after the applicable payment requirements have been satisfied. Processing time can vary depending on product availability, payment confirmation, order volume, and fulfillment requirements.",
     },
     {
         icon: Clock,
-        title: "Processing Time",
+        title: "Delivery Estimates",
         description:
-            "Orders enter our fulfillment queue after cryptocurrency payment confirmation. Processing takes 1–3 business days, depending on order complexity and current volume.",
+            "Delivery times depend on the selected shipping method, destination, carrier, customs procedures, and other circumstances outside the store's control. Delivery estimates are not guaranteed dates.",
     },
     {
         icon: Globe,
         title: "International Shipping",
         description:
-            "We ship to most countries worldwide. Delivery times vary from 7 to 21 business days internationally. Customs clearance is the buyer's responsibility. We cannot guarantee delivery where import regulations prohibit our products.",
+            "International shipping depends on the destinations and shipping methods currently configured by the store. Customers are responsible for ensuring that their order can legally be imported into the destination country.",
     },
     {
         icon: Shield,
-        title: "Insurance & Liability",
+        title: "Customs & Import",
         description:
-            "Express tier shipments include basic carrier insurance. Standard and Priority tiers ship at buyer's risk. FOG Direct is not liable for packages lost, damaged, or seized by customs after carrier handover.",
+            "International shipments may be subject to customs inspections, import restrictions, taxes, duties, or other local requirements. These requirements are the customer's responsibility.",
     },
     {
         icon: Truck,
-        title: "Carriers",
+        title: "Tracking",
         description:
-            "We use a mix of domestic and international carriers, selected based on your location and chosen shipping tier. Specific carrier information is included with your tracking number (when applicable).",
+            "Some shipping methods support tracking. When tracking information is available, the carrier and tracking number can be added to the order and shown to the customer.",
     },
     {
         icon: MapPin,
         title: "Address Accuracy",
         description:
-            "Please ensure your shipping address is complete and accurate before submitting an order. We cannot reroute packages in transit. Address errors may result in lost shipments with no recourse.",
+            "Customers are responsible for providing a complete and accurate delivery address. Incorrect or incomplete information can result in delays, failed delivery, or additional shipping requirements.",
     },
 ];
 
@@ -70,136 +72,177 @@ export default async function ShippingPage() {
     return (
         <section className="container container-space">
 
-            {/* Header */}
             <div className="mb-16 border-b border-border pb-10">
+
                 <Typography
                     type="span"
                     className="text-xs uppercase tracking-widest text-muted font-mono mb-3 block"
                 >
                     Support / Shipping
                 </Typography>
+
                 <Typography
                     type="h1"
-                    className="text-5xl md:text-6xl font-atomic uppercase tracking-tighter mb-4"
+                    className="text-5xl md:text-6xl  uppercase tracking-tighter mb-4"
                 >
                     Shipping Policy
                 </Typography>
-                <Typography type="body" className="text-muted max-w-2xl leading-relaxed">
-                    Every order ships in discreet, unbranded packaging. Here is everything you need
-                    to know about how we handle fulfillment, delivery times, and payment confirmation.
+
+                <Typography
+                    type="body"
+                    className="text-muted max-w-2xl leading-relaxed"
+                >
+                    Available shipping methods, prices, and destination
+                    restrictions are shown during checkout. The information
+                    below explains how fulfillment and delivery work.
                 </Typography>
+
             </div>
 
-            {/* Crypto confirmation times */}
-            <div className="mb-12">
-                <div className="flex items-center gap-2 mb-5">
-                    <Icon icon={CreditCard} className="size-4 text-accent"/>
-                    <Typography type="span" className="text-xs uppercase tracking-widest text-muted font-mono">
-                        Crypto Payment Confirmation
-                    </Typography>
-                </div>
-                <div className="overflow-x-auto rounded-xl border border-border">
-                    <table className="w-full text-sm">
-                        <thead className="border-b border-border bg-surface">
-                        <tr>
-                            <th className="px-5 py-3 text-left text-xs font-semibold uppercase tracking-widest text-muted">
-                                Currency
-                            </th>
-                            <th className="px-5 py-3 text-left text-xs font-semibold uppercase tracking-widest text-muted">
-                                Required Confirmations
-                            </th>
-                            <th className="px-5 py-3 text-left text-xs font-semibold uppercase tracking-widest text-muted">
-                                Typical Time
-                            </th>
-                        </tr>
-                        </thead>
-                        <tbody>
-                        {CRYPTO_TIMES.map((row, i) => (
-                            <tr key={row.coin}
-                                className={`border-b border-border last:border-b-0 ${i % 2 === 0 ? "bg-background" : "bg-surface"}`}>
-                                <td className="px-5 py-3.5 text-xs font-mono text-foreground">{row.coin}</td>
-                                <td className="px-5 py-3.5 text-xs text-muted">{row.confirmations}</td>
-                                <td className="px-5 py-3.5 text-xs text-muted">{row.time}</td>
-                            </tr>
-                        ))}
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-
-            {/* Shipping tiers */}
             {tiers.length > 0 && (
                 <div className="mb-12">
+
                     <div className="flex items-center gap-2 mb-5">
-                        <Icon icon={Truck} className="size-4 text-accent"/>
-                        <Typography type="span" className="text-xs uppercase tracking-widest text-muted font-mono">
-                            Shipping Options
+
+                        <Icon
+                            icon={Truck}
+                            className="size-4 text-accent"
+                        />
+
+                        <Typography
+                            type="span"
+                            className="text-xs uppercase tracking-widest text-muted font-mono"
+                        >
+                            Available Shipping Methods
                         </Typography>
+
                     </div>
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-                        {tiers.map((tier) => (
-                            <div key={tier.code} className="p-5 rounded-xl border border-border bg-surface flex flex-col gap-3">
-                                <div className="flex items-center justify-between">
-                                    <Typography type="h6" className="text-sm font-semibold uppercase tracking-wide">
+
+                    <div className="overflow-x-auto rounded-xl border border-border">
+
+                        <table className="w-full text-sm">
+
+                            <thead className="border-b border-border bg-surface">
+
+                            <tr>
+
+                                <th className="px-5 py-3 text-left text-xs font-semibold uppercase tracking-widest text-muted">
+                                    Method
+                                </th>
+
+                                <th className="px-5 py-3 text-left text-xs font-semibold uppercase tracking-widest text-muted">
+                                    Price
+                                </th>
+
+                                <th className="px-5 py-3 text-left text-xs font-semibold uppercase tracking-widest text-muted">
+                                    Delivery
+                                </th>
+
+                            </tr>
+
+                            </thead>
+
+                            <tbody>
+
+                            {tiers.map((tier,x) => (
+                                <tr
+                                    key={x}
+                                    className="border-b border-border last:border-b-0"
+                                >
+
+                                    <td className="px-5 py-4">
                                         {tier.name}
-                                    </Typography>
-                                    <span className={`text-[10px] font-mono uppercase px-2 py-0.5 rounded-full border ${tier.includes_tracking ? "border-success/40 text-success bg-success/10" : "border-border text-muted"}`}>
-                                        {tier.includes_tracking ? "Tracking" : "No Tracking"}
-                                    </span>
-                                </div>
-                                <Typography type="body-sm" className="text-accent text-xs font-mono font-medium">
-                                    {[tier.estimate, Number(tier.price) ? formatPrice(tier.price) : "Free"].filter(Boolean).join(" · ")}
-                                </Typography>
-                                {tier.description && (
-                                    <Typography type="body-sm" className="text-muted text-xs leading-relaxed">
-                                        {tier.description}
-                                    </Typography>
-                                )}
-                                {tier.free_over != null && (
-                                    <Typography type="body-sm" className="text-xs text-muted">
-                                        Free on orders over {formatPrice(tier.free_over)}
-                                    </Typography>
-                                )}
-                            </div>
-                        ))}
+                                    </td>
+
+                                    <td className="px-5 py-4 text-muted">
+                                        {tier.price != null
+                                            ? formatPrice(tier.price)
+                                            : "Calculated at checkout"}
+                                    </td>
+
+                                    <td className="px-5 py-4 text-muted">
+                                        {tier.estimated_days
+                                            ? `${tier.estimated_days} days`
+                                            : "See checkout"}
+                                    </td>
+
+                                </tr>
+                            ))}
+
+                            </tbody>
+
+                        </table>
+
                     </div>
+
                 </div>
             )}
 
-            {/* Info grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mb-10">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-12">
+
                 {INFO_CARDS.map((card) => (
                     <div
                         key={card.title}
-                        className="p-5 rounded-xl border border-border bg-surface flex flex-col gap-3"
+                        className="p-6 rounded-xl border border-border bg-surface"
                     >
-                        <div className="flex items-center gap-3">
-                            <Icon icon={card.icon} className="size-5 text-accent shrink-0"/>
-                            <Typography type="h6" className="text-sm font-semibold uppercase tracking-widest">
-                                {card.title}
-                            </Typography>
-                        </div>
-                        <Typography type="body-sm" className="text-muted text-xs leading-relaxed">
+
+                        <Icon
+                            icon={card.icon}
+                            className="size-6 text-accent mb-4"
+                        />
+
+                        <Typography
+                            type="h6"
+                            className="text-sm font-semibold uppercase tracking-wider mb-2"
+                        >
+                            {card.title}
+                        </Typography>
+
+                        <Typography
+                            type="body-sm"
+                            className="text-muted text-xs leading-relaxed"
+                        >
                             {card.description}
                         </Typography>
+
                     </div>
                 ))}
+
             </div>
 
-            {/* Warning banner */}
-            <div className="flex items-start gap-3 p-5 rounded-xl border border-warning/30 bg-warning/5">
-                <Icon icon={AlertTriangle} className="size-5 text-warning shrink-0 mt-0.5"/>
-                <div>
-                    <Typography type="h6" className="text-sm font-semibold uppercase tracking-widest mb-1 text-warning">
-                        Customs & Import Responsibility
-                    </Typography>
-                    <Typography type="body-sm" className="text-muted text-xs leading-relaxed">
-                        International orders may be subject to customs inspection and local import
-                        duties. FOG Direct is not responsible for packages delayed, seized, or
-                        returned by customs authorities. It is your responsibility to verify that
-                        importing our products is lawful in your country before placing an order.
-                    </Typography>
+            <div className="p-6 rounded-xl border border-accent/30 bg-accent/5">
+
+                <div className="flex items-start gap-3">
+
+                    <Icon
+                        icon={AlertTriangle}
+                        className="size-5 text-accent shrink-0"
+                    />
+
+                    <div>
+
+                        <Typography
+                            type="h6"
+                            className="text-sm font-semibold uppercase tracking-widest mb-2"
+                        >
+                            Important
+                        </Typography>
+
+                        <Typography
+                            type="body-sm"
+                            className="text-muted text-xs leading-relaxed"
+                        >
+                            Customers are responsible for confirming that
+                            products can legally be purchased, possessed,
+                            imported, and used in their destination. Customs
+                            duties, import taxes, permits, and other local
+                            requirements are the customer's responsibility.
+                        </Typography>
+
+                    </div>
+
                 </div>
+
             </div>
 
         </section>

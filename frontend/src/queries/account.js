@@ -21,11 +21,7 @@ export function useAddresses() {
     });
 }
 
-/**
- * Creates (no `id`) or partially updates (with `id`) an address.
- * The API does not clear the old default, so we do it here when `data.is_default` is true.
- * `addresses` is the list currently on screen.
- */
+
 export function useSaveAddress() {
     const qc = useQueryClient();
     return useMutation({

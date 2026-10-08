@@ -5,7 +5,7 @@ import {Button, Card, Typography} from "@heroui/react";
 import {TriangleAlert} from "lucide-react";
 
 import Loader from "@/components/loader/Loader";
-import {useConfig} from "@/queries/config";
+import {useConfig} from "@/queries/settings";
 import {useCurrentUser} from "@/queries/auth";
 import {useAuthStore} from "@/stores/auth";
 import {useCartStore} from "@/stores/cart";

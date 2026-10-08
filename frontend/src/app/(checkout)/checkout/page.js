@@ -19,7 +19,7 @@ import {useAddresses} from "@/queries/account";
 import {getApiErrorMessage} from "@/lib/utils";
 import {describeMethod, formatPrice} from "@/lib/payments";
 import {notFoundImage} from "@/lib/config";
-import {useConfig} from "@/queries/config";
+import {useConfig} from "@/queries/settings";
 import {useCreateOrder, usePaymentMethods, useShippingMethods} from "@/queries/checkout";
 import {computeTotals, shippingCost, servesCountry, taxLabel} from "@/lib/pricing";
 

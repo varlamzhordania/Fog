@@ -7,17 +7,10 @@ from django.core.files.uploadedfile import UploadedFile
 from rest_framework import serializers
 from constance import config
 
+from settings.models import Contact
+
 
 class ConstanceImageField(serializers.Field):
-    """
-    Serializes Constance image/file values into fully qualified absolute URLs.
-    Handles:
-    - Storage-relative paths (e.g., 'constance/logo.png' -> '/media/constance/logo.png')
-    - Explicit media paths (e.g., '/media/logo.png')
-    - Static paths (e.g., '/static/imgs/logo_black.png')
-    - External absolute URLs (e.g., 'https://...')
-    - Multipart file uploads on write (saving via default_storage)
-    """
 
     def to_representation(self, value: Any) -> Optional[str]:
         if not value:
@@ -41,11 +34,11 @@ class ConstanceImageField(serializers.Field):
         # 3. Resolve relative paths
         if raw_url.startswith(static_url) or raw_url.startswith(
                 "/static/"
-                ):
+        ):
             url = "/" + raw_url.lstrip("/")
         elif raw_url.startswith(media_url) or raw_url.startswith(
                 "/media/"
-                ):
+        ):
             url = "/" + raw_url.lstrip("/")
         elif raw_url.startswith("media/"):
             url = f"/{raw_url}"
@@ -93,7 +86,7 @@ class ConstanceImageField(serializers.Field):
                 settings,
                 "CONSTANCE_FILE_ROOT",
                 "constance"
-                ).strip("/")
+            ).strip("/")
             file_name = default_storage.get_valid_name(data.name)
             target_path = f"{file_root}/{file_name}" if file_root else file_name
             saved_name = default_storage.save(target_path, data)
@@ -130,7 +123,7 @@ def resolve_serializer_field(val_type: Any) -> type:
     if isinstance(val_type, type) and issubclass(
             val_type,
             (forms.FileField, forms.ImageField)
-            ):
+    ):
         return ConstanceImageField
     return TYPE_MAPPING.get(val_type, serializers.CharField)
 
@@ -147,7 +140,7 @@ class ConstanceConfigSerializer(serializers.Serializer):
             settings,
             "CONSTANCE_CONFIG",
             {}
-            )
+        )
 
         for key, item in constance_config.items():
             if allowed_keys is not None and key not in allowed_keys:
@@ -161,7 +154,7 @@ class ConstanceConfigSerializer(serializers.Serializer):
             self.fields[key] = field_class(
                 required=False,
                 allow_null=True if val_type not in (
-                bool, int, float) else False,
+                    bool, int, float) else False,
                 help_text=help_text,
             )
 
@@ -173,3 +166,13 @@ class ConstanceConfigSerializer(serializers.Serializer):
             if hasattr(config, key):
                 setattr(config, key, value)
         return config
+
+class ContactSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Contact
+        fields = (
+            "name",
+            "email",
+            "subject",
+            "message",
+        )

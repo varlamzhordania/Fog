@@ -68,9 +68,9 @@ export const API_ENDPOINTS = {
         orderPay: (id) => `${API_BASE}/checkout/orders/${id}/pay/`,
         orderCancel: (id) => `${API_BASE}/checkout/orders/${id}/cancel/`,
     },
-
     website: {
         config: `${API_BASE}/settings/`,
+        contact: `${API_BASE}/settings/contact/`,
     },
 };
 

@@ -15,7 +15,7 @@ import Image from "@/components/Image";
 import {useCartActions} from "@/hooks/useCartActions";
 import {useRouter} from "next/navigation";
 import {useAuthStore} from "@/stores/auth";
-import {useConfig} from "@/queries/config";
+import {useConfig} from "@/queries/settings";
 import {computeTotals, taxLabel} from "@/lib/pricing";
 
 
