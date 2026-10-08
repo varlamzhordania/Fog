@@ -91,6 +91,7 @@ export default function RootLayout({children}) {
             className={`dark ${roboto.variable} ${poppins.variable} ${atomicAge.variable}`}
             data-theme="dark"
             suppressHydrationWarning
+            data-scroll-behavior="smooth"
         >
         <body className="min-h-screen font-sans antialiased" suppressHydrationWarning>
         <RootProvider>
