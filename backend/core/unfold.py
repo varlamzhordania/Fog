@@ -284,8 +284,11 @@ UNFOLD_SETTINGS = {
     "SIDEBAR": {
         "show_search": True,
         "show_all_applications": True,
-        # Ensures unlisted models remain discoverable
+
         "navigation": [
+            # ------------------------------------------------------------------
+            # Overview
+            # ------------------------------------------------------------------
             {
                 "title": _("Overview"),
                 "items": [
@@ -297,76 +300,111 @@ UNFOLD_SETTINGS = {
                     {
                         "title": _("Analytics"),
                         "icon": "insights",
-                        "link": reverse_lazy(
-                            "admin-analytics"
-                        ),
+                        "link": reverse_lazy("admin-analytics"),
                     },
                 ],
             },
+
+            # ------------------------------------------------------------------
+            # Sales
+            # ------------------------------------------------------------------
             {
-                "title": _("Sales & Fulfilment"),
+                "title": _("Sales"),
                 "separator": True,
                 "collapsible": True,
                 "items": [
                     nav_item(
-                        _("Orders"), "receipt_long", "checkout.order",
+                        _("Orders"),
+                        "receipt_long",
+                        "checkout.order",
                         badge="core.utils.pending_orders_badge_callback",
                         badge_variant="warning",
                     ),
                     nav_item(
-                        _("Payments"), "payments", "checkout.orderpayment",
+                        _("Payments"),
+                        "payments",
+                        "checkout.orderpayment",
                     ),
                     nav_item(
-                        _("Shipments"), "local_shipping",
+                        _("Payment Attempts"),
+                        "history_edu",
+                        "checkout.paymentattempt",
+                    ),
+                    nav_item(
+                        _("Shopping Carts"),
+                        "shopping_cart",
+                        "checkout.shoppingcart",
+                    ),
+                ],
+            },
+
+            # ------------------------------------------------------------------
+            # Fulfilment
+            # ------------------------------------------------------------------
+            {
+                "title": _("Fulfilment"),
+                "separator": True,
+                "collapsible": True,
+                "items": [
+                    nav_item(
+                        _("Shipments"),
+                        "local_shipping",
                         "checkout.ordershipment",
                         badge="core.utils.pending_shipments_badge_callback",
                         badge_variant="info",
                     ),
                     nav_item(
-                        _("Shopping Carts"), "shopping_cart",
-                        "checkout.shoppingcart",
-                    ),
-                    nav_item(
                         _("Shipping Methods"),
                         "route",
-                        "checkout.shippingmethod"
+                        "checkout.shippingmethod",
                     ),
                     nav_item(
-                        _("Payment Methods"), "credit_card",
-                        "checkout.paymentmethod",
+                        _("Stock Levels"),
+                        "warehouse",
+                        "inventory.productstock",
+                        badge="core.utils.low_stock_badge_callback",
+                        badge_variant="danger",
                     ),
                     nav_item(
-                        _("Payment Attempts"),
-                        "history_edu",
-                        "checkout.paymentattempt"
+                        _("Reservations"),
+                        "lock_clock",
+                        "inventory.stockreservation",
                     ),
                     nav_item(
-                        _("Email Log"),
-                        "forward_to_inbox",
-                        "checkout.ordernotification"
+                        _("Stock Log"),
+                        "history",
+                        "inventory.stocktransactionlog",
                     ),
                 ],
             },
+
+            # ------------------------------------------------------------------
+            # Catalog
+            # ------------------------------------------------------------------
             {
-                "title": _("Catalog & Genetics"),
+                "title": _("Catalog"),
                 "separator": True,
                 "collapsible": True,
                 "items": [
                     nav_item(
                         _("Products"),
                         "inventory_2",
-                        "inventory.product"
+                        "inventory.product",
                     ),
                     nav_item(
                         _("Categories"),
                         "category",
-                        "inventory.category"
+                        "inventory.category",
                     ),
-                    nav_item(_("Tags"), "sell", "inventory.tag"),
+                    nav_item(
+                        _("Tags"),
+                        "sell",
+                        "inventory.tag",
+                    ),
                     nav_item(
                         _("Reviews"),
                         "star",
-                        "inventory.productreview"
+                        "inventory.productreview",
                     ),
                     nav_item(
                         _("General Media"),
@@ -376,45 +414,57 @@ UNFOLD_SETTINGS = {
                     ),
                 ],
             },
+
+            # ------------------------------------------------------------------
+            # Customers
+            # ------------------------------------------------------------------
             {
-                "title": _("Inventory"),
+                "title": _("Customers"),
                 "separator": True,
                 "collapsible": True,
                 "items": [
                     nav_item(
-                        _("Stock Levels"), "warehouse",
-                        "inventory.productstock",
-                        badge="core.utils.low_stock_badge_callback",
-                        badge_variant="danger",
+                        _("Users"),
+                        "people",
+                        "account.user",
                     ),
-                    nav_item(
-                        _("Reservations"), "lock_clock",
-                        "inventory.stockreservation",
-                    ),
-                    nav_item(
-                        _("Stock Log"), "history",
-                        "inventory.stocktransactionlog",
-                    ),
-                ],
-            },
-            {
-                "title": _("Customers & Access"),
-                "separator": True,
-                "collapsible": True,
-                "items": [
-                    nav_item(_("Users"), "people", "account.user"),
                     nav_item(
                         _("Addresses"),
                         "location_on",
-                        "account.address"
+                        "account.address",
                     ),
                     nav_item(
-                        _("Groups & Permissions"), "shield_person",
+                        _("Groups & Permissions"),
+                        "shield_person",
                         "auth.group",
                     ),
                 ],
             },
 
+            # ------------------------------------------------------------------
+            # Payments & Configuration
+            # ------------------------------------------------------------------
+            {
+                "title": _("Payment Configuration"),
+                "separator": True,
+                "collapsible": True,
+                "items": [
+                    nav_item(
+                        _("Payment Methods"),
+                        "credit_card",
+                        "checkout.paymentmethod",
+                    ),
+                    nav_item(
+                        _("Email Log"),
+                        "forward_to_inbox",
+                        "checkout.ordernotification",
+                    ),
+                ],
+            },
+
+            # ------------------------------------------------------------------
+            # Communication & Support
+            # ------------------------------------------------------------------
             {
                 "title": _("Communication & Support"),
                 "separator": True,
@@ -429,11 +479,12 @@ UNFOLD_SETTINGS = {
                     ),
                 ],
             },
+
             # ------------------------------------------------------------------
-            # Automation & Scheduled Tasks (Django Celery Beat)
+            # Automation
             # ------------------------------------------------------------------
             {
-                "title": _("Automation & Tasks"),
+                "title": _("Automation"),
                 "separator": True,
                 "collapsible": True,
                 "items": [
@@ -457,13 +508,17 @@ UNFOLD_SETTINGS = {
                     ),
                 ],
             },
+
+            # ------------------------------------------------------------------
+            # System
+            # ------------------------------------------------------------------
             {
-                "title": _("System & Configuration"),
+                "title": _("System"),
                 "separator": True,
                 "collapsible": True,
                 "items": [
                     {
-                        "title": _("Live Config (Constance)"),
+                        "title": _("Live Config"),
                         "icon": "tune",
                         "link": reverse_lazy(
                             "admin:constance_config_changelist"
@@ -471,20 +526,17 @@ UNFOLD_SETTINGS = {
                         "permission": superuser_only,
                     },
                     nav_item(
-                        _("OAuth Applications"), "key",
+                        _("OAuth Applications"),
+                        "key",
                         "oauth2_provider.application",
                         permission=superuser_only,
                     ),
                     nav_item(
-                        _("OAuth Access Tokens"), "vpn_key",
+                        _("OAuth Access Tokens"),
+                        "vpn_key",
                         "oauth2_provider.accesstoken",
                         permission=superuser_only,
                     ),
-                    # nav_item(
-                    #     _("Social Accounts"), "link",
-                    #     "social_django.usersocialauth",
-                    #     permission=superuser_only,
-                    # ),
                 ],
             },
         ],

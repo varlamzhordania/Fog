@@ -75,14 +75,17 @@ export default function ProductReviews({product}) {
                         <Card.Content className="flex flex-col gap-2 p-5">
                             <div className="flex flex-wrap items-center justify-between gap-2">
                                 <div className="flex items-center gap-3">
-                                    <Stars value={review.rating}/>
-                                    <span className="text-sm font-medium">{review.author}</span>
-                                    {review.is_mine && <span className="text-xs text-accent">You</span>}
+                                    <Typography type={"body-md"}>
+                                        {review.author}
+                                        {review.is_mine && <span className="text-xs text-accent mx-1">(You)</span>}
+                                    </Typography>
+                                    <Stars value={review.rating} className={"size-4"}/>
+
                                 </div>
                                 <span className="text-xs text-muted">{formatDate(review.created_at)}</span>
                             </div>
                             {review.comment && (
-                                <p className="whitespace-pre-line text-sm leading-relaxed">{review.comment}</p>
+                                <Typography type={"body-sm"} className="whitespace-pre-line">{review.comment}</Typography>
                             )}
                         </Card.Content>
                     </Card>

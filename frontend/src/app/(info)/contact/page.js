@@ -4,6 +4,7 @@ import {useState} from "react";
 import {Button, Typography} from "@heroui/react";
 import {CheckCircle, Clock, Mail, MessageSquare, Send} from "lucide-react";
 import Icon from "@/components/icon/Icon";
+import {useConfig} from "@/queries/config";
 
 const buildChannels = (config) => [
     config?.SUPPORT_EMAIL && {

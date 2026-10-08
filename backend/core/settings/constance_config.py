@@ -5,12 +5,11 @@ import os
 def _env(name, default=""):
     return os.environ.get(name, default)
 
-
 CONSTANCE_CONFIG = OrderedDict(
     [
-        # -------------------------------------------------------------------------
+        # =========================================================================
         # 1. Website Branding & Identity
-        # -------------------------------------------------------------------------
+        # =========================================================================
         (
             "WEBSITE_TITLE",
             (
@@ -51,58 +50,10 @@ CONSTANCE_CONFIG = OrderedDict(
                 "image_field",
             ),
         ),
-        # -------------------------------------------------------------------------
-        # . Notifications
-        # -------------------------------------------------------------------------
 
-        (
-            "ORDER_ADMIN_EMAILS",
-            (
-                "",
-                "Comma-separated addresses for order alerts. Empty = all active staff in the admin/support groups.",
-                str,
-            ),
-        ),
-        (
-            "NOTIFY_CUSTOMERS",
-            (
-                True,
-                "Send order status emails to customers.",
-                bool
-            )
-        ),
-        # -------------------------------------------------------------------------
-        # 2. SEO & Social Metadata
-        # -------------------------------------------------------------------------
-        (
-            "WEBSITE_META_DESCRIPTION",
-            (
-                "Source for premium mycology genetics, research spores, laboratory "
-                "equipment, and cultivation media. Secure anonymous cryptocurrency checkout.",
-                "Default fallback description used for meta tags and search crawlers.",
-                str,
-            ),
-        ),
-        (
-            "WEBSITE_META_KEYWORDS",
-            (
-                "mycology, spore microscopy, research genetics, lab supplies, crypto checkout",
-                "Comma-separated default SEO keywords.",
-                str,
-            ),
-        ),
-        (
-            "WEBSITE_OG_IMAGE",
-            (
-                "og-cover.jpg",
-                "Default 1200x630 Open Graph preview image for social sharing.",
-                "image_field",
-            ),
-        ),
-
-        # -------------------------------------------------------------------------
-        # 3. Header & Announcement Bar
-        # -------------------------------------------------------------------------
+        # =========================================================================
+        # 2. Header & Announcement
+        # =========================================================================
         (
             "ANNOUNCEMENT_BAR_ENABLED",
             (
@@ -129,145 +80,38 @@ CONSTANCE_CONFIG = OrderedDict(
             ),
         ),
 
-        # -------------------------------------------------------------------------
-        # 4. Legal Compliance & Footer
-        # -------------------------------------------------------------------------
+        # =========================================================================
+        # 3. SEO & Social Metadata
+        # =========================================================================
         (
-            "LEGAL_RESEARCH_DISCLAIMER",
+            "WEBSITE_META_DESCRIPTION",
             (
-                "All psilocybe spore syringes and microscopy prints are sold exclusively "
-                "for research, taxonomy, and educational identification purposes under "
-                "high-power microscopy. Cultivation of regulated species is strictly "
-                "prohibited. Sales are void where prohibited.",
-                "Mandatory legal disclaimer displayed on product detail pages and footer.",
+                "Source for premium mycology genetics, research spores, laboratory "
+                "equipment, and cultivation media. Secure anonymous cryptocurrency checkout.",
+                "Default fallback description used for meta tags and search crawlers.",
                 str,
             ),
         ),
         (
-            "FOOTER_COPYRIGHT_TEXT",
+            "WEBSITE_META_KEYWORDS",
             (
-                "© 2026 FOG Mycology Research Lab. All rights reserved.",
-                "Copyright line rendered at the bottom of the storefront layout.",
+                "mycology, spore microscopy, research genetics, lab supplies, crypto checkout",
+                "Comma-separated default SEO keywords.",
                 str,
+            ),
+        ),
+        (
+            "WEBSITE_OG_IMAGE",
+            (
+                "og-cover.jpg",
+                "Default 1200x630 Open Graph preview image for social sharing.",
+                "image_field",
             ),
         ),
 
-        # -------------------------------------------------------------------------
-        # 5. Community & Support
-        # -------------------------------------------------------------------------
-        (
-            "SUPPORT_EMAIL",
-            (
-                "support@fog-mycology.example",
-                "Contact email displayed to users for payment discrepancies or expired orders.",
-                str,
-            ),
-        ),
-        (
-            "COMMUNITY_TELEGRAM_URL",
-            (
-                "https://t.me/fog_mycology",
-                "Official Telegram group or announcement channel URL.",
-                "link_field",
-            ),
-        ),
-        (
-            "COMMUNITY_DISCORD_URL",
-            (
-                "https://discord.gg/fog_mycology",
-                "Official Discord community invite link. Leave empty if inactive.",
-                "link_field",
-            ),
-        ),
-        (
-            "COMMUNITY_TWITTER_URL",
-            (
-                "https://x.com/fog_mycology",
-                "Official X (Twitter) profile URL.",
-                "link_field",
-            ),
-        ),
-
-        # -------------------------------------------------------------------------
-        # 6. Crypto Payment & Security
-        # -------------------------------------------------------------------------
-        (
-            "CRYPTO_PAYMENT_WINDOW_MINUTES",
-            (
-                60,
-                "Expiration window for pending crypto payments, in minutes.",
-                int,
-            ),
-        ),
-
-        # -------------------------------------------------------------------------
-        # 7. Stripe Payment
-        # -------------------------------------------------------------------------
-        (
-            "STRIPE_SECRET_KEY",
-            (
-                _env("STRIPE_SECRET_KEY", "sk_***"),
-                "Stripe secret API key used by the backend to create and manage payments.",
-                str,
-            ),
-        ),
-        (
-            "STRIPE_PUBLISHABLE_KEY",
-            (
-                _env("STRIPE_PUBLISHABLE_KEY", "pk_***"),
-                "Stripe publishable key exposed to the storefront for client-side Stripe integration.",
-                str,
-            ),
-        ),
-        (
-            "STRIPE_WEBHOOK_KEY",
-            (
-                _env("STRIPE_WEBHOOK_KEY", "whsec_***"),
-                "Stripe webhook signing secret used to verify incoming webhook requests.",
-                str,
-            ),
-        ),
-
-        # -------------------------------------------------------------------------
-        # 8. Xcash Payment
-        # -------------------------------------------------------------------------
-        ("XCASH_API_URL", (_env("XCASH_API_URL", "https://pay.xca.sh"),
-                           "Base URL of the Xcash payment server API.",
-                           str)),
-        ("XCASH_NOTIFY_URL", (_env(
-            "XCASH_NOTIFY_URL",
-            "http://localhost/api/v1/checkout/webhooks/xcash/"
-        ),
-                              "Webhook URL that Xcash uses to notify FOG about payment events.",
-                              str)),
-        ("XCASH_APPID", (_env("XCASH_APPID"),
-                         "Xcash application ID used to authenticate payment API requests.",
-                         str)),
-        ("XCASH_HMAC_KEY", (_env("XCASH_HMAC_KEY"),
-                            "Secret HMAC key used to authenticate and verify Xcash payment requests.",
-                            str)),
-        # (
-        #     "XCASH_METHODS",
-        #     (
-        #         "",
-        #         'Optional JSON limiting the coins offered when a payment method has no asset set, '
-        #         'e.g. {"USDT": ["ethereum", "tron"]}. Empty lets the customer choose on the gateway.',
-        #         str,
-        #     ),
-        # ),
-        # (
-        #     "XCASH_CONTRACT_CHAINS",
-        #     (
-        #         "",
-        #         "Comma-separated chains where Xcash uses a smart-contract deposit address "
-        #         "(shows an extra notice on the order page), e.g. ethereum,bsc.",
-        #         str,
-        #     ),
-        # ),
-
-        # -------------------------------------------------------------------------
-        # 7. Store Operations
-        # -------------------------------------------------------------------------
+        # =========================================================================
+        # 4. Store Operations
+        # =========================================================================
         (
             "STORE_MAINTENANCE_MODE",
             (
@@ -280,7 +124,7 @@ CONSTANCE_CONFIG = OrderedDict(
             "MINIMUM_ORDER_AMOUNT_USD",
             (
                 15.0,
-                "Minimum cart value required to initiate anonymous crypto checkout.",
+                "Minimum cart value required to initiate checkout.",
                 float,
             ),
         ),
@@ -294,9 +138,9 @@ CONSTANCE_CONFIG = OrderedDict(
             ),
         ),
 
-        # -------------------------------------------------------------------------
-        # 8. Store Pricing & Tax
-        # -------------------------------------------------------------------------
+        # =========================================================================
+        # 5. Store Pricing & Tax
+        # =========================================================================
         (
             "TAX_ENABLED",
             (
@@ -337,11 +181,195 @@ CONSTANCE_CONFIG = OrderedDict(
                 bool,
             ),
         ),
+
+        # =========================================================================
+        # 6. Payments
+        # =========================================================================
+
+        # -------------------------------------------------------------------------
+        # Crypto Payments
+        # -------------------------------------------------------------------------
+        (
+            "CRYPTO_PAYMENT_WINDOW_MINUTES",
+            (
+                60,
+                "Expiration window for pending crypto payments, in minutes.",
+                int,
+            ),
+        ),
+
+        # -------------------------------------------------------------------------
+        # Stripe
+        # -------------------------------------------------------------------------
+        (
+            "STRIPE_SECRET_KEY",
+            (
+                _env("STRIPE_SECRET_KEY", "sk_***"),
+                "Stripe secret API key used by the backend to create and manage payments.",
+                str,
+            ),
+        ),
+        (
+            "STRIPE_PUBLISHABLE_KEY",
+            (
+                _env("STRIPE_PUBLISHABLE_KEY", "pk_***"),
+                "Stripe publishable key exposed to the storefront for client-side Stripe integration.",
+                str,
+            ),
+        ),
+        (
+            "STRIPE_WEBHOOK_KEY",
+            (
+                _env("STRIPE_WEBHOOK_KEY", "whsec_***"),
+                "Stripe webhook signing secret used to verify incoming webhook requests.",
+                str,
+            ),
+        ),
+
+        # -------------------------------------------------------------------------
+        # Xcash
+        # -------------------------------------------------------------------------
+        (
+            "XCASH_API_URL",
+            (
+                _env("XCASH_API_URL", "https://pay.xca.sh"),
+                "Base URL of the Xcash payment server API.",
+                str,
+            ),
+        ),
+        (
+            "XCASH_NOTIFY_URL",
+            (
+                _env(
+                    "XCASH_NOTIFY_URL",
+                    "http://localhost/api/v1/checkout/webhooks/xcash/",
+                ),
+                "Webhook URL that Xcash uses to notify FOG about payment events.",
+                str,
+            ),
+        ),
+        (
+            "XCASH_APPID",
+            (
+                _env("XCASH_APPID"),
+                "Xcash application ID used to authenticate payment API requests.",
+                str,
+            ),
+        ),
+        (
+            "XCASH_HMAC_KEY",
+            (
+                _env("XCASH_HMAC_KEY"),
+                "Secret HMAC key used to authenticate and verify Xcash payment requests.",
+                str,
+            ),
+        ),
+        # (
+        #     "XCASH_METHODS",
+        #     (
+        #         "",
+        #         'Optional JSON limiting the coins offered when a payment method has no asset set, '
+        #         'e.g. {"USDT": ["ethereum", "tron"]}. Empty lets the customer choose on the gateway.',
+        #         str,
+        #     ),
+        # ),
+        # (
+        #     "XCASH_CONTRACT_CHAINS",
+        #     (
+        #         "",
+        #         "Comma-separated chains where Xcash uses a smart-contract deposit address "
+        #         "(shows an extra notice on the order page), e.g. ethereum,bsc.",
+        #         str,
+        #     ),
+        # ),
+
+        # =========================================================================
+        # 7. Email & Notifications
+        # =========================================================================
+        (
+            "ORDER_ADMIN_EMAILS",
+            (
+                "",
+                "Comma-separated addresses for order alerts. Empty = all active staff in the admin/support groups.",
+                str,
+            ),
+        ),
+        (
+            "NOTIFY_CUSTOMERS",
+            (
+                True,
+                "Send order status emails to customers.",
+                bool,
+            ),
+        ),
+
+        # =========================================================================
+        # 8. Community & Customer Support
+        # =========================================================================
+        (
+            "SUPPORT_EMAIL",
+            (
+                "support@fog-mycology.example",
+                "Contact email displayed to users for payment discrepancies or expired orders.",
+                str,
+            ),
+        ),
+        (
+            "COMMUNITY_TELEGRAM_URL",
+            (
+                "https://t.me/fog_mycology",
+                "Official Telegram group or announcement channel URL.",
+                "link_field",
+            ),
+        ),
+        (
+            "COMMUNITY_DISCORD_URL",
+            (
+                "https://discord.gg/fog_mycology",
+                "Official Discord community invite link. Leave empty if inactive.",
+                "link_field",
+            ),
+        ),
+        (
+            "COMMUNITY_TWITTER_URL",
+            (
+                "https://x.com/fog_mycology",
+                "Official X (Twitter) profile URL.",
+                "link_field",
+            ),
+        ),
+
+        # =========================================================================
+        # 9. Legal & Footer
+        # =========================================================================
+        (
+            "LEGAL_RESEARCH_DISCLAIMER",
+            (
+                "All psilocybe spore syringes and microscopy prints are sold exclusively "
+                "for research, taxonomy, and educational identification purposes under "
+                "high-power microscopy. Cultivation of regulated species is strictly "
+                "prohibited. Sales are void where prohibited.",
+                "Mandatory legal disclaimer displayed on product detail pages and footer.",
+                str,
+            ),
+        ),
+        (
+            "FOOTER_COPYRIGHT_TEXT",
+            (
+                "© 2026 FOG Mycology Research Lab. All rights reserved.",
+                "Copyright line rendered at the bottom of the storefront layout.",
+                str,
+            ),
+        ),
     ]
 )
 
+
 CONSTANCE_CONFIG_FIELDSETS = OrderedDict(
     [
+        # =========================================================================
+        # Website
+        # =========================================================================
         (
             "Website Branding & Identity",
             {
@@ -354,7 +382,17 @@ CONSTANCE_CONFIG_FIELDSETS = OrderedDict(
                 ),
             },
         ),
-
+        (
+            "Header & Announcement",
+            {
+                "fields": (
+                    "ANNOUNCEMENT_BAR_ENABLED",
+                    "ANNOUNCEMENT_BAR_TEXT",
+                    "ANNOUNCEMENT_BAR_LINK",
+                ),
+                "collapse": True,
+            },
+        ),
         (
             "SEO & Social Metadata",
             {
@@ -366,49 +404,43 @@ CONSTANCE_CONFIG_FIELDSETS = OrderedDict(
                 "collapse": True,
             },
         ),
+
+        # =========================================================================
+        # Store
+        # =========================================================================
         (
-            "Email & Notifications",
+            "Store Operations",
             {
                 "fields": (
-                    "ORDER_ADMIN_EMAILS",
-                    "NOTIFY_CUSTOMERS",
+                    "STORE_MAINTENANCE_MODE",
+                    "MINIMUM_ORDER_AMOUNT_USD",
+                    "PRODUCT_REVIEWS_ENABLED",
                 ),
-                "collapse": True,
             },
         ),
         (
-            "Header & Announcement Bar",
+            "Store Pricing & Tax",
             {
                 "fields": (
-                    "ANNOUNCEMENT_BAR_ENABLED",
-                    "ANNOUNCEMENT_BAR_TEXT",
-                    "ANNOUNCEMENT_BAR_LINK",
+                    "TAX_ENABLED",
+                    "TAX_RATE",
+                    "TAX_NAME",
+                    "PRICES_INCLUDE_TAX",
+                    "TAX_ON_SHIPPING",
                 ),
                 "collapse": True,
             },
         ),
 
+        # =========================================================================
+        # Payments
+        # =========================================================================
         (
-            "Legal Compliance & Footer",
+            "Crypto Payments",
             {
                 "fields": (
-                    "LEGAL_RESEARCH_DISCLAIMER",
-                    "FOOTER_COPYRIGHT_TEXT",
+                    "CRYPTO_PAYMENT_WINDOW_MINUTES",
                 ),
-                "collapse": True,
-            },
-        ),
-
-        (
-            "Community & Customer Support",
-            {
-                "fields": (
-                    "SUPPORT_EMAIL",
-                    "COMMUNITY_TELEGRAM_URL",
-                    "COMMUNITY_DISCORD_URL",
-                    "COMMUNITY_TWITTER_URL",
-                ),
-                "collapse": True,
             },
         ),
         (
@@ -422,7 +454,6 @@ CONSTANCE_CONFIG_FIELDSETS = OrderedDict(
                 "collapse": True,
             },
         ),
-
         (
             "Xcash Payment",
             {
@@ -438,40 +469,48 @@ CONSTANCE_CONFIG_FIELDSETS = OrderedDict(
             },
         ),
 
+        # =========================================================================
+        # Communication
+        # =========================================================================
         (
-            "Crypto Payment & Security",
+            "Email & Notifications",
             {
                 "fields": (
-                    "CRYPTO_PAYMENT_WINDOW_MINUTES",
+                    "ORDER_ADMIN_EMAILS",
+                    "NOTIFY_CUSTOMERS",
                 ),
+                "collapse": True,
             },
         ),
         (
-            "Store Operations",
+            "Community & Customer Support",
             {
                 "fields": (
-                    "STORE_MAINTENANCE_MODE",
-                    "MINIMUM_ORDER_AMOUNT_USD",
-                    "PRODUCT_REVIEWS_ENABLED",
+                    "SUPPORT_EMAIL",
+                    "COMMUNITY_TELEGRAM_URL",
+                    "COMMUNITY_DISCORD_URL",
+                    "COMMUNITY_TWITTER_URL",
                 ),
+                "collapse": True,
             },
         ),
 
+        # =========================================================================
+        # Legal
+        # =========================================================================
         (
-            "Store Pricing & Tax",
+            "Legal & Footer",
             {
                 "fields": (
-                    "TAX_ENABLED",
-                    "TAX_RATE",
-                    "TAX_NAME",
-                    "PRICES_INCLUDE_TAX",
-                    "TAX_ON_SHIPPING",
+                    "LEGAL_RESEARCH_DISCLAIMER",
+                    "FOOTER_COPYRIGHT_TEXT",
                 ),
                 "collapse": True,
             },
         ),
     ]
 )
+
 
 CONSTANCE_PUBLIC_KEYS = {
     "WEBSITE_TITLE",

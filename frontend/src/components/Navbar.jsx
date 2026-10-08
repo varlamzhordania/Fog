@@ -71,9 +71,9 @@ const Navbar = () => {
                 </Link>))}
             </nav>
             <div className={"xl:w-1/3 flex flex-row justify-end items-center lg:gap-2"}>
-                <Button isIconOnly variant={"ghost"}>
-                    <Icon icon={Search}/>
-                </Button>
+                {/*<Button isIconOnly variant={"ghost"}>*/}
+                {/*    <Icon icon={Search}/>*/}
+                {/*</Button>*/}
 
                 {logged_in && user ? <Dropdown isOpen={dropdownOpen} onOpenChange={setDropdownOpen}>
                         <Button isIconOnly variant={"ghost"}>

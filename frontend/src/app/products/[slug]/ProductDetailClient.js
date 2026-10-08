@@ -209,7 +209,9 @@ export default function ProductDetailClient({product: initialProduct}) {
         {/* Information */}
         <ProductInformation product={product}/>
 
-        <div id="reviews"><ProductReviews product={product}/></div>
+        <div id="reviews">
+            <ProductReviews product={product}/>
+        </div>
 
         {/* Related */}
         <section className={"container-space pb-0"}>

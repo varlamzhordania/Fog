@@ -277,8 +277,16 @@ export default function CheckoutPage() {
                                                         className="flex min-w-0 flex-1 items-start justify-between gap-3">
                                                         <div
                                                             className="flex min-w-0 flex-col gap-0.5">
-                                                            <Label
-                                                                className="font-medium">{m.name}</Label>
+
+                                                            <div className={"flex flex-row gap-2"}>
+                                                                <Label
+                                                                    className="font-medium">{m.name}</Label>
+                                                                <span
+                                                                    className="shrink-0 font-medium">
+                                                                {price === 0 ? "Free" : formatPrice(price)}
+                                                            </span>
+                                                            </div>
+
                                                             <span className="text-xs text-muted">
                                                                 {[m.estimate, m.includes_tracking && "Tracking included"]
                                                                     .filter(Boolean).join(" · ")}
@@ -294,9 +302,6 @@ export default function CheckoutPage() {
                                                                 </span>
                                                             )}
                                                         </div>
-                                                        <span className="shrink-0 font-medium">
-                                                            {price === 0 ? "Free" : formatPrice(price)}
-                                                        </span>
                                                     </div>
                                                 </Radio.Content>
                                             </Radio>
@@ -434,6 +439,7 @@ export default function CheckoutPage() {
                                     <span className="text-muted">Subtotal</span>
                                     <span>{formatPrice(totals.subtotal)}</span>
                                 </div>
+
                                 {needsShipping && (
                                     <div className="mt-2 flex items-center justify-between text-sm">
                                         <span className="text-muted">
