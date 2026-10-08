@@ -4,7 +4,15 @@ import {Avatar, Button, Drawer, Dropdown, Label, Separator, Typography} from "@h
 import Link from "next/link";
 import {
     ClipboardList,
-    LayoutDashboard, LogOut, MapPinHouse, Menu, Moon, Search, ShoppingCart, Sun, UserRound
+    LayoutDashboard,
+    LogOut,
+    MapPinHouse,
+    Menu,
+    Moon,
+    Search,
+    ShoppingCart,
+    Sun,
+    UserRound
 } from "lucide-react";
 import {useState} from "react";
 import Icon from "@/components/icon/Icon";
@@ -35,10 +43,11 @@ const Navbar = () => {
     }, {
         title: "Shop", href: "/products",
     }, {
-        title: "Research", href: "/research",
-    }, {
         title: "About", href: "/about",
-    },]
+    }, {
+        title: "Contact US", href: "/contact",
+    },
+    ]
 
     const handleLogout = () => {
         logout.mutate()
