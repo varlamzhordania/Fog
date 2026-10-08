@@ -10,6 +10,8 @@ from unfold import admin
 from simple_history.admin import SimpleHistoryAdmin
 
 from core.admin import UnfoldImportExportHistoryAdmin
+from inventory.services.stock import StockService
+
 from .models import (
     Category,
     Tag,
@@ -139,6 +141,7 @@ class ProductStockInline(
         "low_stock_threshold",
         "is_available",
     ]
+    readonly_fields = ["reserved_quantity"]
 
 
 @django_admin.register(Media)
@@ -471,18 +474,16 @@ class StockReservationAdmin(SimpleHistoryAdmin, admin.ModelAdmin):
         description=_("Manually release selected active holds")
     )
     def manually_release_reservations(self, request, queryset):
-        active_holds = queryset.filter(
-            status=StockReservation.ReservationStatus.ACTIVE
-        )
-        count = 0
-        for hold in active_holds:
-            hold.release(
-                reason=f"Manually released via admin by {request.user.username}"
+        released = sum(
+            StockService.release(
+                hold,
+                f"Manually released by {request.user.email}"
             )
-            count += 1
+            for hold in queryset.select_related("product_stock")
+        )
         self.message_user(
             request,
-            f"Successfully released {count} stock reservation(s)."
+            f"Released {released} stock reservation(s)."
         )
 
 

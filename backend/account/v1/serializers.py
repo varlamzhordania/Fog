@@ -3,8 +3,10 @@ from django.contrib.auth.tokens import default_token_generator
 from django.core.exceptions import ValidationError as DjangoValidationError
 from django.utils.encoding import force_str
 from django.utils.http import urlsafe_base64_decode
-from rest_framework import serializers
 from django.utils.translation import gettext_lazy as _
+from oauth2_provider.models import AccessToken, RefreshToken
+from rest_framework import serializers
+
 
 from account.models import User, Address
 
@@ -147,4 +149,6 @@ class PasswordResetConfirmSerializer(serializers.Serializer):
         user = self.validated_data["user"]
         user.set_password(self.validated_data["new_password1"])
         user.save(update_fields=["password"])
+        RefreshToken.objects.filter(user=user).delete()
+        AccessToken.objects.filter(user=user).delete()
         return user

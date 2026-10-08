@@ -41,8 +41,13 @@ class UserOrderView(ReadOnlyModelViewSet):
     serializer_class = OrderSerializer
 
     def get_queryset(self):
-        OrderService.expire_due_orders(user=self.request.user)
         return orders_for_user(self.request.user)
+
+    def retrieve(self, request, *args, **kwargs):
+        pk = str(kwargs.get("pk", ""))
+        if pk.isdigit():
+            OrderService.expire_if_needed(int(pk))
+        return super().retrieve(request, *args, **kwargs)
 
 
 def _order_payload(order_id, request, instructions=None):

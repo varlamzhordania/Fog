@@ -130,7 +130,7 @@ AUTH_PASSWORD_VALIDATORS = [
         "CommonPasswordValidator", "NumericPasswordValidator",
     )
 ]
-
+PASSWORD_RESET_TIMEOUT = 60 * 60 * 24
 REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": [
         "core.api.authentication.LoggedOAuth2Authentication"],
@@ -163,7 +163,6 @@ STATICFILES_DIRS = [BASE_DIR / "static"]
 MEDIA_URL = "/media/"
 MEDIA_ROOT = BASE_DIR / "media"
 
-
 USE_HTTPS_IN_ABSOLUTE_URLS = env.bool(
     "USE_HTTPS_IN_ABSOLUTE_URLS",
     default=False
@@ -181,7 +180,6 @@ CSRF_TRUSTED_ORIGINS = [
     f"https://{SERVER_DOMAIN}",
 ]
 
-
 EMAIL_HOST = env("EMAIL_HOST", default="")
 EMAIL_PORT = env.int("EMAIL_PORT", default=587)
 EMAIL_USE_TLS = env.bool("EMAIL_USE_TLS", default=True)
@@ -193,7 +191,6 @@ DEFAULT_FROM_EMAIL = env(
     default="FOG Direct <noreply@localhost>"
 )
 SERVER_EMAIL = DEFAULT_FROM_EMAIL
-
 
 CELERY_BROKER_URL = env(
     "CELERY_BROKER_URL",
@@ -224,13 +221,11 @@ CELERY_BEAT_SCHEDULE = {
                      "schedule": crontab(hour=8, minute=0)},
 }
 
-
 CKEDITOR_5_CONFIGS = BASE_CKEDITOR_5_CONFIGS
 CONSTANCE_BACKEND = "constance.backends.database.DatabaseBackend"
 CONSTANCE_IGNORE_ADMIN_VERSION_CHECK = True
 CONSTANCE_ADDITIONAL_FIELDS = CUSTOM_UNFOLD_CONSTANCE_ADDITIONAL_FIELDS
 UNFOLD = {**UNFOLD_SETTINGS, "SITE_URL": FRONTEND_URL}
-
 
 LOG_LEVEL = env("LOG_LEVEL", default="INFO").upper()
 LOG_FILE = env("LOG_FILE", default="")

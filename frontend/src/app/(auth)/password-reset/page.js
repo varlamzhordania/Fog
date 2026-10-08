@@ -2,20 +2,29 @@
 
 import {useState} from "react";
 import Link from "next/link";
-import {Button, Typography} from "@heroui/react";
-import {AlertCircle, ArrowLeft, CheckCircle, Mail} from "lucide-react";
+import {
+    Button,
+    Card,
+    FieldError,
+    Form,
+    Input,
+    Label,
+    Separator,
+    TextField,
+    Typography,
+} from "@heroui/react";
+import {ArrowLeft, CheckCircle, Mail} from "lucide-react";
 import Icon from "@/components/icon/Icon";
 import {useRequestPasswordReset} from "@/queries/auth";
-
-const INPUT_CLASS =
-    "w-full rounded-lg border border-field-border bg-field-background px-3.5 py-2.5 text-sm text-field-foreground placeholder:text-field-placeholder focus:outline-none focus:ring-1 focus:ring-accent transition-shadow";
+import {validateEmail} from "@/lib/utils";
 
 export default function PasswordResetPage() {
-    const {mutate: requestReset, isPending, error, isSuccess} = useRequestPasswordReset();
+    const {mutate: requestReset, isPending, isSuccess} = useRequestPasswordReset();
     const [email, setEmail] = useState("");
 
     const handleSubmit = (e) => {
         e.preventDefault();
+
         requestReset({email});
     };
 
@@ -29,107 +38,140 @@ export default function PasswordResetPage() {
                         type="span"
                         className="font-atomic text-5xl uppercase tracking-tighter text-foreground"
                     >
-                        FOG
+                        FOG DIRECT
                     </Typography>
                 </Link>
-                <Typography type="body-sm" className="mt-1.5 block text-muted">
-                    Reset your password
-                </Typography>
             </div>
 
-            {/* Card */}
-            <div className="rounded-xl border border-border bg-surface p-8">
+            <Card>
+                <Card.Content className="p-2">
 
-                {isSuccess ? (
-                    /* Success state */
-                    <div className="flex flex-col items-center gap-4 py-4 text-center">
-                        <div className="flex size-14 items-center justify-center rounded-full border border-success/30 bg-success/10">
-                            <Icon icon={CheckCircle} className="size-7 text-success"/>
-                        </div>
-                        <div>
-                            <Typography type="h6" className="mb-1 text-sm font-semibold uppercase tracking-wide">
-                                Check Your Email
-                            </Typography>
-                            <Typography type="body-sm" className="text-xs text-muted leading-relaxed">
-                                If an account with <strong className="text-foreground">{email}</strong> exists,
-                                we&apos;ve sent a password reset link. Check your inbox and spam folder.
-                            </Typography>
-                        </div>
-                        <Typography type="small" className="text-xs text-muted/60">
-                            The link expires in 24 hours.
-                        </Typography>
-                        <Link
-                            href="/login"
-                            className="mt-2 flex items-center gap-1.5 text-xs text-accent hover:underline underline-offset-2"
-                        >
-                            <Icon icon={ArrowLeft} className="size-3.5"/>
-                            Back to sign in
-                        </Link>
-                    </div>
-                ) : (
-                    <>
-                        {/* Description */}
-                        <Typography type="body-sm" className="mb-6 text-xs text-muted leading-relaxed">
-                            Enter the email address associated with your account and we&apos;ll send
-                            you a link to reset your password.
-                        </Typography>
+                    {isSuccess ? (
+                        <>
+                            <div className="flex flex-col items-center gap-4 py-6 text-center">
+                                <div
+                                    className="flex size-14 items-center justify-center rounded-full border border-success/30 bg-success/10">
+                                    <Icon
+                                        icon={CheckCircle}
+                                        className="size-7 text-success"
+                                    />
+                                </div>
 
-                        {/* Error */}
-                        {error && (
-                            <div className="mb-5 flex items-start gap-2.5 rounded-lg border border-danger/30 bg-danger/10 p-3">
-                                <Icon icon={AlertCircle} className="size-4 shrink-0 text-danger mt-0.5"/>
-                                <Typography type="small" className="text-xs text-danger">
-                                    {error.message}
+                                <div>
+                                    <Typography
+                                        type="h6"
+                                        className="mb-1 text-sm font-semibold uppercase tracking-wide"
+                                    >
+                                        Check Your Email
+                                    </Typography>
+
+                                    <Typography
+                                        type="body-sm"
+                                        className="text-xs leading-relaxed text-muted"
+                                    >
+                                        If an account with{" "}
+                                        <strong className="text-foreground">
+                                            {email}
+                                        </strong>{" "}
+                                        exists, we&apos;ve sent a password reset link.
+                                        Check your inbox and spam folder.
+                                    </Typography>
+                                </div>
+
+                                <Typography
+                                    type="small"
+                                    className="text-xs text-muted/60"
+                                >
+                                    The link expires in 24 hours.
                                 </Typography>
                             </div>
-                        )}
 
-                        <form onSubmit={handleSubmit} className="flex flex-col gap-5">
+                            <Separator orientation="vertical"/>
 
-                            {/* Email */}
-                            <div className="flex flex-col gap-1.5">
-                                <label className="text-xs font-mono uppercase tracking-widest text-muted">
-                                    Email Address
-                                </label>
-                                <input
+                            <Typography
+                                type="small"
+                                className="flex justify-center text-center text-xs text-muted"
+                            >
+                                <Link
+                                    href="/login"
+                                    className="flex items-center gap-1.5 text-accent font-medium hover:underline underline-offset-2"
+                                >
+                                    <Icon icon={ArrowLeft} className="size-3.5"/>
+                                    Back to sign in
+                                </Link>
+                            </Typography>
+                        </>
+                    ) : (
+                        <>
+                            <Typography
+                                type="body-sm"
+                                className="mb-6 text-xs leading-relaxed text-muted"
+                            >
+                                Enter the email address associated with your account
+                                and we&apos;ll send you a link to reset your password.
+                            </Typography>
+
+                            {/*
+                             * If your mutation exposes an error, you can display it
+                             * through Form validation or a toast, matching RegisterPage.
+                             */}
+                            <Form
+                                onSubmit={handleSubmit}
+                                className="flex flex-col gap-5"
+                            >
+                                <TextField
+                                    isRequired
+                                    variant="secondary"
+                                    name="email"
                                     type="email"
-                                    required
-                                    autoComplete="email"
+                                    validate={(value) => {
+                                        return validateEmail(value)
+                                            ? "Please enter a valid email address"
+                                            : null;
+                                    }}
                                     value={email}
-                                    onChange={(e) => setEmail(e.target.value)}
-                                    placeholder="you@example.com"
-                                    className={INPUT_CLASS}
-                                />
-                            </div>
+                                    onChange={setEmail}
+                                >
+                                    <Label>Email</Label>
+                                    <Input
+                                        placeholder="john@example.com"
+                                        autoComplete="email"
+                                    />
+                                    <FieldError/>
+                                </TextField>
 
-                            {/* Submit */}
-                            <Button
-                                type="submit"
-                                isLoading={isPending}
-                                isDisabled={isPending}
-                                className="w-full gap-2"
+                                <Button
+                                    type="submit"
+                                    isPending={isPending}
+                                    isDisabled={isPending}
+                                    fullWidth
+                                >
+                                    <Icon icon={Mail} className="size-4"/>
+                                    {isPending
+                                        ? "Sending reset link..."
+                                        : "Send Reset Link"}
+                                </Button>
+                            </Form>
+
+                            <Separator orientation="vertical"/>
+
+                            <Typography
+                                type="small"
+                                className="text-center text-xs text-muted"
                             >
-                                <Icon icon={Mail} className="size-4"/>
-                                {isPending ? "Sending..." : "Send Reset Link"}
-                            </Button>
+                                Remember your password?{" "}
+                                <Link
+                                    href="/login"
+                                    className="text-accent font-medium hover:underline underline-offset-2"
+                                >
+                                    Sign in
+                                </Link>
+                            </Typography>
+                        </>
+                    )}
 
-                        </form>
-
-                        {/* Back to login */}
-                        <div className="mt-6 text-center">
-                            <Link
-                                href="/login"
-                                className="flex items-center justify-center gap-1.5 text-xs text-muted hover:text-foreground transition-colors"
-                            >
-                                <Icon icon={ArrowLeft} className="size-3.5"/>
-                                Back to sign in
-                            </Link>
-                        </div>
-                    </>
-                )}
-
-            </div>
-
+                </Card.Content>
+            </Card>
         </div>
     );
 }

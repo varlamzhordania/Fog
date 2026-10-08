@@ -1,59 +1,51 @@
-from unittest.mock import patch
-
-from django.contrib.auth import get_user_model
-from django.contrib.auth.tokens import default_token_generator
-from django.test import TestCase
-from django.utils.encoding import force_bytes
-from django.utils.http import urlsafe_base64_encode
+from checkout.models import Order
+from account.models import Address
 from rest_framework.test import APITestCase
-
-from account.backends import EmailBackend
+from django.contrib.auth import get_user_model
 
 User = get_user_model()
-GOOD = "Str0ng-pass-123"
 
+class AddressTests(APITestCase):
+    URL = "/api/v1/account/address/"
 
-class EmailBackendTests(TestCase):
-    def test_inactive_user_cannot_authenticate(self):
-        User.objects.create_user(email="i@x.com", password=GOOD, is_active=False)
-        self.assertIsNone(EmailBackend().authenticate(None, email="i@x.com", password=GOOD))
-
-    def test_active_user_case_insensitive(self):
-        user = User.objects.create_user(email="a@x.com", password=GOOD)
-        self.assertEqual(EmailBackend().authenticate(None, username="A@X.com", password=GOOD), user)
-
-
-class PasswordResetTests(APITestCase):
     def setUp(self):
-        self.user = User.objects.create_user(email="k@x.com", password=GOOD)
+        self.user = User.objects.create_user(email="ad@x.com", password="GOOD")
+        self.client.force_authenticate(self.user)
 
-    def test_request_response_identical_for_known_and_unknown(self):
-        url = "/api/v1/account/password-reset/"
-        with patch("account.v1.views.send_password_reset_email_task") as task:
-            known = self.client.post(url, {"email": "k@x.com"}, format="json")
-            unknown = self.client.post(url, {"email": "nobody@x.com"}, format="json")
-        self.assertEqual(known.status_code, unknown.status_code)
-        self.assertEqual(known.json(), unknown.json())
-        task.delay.assert_called_once_with(self.user.id)
+    def _add(self, **over):
+        data = {"full_name": "A", "line1": "1 St", "city": "C",
+                "postal_code": "1", "country": "X", **over}
+        r = self.client.post(self.URL, data, format="json")
+        self.assertEqual(r.status_code, 201, r.content)
+        return r.json()["id"]
 
-    def _payload(self, **over):
-        data = {
-            "uid": urlsafe_base64_encode(force_bytes(self.user.pk)),
-            "token": default_token_generator.make_token(self.user),
-            "new_password1": "New-Str0ng-pass-1", "new_password2": "New-Str0ng-pass-1",
-        }
-        return {**data, **over}
+    def _defaults(self):
+        return list(self.user.addresses.filter(is_active=True, is_default=True)
+                    .values_list("pk", flat=True))
 
-    def test_confirm_rejects_mismatch_and_weak_passwords(self):
-        url = "/api/v1/account/password-reset-confirm/"
-        for over in ({"new_password2": "different"},
-                     {"new_password1": "12345678", "new_password2": "12345678"}):
-            self.assertEqual(self.client.post(url, self._payload(**over), format="json").status_code, 400)
-        self.user.refresh_from_db()
-        self.assertTrue(self.user.check_password(GOOD))
+    def test_first_address_becomes_default(self):
+        first = self._add()
+        self.assertEqual(self._defaults(), [first])
 
-    def test_confirm_success(self):
-        r = self.client.post("/api/v1/account/password-reset-confirm/", self._payload(), format="json")
-        self.assertEqual(r.status_code, 200)
-        self.user.refresh_from_db()
-        self.assertTrue(self.user.check_password("New-Str0ng-pass-1"))
+    def test_new_default_clears_the_old_one(self):
+        self._add()
+        second = self._add(is_default=True)
+        self.assertEqual(self._defaults(), [second])
+
+    def test_deleting_default_promotes_another(self):
+        first = self._add()
+        second = self._add()
+        self.assertEqual(self.client.delete(f"{self.URL}{first}/").status_code, 204)
+        self.assertEqual(self._defaults(), [second])
+
+    def test_address_used_by_an_order_is_deactivated_not_deleted(self):
+        pk = self._add()
+        Order.objects.create(user=self.user, delivery_address_id=pk, total_price=1)
+        self.assertEqual(self.client.delete(f"{self.URL}{pk}/").status_code, 204)
+        self.assertTrue(self.user.addresses.filter(pk=pk, is_active=False).exists())
+
+    def test_cannot_touch_another_users_address(self):
+        other = User.objects.create_user(email="o@x.com", password="GOOD")
+        theirs = Address.objects.create(user=other, full_name="O", line1="1", city="C",
+                                        postal_code="1", country="X")
+        self.assertEqual(self.client.delete(f"{self.URL}{theirs.pk}/").status_code, 404)

@@ -57,7 +57,7 @@ export function useLogin() {
 
     return useMutation({
         mutationFn: ({email, password}) =>
-            authFetch("/api/auth/login", {email, password}),
+            authFetch("/api/auth/login/", {email, password}),
 
         onSuccess: ({access_token, user}) => {
             setAuth({access_token, user});
@@ -71,7 +71,7 @@ export function useRegister() {
 
     return useMutation({
         mutationFn: (formData) =>
-            authFetch("/api/auth/register", formData),
+            authFetch("/api/auth/register/", formData),
 
         onSuccess: ({access_token, expires_in, user}) => {
             if (access_token) {
@@ -87,7 +87,7 @@ export function useLogout() {
 
     return useMutation({
         mutationFn: () =>
-            authFetch("/api/auth/logout", undefined, "GET"),
+            authFetch("/api/auth/logout/", undefined, "GET"),
 
         onSuccess: () => {
             clearAuth();
@@ -103,14 +103,14 @@ export function useLogout() {
 export function useRequestPasswordReset() {
     return useMutation({
         mutationFn: ({email}) =>
-            authFetch("/api/auth/password-reset", {email}),
+            authFetch("/api/auth/password-reset/", {email}),
     });
 }
 
 export function useConfirmPasswordReset() {
     return useMutation({
         mutationFn: ({uid, token, new_password1, new_password2}) =>
-            authFetch("/api/auth/password-reset-confirm", {
+            authFetch("/api/auth/password-reset-confirm/", {
                 uid,
                 token,
                 new_password1,

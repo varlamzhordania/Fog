@@ -8,14 +8,13 @@ from django.urls import reverse
 from django.utils import timezone
 
 from core.logging import get_logger
+from core.branding import APP_NAME
 from checkout.models import Order, OrderNotification as N
 
 log = get_logger(__name__)
 
 CUSTOMER, ADMIN = N.Audience.CUSTOMER, N.Audience.ADMIN
-APP_NAME = "FOG Direct"
 
-# event -> audience -> (subject, headline, intro). Subjects are deliberately neutral.
 SPEC = {
     "order_created": {
         CUSTOMER: ("Order #{id} received", "We received your order",

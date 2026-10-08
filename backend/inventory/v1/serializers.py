@@ -18,35 +18,43 @@ class CategorySerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Category
-        fields = [
-            'id',
-            'name',
-            'slug',
-            'description',
-            'img',
-            'is_featured',
-            'is_filterable',
-            'children',
-        ]
+        fields = ["id", "name", "slug", "description", "img",
+                  "is_featured", "is_filterable", "children"]
 
     def get_img(self, obj):
-        if hasattr(obj, 'img') and obj.img and hasattr(
-                obj.img,
-                'file'
-        ) and obj.img.file:
-            request = self.context.get('request')
-            if request:
-                return request.build_absolute_uri(obj.img.file.url)
-            return obj.img.file.url
-        return None
+        media = obj.img
+        if not (media and media.file):
+            return None
+        request = self.context.get("request")
+        url = media.file.url
+        return request.build_absolute_uri(url) if request else url
 
     def get_children(self, obj):
-        children = obj.get_children().filter(is_active=True)
+        lookups = self.context.get("category_lookups")
+        if lookups is None:
+            kids = obj.get_children().filter(is_active=True)
+        else:
+            kids = lookups["children"].get(obj.path, [])
         return CategorySerializer(
-            children,
+            kids,
             many=True,
             context=self.context
-        ).data
+            ).data
+
+
+class CategoryMinimalSerializer(serializers.ModelSerializer):
+    breadcrumb = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Category
+        fields = ["id", "name", "slug", "breadcrumb"]
+        read_only_fields = fields
+
+    def get_breadcrumb(self, obj):
+        lookups = self.context.get("category_lookups")
+        if lookups and obj.pk in lookups["breadcrumbs"]:
+            return lookups["breadcrumbs"][obj.pk]
+        return obj.get_breadcrumb()
 
 
 class TagSerializer(serializers.ModelSerializer):

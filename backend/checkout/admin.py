@@ -1,16 +1,17 @@
 from django.contrib import admin as django_admin
+from django.http import Http404
 from django.urls import NoReverseMatch, reverse
 from django.utils import timezone
 from django.utils.html import format_html
 from django.utils.translation import gettext_lazy as _
-from unfold import admin
-from unfold.decorators import display, action
 from django.contrib import messages
 from rest_framework.exceptions import APIException
+from unfold.decorators import display, action
+from unfold import admin
+
 from checkout.services.fulfilment import FulfilmentService
 from checkout.services.orders import OrderService
 from checkout.services.payments import PaymentService
-
 from inventory.models import StockReservation
 from core.admin import UnfoldImportExportHistoryAdmin
 
@@ -43,6 +44,12 @@ def run_on_orders(modeladmin, request, order_ids, fn, success):
             modeladmin.message_user(
                 request,
                 f"Order #{order_id}: {exc.detail}",
+                level=messages.ERROR
+            )
+        except Http404:
+            modeladmin.message_user(
+                request,
+                f"Order #{order_id} no longer exists.",
                 level=messages.ERROR
             )
     if done:
@@ -188,7 +195,7 @@ class ShoppingCartAdmin(UnfoldImportExportHistoryAdmin):
     resource_classes = [ShoppingCartResource]
     list_display = ["id_short", "customer_display", "items_count",
                     "created_at"]
-    search_fields = ["user__username", "user__email", "user__first_name",
+    search_fields = ["user__email", "user__first_name",
                      "user__last_name"]
     readonly_fields = ["created_at", "updated_at"]
     inlines = [ShoppingCartItemInline]
@@ -196,7 +203,7 @@ class ShoppingCartAdmin(UnfoldImportExportHistoryAdmin):
 
     @django_admin.display(description=_("Cart ID"))
     def id_short(self, obj):
-        return str(obj.id)[:8]
+        return obj.id
 
     @django_admin.display(description=_("Customer"))
     def customer_display(self, obj):
@@ -235,7 +242,6 @@ class OrderAdmin(UnfoldImportExportHistoryAdmin):
     search_fields = [
         "id",
         "user__email",
-        "user__username",
         "user__first_name",
         "user__last_name",
         "payment__transaction_id",
@@ -279,7 +285,7 @@ class OrderAdmin(UnfoldImportExportHistoryAdmin):
     def id_short(self, obj):
         return format_html(
             '<span class="font-mono font-semibold">#{}</span>',
-            str(obj.id)[:8]
+            obj.id
         )
 
     @django_admin.display(description=_("Customer"))
@@ -356,8 +362,11 @@ class OrderAdmin(UnfoldImportExportHistoryAdmin):
     @action(description=_("Start processing"))
     def mark_processing(self, request, queryset):
         run_on_orders(
-            self, request, [o.pk for o in queryset],
-            FulfilmentService.start_processing, "{n} order(s) now processing."
+            self,
+            request,
+            [o.pk for o in queryset],
+            FulfilmentService.start_processing,
+            "{n} order(s) now processing."
         )
 
     @action(description=_("Mark as shipped"))
@@ -443,7 +452,7 @@ class OrderPaymentAdmin(UnfoldImportExportHistoryAdmin):
             return format_html(
                 '<a href="{}" class="font-semibold text-primary-600 underline">Order #{}</a>',
                 url,
-                str(obj.order.id)[:8],
+                obj.order.id,
             )
         except (NoReverseMatch, AttributeError):
             return f"Order #{str(obj.order.id)[:8]}"
@@ -581,7 +590,7 @@ class OrderShipmentAdmin(UnfoldImportExportHistoryAdmin):
             self,
             request,
             [s.order_id for s in queryset],
-            OrderService.mark_shipped,
+            FulfilmentService.mark_shipped,
             "Marked {n} shipment(s) as in transit."
         )
 
@@ -595,11 +604,14 @@ class OrderShipmentAdmin(UnfoldImportExportHistoryAdmin):
             "Marked {n} shipment(s) as delivered."
         )
 
+
 @django_admin.register(PaymentAttempt)
 class PaymentAttemptAdmin(admin.ModelAdmin):
-    list_display = ["payment", "number", "provider", "method", "status", "transaction_id", "created_at"]
+    list_display = ["payment", "number", "provider", "method", "status",
+                    "transaction_id", "created_at"]
     list_filter = ["status", "provider", "method"]
-    search_fields = ["payment__order__id", "provider_reference", "transaction_id"]
+    search_fields = ["payment__order__id", "provider_reference",
+                     "transaction_id"]
     readonly_fields = [f.name for f in PaymentAttempt._meta.fields]
 
     def has_add_permission(self, request):
@@ -608,7 +620,8 @@ class PaymentAttemptAdmin(admin.ModelAdmin):
 
 @django_admin.register(OrderNotification)
 class OrderNotificationAdmin(admin.ModelAdmin):
-    list_display = ["order", "event", "audience", "status", "recipients", "sent_at"]
+    list_display = ["order", "event", "audience", "status", "recipients",
+                    "sent_at"]
     list_filter = ["status", "audience", "event"]
     search_fields = ["order__id", "recipients", "subject"]
     readonly_fields = [f.name for f in OrderNotification._meta.fields]

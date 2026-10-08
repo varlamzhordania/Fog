@@ -14,6 +14,7 @@ from checkout.services.orders import OrderService
 from core.logging import get_logger
 from core.logging.audit import audit, audit_on_commit
 from inventory.models import ProductStock, StockTransactionLog
+from inventory.services.stock import StockService
 
 log = get_logger(__name__)
 _EXPIRED = "The payment window expired and the order was cancelled."
@@ -123,7 +124,7 @@ class PaymentService:
             if order.status != S.PAYMENT:
                 raise CheckoutError("This order is not awaiting payment.")
             for reservation in order.stock_reservations.filter(status=ACTIVE):
-                reservation.commit()
+                StockService.commit(reservation)
             order.payment.mark_completed(transaction_id)
             attempts.close(order.payment, attempts.S.SUCCEEDED, transaction_id=transaction_id)
             OrderShipment.objects.get_or_create(order=order)
@@ -206,7 +207,7 @@ class PaymentService:
             with transaction.atomic():
                 order = lock_order(order_id)
                 cls._assert_refundable(order)
-                cls._restock(order, performed_by)
+                StockService.restock(order, performed_by)
                 payment = order.payment
                 payment.status = P.REFUNDED
                 payment.save(update_fields=["status", "updated_at"])
@@ -225,17 +226,3 @@ class PaymentService:
         audit("order.refunded", order_id=order_id, automatic=automatic,
               by=getattr(performed_by, "pk", None))
         return order
-
-    @staticmethod
-    def _restock(order, performed_by):
-        for item in order.items.all():
-            stock = ProductStock.objects.filter(product_id=item.product_id).first()
-            if not stock:
-                continue
-            ProductStock.objects.filter(pk=stock.pk).update(quantity=F("quantity") + item.quantity)
-            StockTransactionLog.objects.create(
-                product_stock=stock,
-                action=StockTransactionLog.ActionChoices.RESTOCK,
-                quantity=item.quantity, performed_by=performed_by,
-                note=f"Order #{order.id} refunded before dispatch: units returned to stock.",
-            )

@@ -1,9 +1,8 @@
 import uuid
-from decimal import Decimal,ROUND_HALF_UP
+from decimal import Decimal, ROUND_HALF_UP
 from datetime import timedelta
 
-from django.db import models, transaction
-from django.db.models import F
+from django.db import models
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 from django.core.validators import MinValueValidator
@@ -458,11 +457,6 @@ class ProductStock(BaseModel):
 
 
 class StockReservation(BaseModel):
-    """
-    Temporarily locks inventory units for an order during the 60-minute crypto payment window.
-    Releases automatically via Celery beat if the deposit address is unfunded upon expiration.
-    """
-
     class ReservationStatus(models.TextChoices):
         ACTIVE = "active", _("Active Hold")
         COMMITTED = "committed", _("Committed (Paid)")
@@ -514,45 +508,6 @@ class StockReservation(BaseModel):
         if not self.expires_at:
             self.expires_at = timezone.now() + timedelta(minutes=60)
         super().save(*args, **kwargs)
-
-    @transaction.atomic
-    def release(self, reason: str = "Crypto payment window expired"):
-        """Releases locked stock back to general availability."""
-        if self.status != self.ReservationStatus.ACTIVE:
-            return
-
-        ProductStock.objects.filter(id=self.product_stock_id).update(
-            reserved_quantity=F("reserved_quantity") - self.quantity
-        )
-        self.status = self.ReservationStatus.RELEASED
-        self.save(update_fields=["status", "updated_at"])
-
-        StockTransactionLog.objects.create(
-            product_stock=self.product_stock,
-            action=StockTransactionLog.ActionChoices.RELEASE_RESERVATION,
-            quantity=self.quantity,
-            note=f"Reservation {self.id} released: {reason}",
-        )
-
-    @transaction.atomic
-    def commit(self):
-        """Deducts stock permanently once the cryptocurrency transaction is confirmed."""
-        if self.status != self.ReservationStatus.ACTIVE:
-            return
-
-        ProductStock.objects.filter(id=self.product_stock_id).update(
-            quantity=F("quantity") - self.quantity,
-            reserved_quantity=F("reserved_quantity") - self.quantity,
-        )
-        self.status = self.ReservationStatus.COMMITTED
-        self.save(update_fields=["status", "updated_at"])
-
-        StockTransactionLog.objects.create(
-            product_stock=self.product_stock,
-            action=StockTransactionLog.ActionChoices.ORDER_DEDUCTION,
-            quantity=self.quantity,
-            note=f"Reservation {self.id} committed for Order #{self.order.id}",
-        )
 
 
 class StockTransactionLog(BaseModel):

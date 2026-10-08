@@ -1,6 +1,5 @@
 from drf_spectacular.utils import extend_schema, OpenApiResponse
 from rest_framework import status
-from rest_framework.exceptions import PermissionDenied
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.views import APIView
@@ -8,11 +7,12 @@ from rest_framework.generics import RetrieveUpdateAPIView
 from rest_framework.viewsets import ModelViewSet
 from django.db import transaction
 
-from account.models import Address, User
-from checkout.models import Order
 from core.api.mixins import OptionalPaginationMixin
 from core.logging import get_logger
 from core.logging.audit import audit
+from account.models import Address, User
+from account.services.addresses import AddressService
+from account.tasks import send_password_reset_email_task
 
 from .serializers import (
     UserSerializer,
@@ -21,7 +21,7 @@ from .serializers import (
     PasswordResetRequestSerializer,
     PasswordResetConfirmSerializer, UserRegisterSerializer,
 )
-from account.tasks import send_password_reset_email_task
+
 
 
 log = get_logger(__name__)
@@ -89,61 +89,16 @@ class AddressViewSet(OptionalPaginationMixin, ModelViewSet):
     permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
-        """Only return addresses for the authenticated user."""
-        return Address.objects.filter(
-            user=self.request.user,
-            is_active=True
-        )
+        return Address.objects.filter(user=self.request.user, is_active=True)
 
     def perform_create(self, serializer):
-        """Ensure the address is always created for the authenticated user."""
-        serializer.save(user=self.request.user)
+        AddressService.create(self.request.user, serializer)
 
     def perform_update(self, serializer):
-        """Prevent updating someone else's address."""
-        if serializer.instance.user != self.request.user:
-            raise PermissionDenied(
-                "You do not have permission to edit this address."
-            )
-        serializer.save()
+        AddressService.update(serializer)
 
     def perform_destroy(self, instance):
-        """Prevent deleting someone else's address."""
-        if instance.user != self.request.user:
-            raise PermissionDenied(
-                "You do not have permission to delete this address."
-            )
-        instance.delete()
-
-    def destroy(self, request, *args, **kwargs):
-        instance = self.get_object()
-
-        # Ownership check
-        if instance.user != request.user:
-            raise PermissionDenied(
-                "You do not have permission to delete this address."
-            )
-
-        address_in_use = Order.objects.filter(
-            delivery_address=instance
-        ).exists()
-
-        if address_in_use:
-            # Soft delete
-            instance.is_active = False
-            instance.save(update_fields=["is_active"])
-            return Response(
-                {
-                    "detail": "Address is in use and has been deactivated instead of deleted."},
-                status=status.HTTP_200_OK
-            )
-
-        # Hard delete
-        instance.delete()
-        return Response(
-            {"detail": "Address deleted successfully."},
-            status=status.HTTP_204_NO_CONTENT
-        )
+        AddressService.remove(instance)
 
 
 @extend_schema(
