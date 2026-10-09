@@ -127,8 +127,9 @@
                 <h2 class="fog-card-title">{% trans "Latest orders" %}</h2>
                 <p class="fog-card-note">{% trans "Most recent first" %}</p>
             </div>
-            <a class="fog-link" href="{% url 'admin:checkout_order_changelist' %}">{% trans "View
-                all" %}</a>
+            <a class="fog-link" href="{% url 'admin:checkout_order_changelist' %}">
+                {% trans "View all" %}
+            </a>
         </header>
         {% if recent_orders %}
         <div class="fog-table-scroll">
