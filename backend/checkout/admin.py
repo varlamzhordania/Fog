@@ -66,20 +66,24 @@ class ShoppingCartItemInline(admin.TabularInline):
 class OrderItemInline(admin.TabularInline):
     model = OrderItem
     extra = 0
+    can_delete = False
     fields = ["product", "quantity", "unit_price", "total_price"]
-    readonly_fields = ["total_price"]
+    readonly_fields = fields
+
+    def has_add_permission(self, request, obj=None):
+        return False
 
 
 class OrderPaymentInline(admin.StackedInline):
     model = OrderPayment
     extra = 0
     can_delete = False
-    fields = [
-        ("provider", "method", "status"),
-        ("amount", "transaction_id"),
-        "paid_at",
-    ]
-    readonly_fields = ["paid_at", "status"]
+    fields = [("provider", "method", "status"),
+              ("amount", "transaction_id"), "paid_at"]
+    readonly_fields = ["provider","method","status","amount","transaction_id","paid_at"]
+
+    def has_add_permission(self, request, obj=None):
+        return False
 
 
 class OrderShipmentInline(admin.StackedInline):
@@ -92,7 +96,7 @@ class OrderShipmentInline(admin.StackedInline):
         ("shipped_at", "delivered_at"),
         "notes",
     ]
-    readonly_fields = ["shipped_at", "delivered_at"]
+    readonly_fields = ["status", "shipped_at", "delivered_at"]
 
 
 class OrderStockReservationInline(admin.TabularInline):
@@ -278,11 +282,11 @@ class OrderAdmin(UnfoldImportExportHistoryAdmin):
         "payment__transaction_id",
         "shipment__tracking_number",
     ]
-    readonly_fields = ["id", "created_at", "updated_at", "subtotal",
-                       "tax_amount", "tax_rate", "tax_name",
+    readonly_fields = ["id", "user", "delivery_address", "status",
+                       "total_price", "created_at", "updated_at",
+                       "subtotal", "tax_amount", "tax_rate", "tax_name",
                        "tax_included", "shipping_method_name",
-                       "shipping_cost"
-                       ]
+                       "shipping_cost"]
     ordering = ["-created_at"]
 
     fieldsets = [
@@ -318,6 +322,12 @@ class OrderAdmin(UnfoldImportExportHistoryAdmin):
     actions = ["confirm_payment_manually", "mark_processing",
                "mark_shipped",
                "mark_delivered", "refund_orders", "cancel_unpaid"]
+
+    def has_add_permission(self, request):
+        return False
+
+    def has_delete_permission(self, request, obj=None):
+        return request.user.is_superuser
 
     @django_admin.display(description=_("Order #"))
     def id_short(self, obj):
@@ -453,8 +463,10 @@ class OrderPaymentAdmin(UnfoldImportExportHistoryAdmin):
     list_filter = ["status", "provider", "method", "created_at"]
     search_fields = ["order__id", "transaction_id", "method",
                      "provider_reference"]
-    readonly_fields = ["created_at", "updated_at", "paid_at",
-                       "provider_reference", "provider_data"]
+    readonly_fields = ["order", "method", "amount", "status",
+                       "transaction_id", "paid_at",
+                       "created_at", "updated_at", "provider_reference",
+                       "provider_data"]
     actions = ["mark_as_completed", "mark_as_failed"]
 
     fieldsets = [
@@ -479,6 +491,9 @@ class OrderPaymentAdmin(UnfoldImportExportHistoryAdmin):
             },
         ),
     ]
+
+    def has_add_permission(self, request):
+        return False
 
     @display(description=_("Order"))
     def order_link(self, obj):
@@ -559,8 +574,8 @@ class OrderShipmentAdmin(UnfoldImportExportHistoryAdmin):
     ]
     list_filter = ["status", "carrier", "created_at"]
     search_fields = ["order__id", "tracking_number", "carrier", "notes"]
-    readonly_fields = ["shipped_at", "delivered_at", "created_at",
-                       "updated_at"]
+    readonly_fields = ["status", "shipped_at", "delivered_at",
+                       "created_at", "updated_at"]
     actions = ["mark_as_shipped_action", "mark_as_delivered_action"]
 
     fieldsets = [

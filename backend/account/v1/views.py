@@ -8,6 +8,7 @@ from rest_framework.viewsets import ModelViewSet
 from django.db import transaction
 
 from core.api.mixins import OptionalPaginationMixin
+from core.api.throttling import PasswordResetEmailThrottle
 from core.logging import get_logger
 from core.logging.audit import audit
 from account.models import Address, User
@@ -117,6 +118,7 @@ class AddressViewSet(OptionalPaginationMixin, ModelViewSet):
 )
 class PasswordResetRequestView(APIView):
     permission_classes = [AllowAny]
+    throttle_classes = [PasswordResetEmailThrottle]
 
     def post(self, request):
         serializer = PasswordResetRequestSerializer(data=request.data)

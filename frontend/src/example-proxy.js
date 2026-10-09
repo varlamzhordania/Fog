@@ -7,8 +7,9 @@ export const config = {
   matcher: ["/((?!_next/|media/|api/|.*\.[\w]+$).*)"],
 };
 
-export function proxy(request) {
+export function exampleProxy(request) {
   const headers = new Headers(request.headers);
 
   return NextResponse.next({ request: { headers } });
 }
+

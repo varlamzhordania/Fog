@@ -18,7 +18,6 @@ export default function AppInitializer({children}) {
     const {data, isError: userIsError} = useCurrentUser();
 
     useEffect(() => {
-        useAuthStore.persist.rehydrate();
         useCartStore.persist.rehydrate();
         useThemeStore.persist.rehydrate();
     }, []);

@@ -2,7 +2,11 @@
 <header class="fog-card-head">
     <div>
         <h2 class="fog-card-title">{% trans "Contact messages" %}</h2>
-        <p class="fog-card-note">{% blocktrans count n=contacts_open %}{{ n }} message waiting for a reply{% plural %}{{ n }} messages waiting for a reply{% endblocktrans %}</p>
+        <p class="fog-card-note">
+            {% blocktrans count n=contacts_open %}
+            {{ n }} message waiting for a reply{% plural %}{{ n }} messages waiting for a reply
+            {% endblocktrans %}
+        </p>
     </div>
     <div class="fog-controls" hx-target="#dash-contacts" hx-swap="innerHTML">
         <nav class="fog-segmented" aria-label="{% trans 'Filter messages' %}">

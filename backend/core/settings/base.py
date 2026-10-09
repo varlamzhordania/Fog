@@ -140,6 +140,14 @@ REST_FRAMEWORK = {
     "PAGE_SIZE": 25,
     "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
     "EXCEPTION_HANDLER": "core.api.exception_handler.exception_handler",
+    "DEFAULT_THROTTLE_RATES": {"password_reset_email": "3/hour"},
+}
+
+OAUTH2_PROVIDER = {
+    "ACCESS_TOKEN_EXPIRE_SECONDS": 60 * 60,            # 1 hour
+    "REFRESH_TOKEN_EXPIRE_SECONDS": 60 * 60 * 24 * 7,  # same as the 7-day cookie
+    "ROTATE_REFRESH_TOKEN": True,
+    "REFRESH_TOKEN_GRACE_PERIOD_SECONDS": 60,          # tolerate two tabs refreshing together
 }
 
 SPECTACULAR_SETTINGS = {
@@ -219,6 +227,9 @@ CELERY_BEAT_SCHEDULE = {
         "schedule": 300.0},
     "admin-digest": {"task": "checkout.tasks.send_admin_digest",
                      "schedule": crontab(hour=8, minute=0)},
+    "clear-oauth-tokens": {
+        "task": "account.tasks.clear_expired_oauth_tokens",
+        "schedule": crontab(hour=3, minute=30)},
 }
 
 CKEDITOR_5_CONFIGS = BASE_CKEDITOR_5_CONFIGS

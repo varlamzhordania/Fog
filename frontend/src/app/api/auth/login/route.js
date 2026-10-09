@@ -1,5 +1,6 @@
 import {NextResponse} from "next/server";
 import {loginWithPassword, retrieveSelf} from "@/lib/api/auth";
+import {setAuthCookies} from "@/lib/auth-cookies";
 
 const AUTH_CLIENT_ID = process.env.AUTH_CLIENT_ID;
 const AUTH_CLIENT_SECRET = process.env.AUTH_CLIENT_SECRET;
@@ -38,23 +39,8 @@ export async function POST(request) {
             {status: 200}
         );
 
-        const secure = process.env.NODE_ENV === "production";
 
-        response.cookies.set("access_token", access_token, {
-            httpOnly: true,
-            sameSite: "lax",
-            secure,
-            path: "/",
-            maxAge: expires_in,
-        });
-
-        response.cookies.set("refresh_token", refresh_token, {
-            httpOnly: true,
-            sameSite: "lax",
-            secure,
-            path: "/",
-            maxAge: 60 * 60 * 24 * 7, // 7 days
-        });
+        setAuthCookies(response, {access_token, refresh_token, expires_in})
 
         return response;
     } catch (e) {

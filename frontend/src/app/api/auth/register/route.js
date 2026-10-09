@@ -2,6 +2,7 @@ import {NextResponse} from "next/server";
 import {serverFetch} from "@/lib/api/server";
 import {loginWithPassword, retrieveSelf} from "@/lib/api/auth";
 import {API_ENDPOINTS} from "@/lib/config";
+import {setAuthCookies} from "@/lib/auth-cookies";
 
 const AUTH_CLIENT_ID = process.env.AUTH_CLIENT_ID;
 const AUTH_CLIENT_SECRET = process.env.AUTH_CLIENT_SECRET;
@@ -43,28 +44,13 @@ export async function POST(request) {
 
         const user = await retrieveSelf(access_token);
 
-        const secure = process.env.NODE_ENV === "production";
 
         const response = NextResponse.json(
             {access_token, expires_in, user},
             {status: 201}
         );
 
-        response.cookies.set("access_token", access_token, {
-            httpOnly: true,
-            sameSite: "lax",
-            secure,
-            path: "/",
-            maxAge: expires_in,
-        });
-
-        response.cookies.set("refresh_token", refresh_token, {
-            httpOnly: true,
-            sameSite: "lax",
-            secure,
-            path: "/",
-            maxAge: 60 * 60 * 24 * 7,
-        });
+        setAuthCookies(response, {access_token, refresh_token, expires_in})
 
         return response;
     } catch (e) {

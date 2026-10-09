@@ -11,6 +11,7 @@ from django_ckeditor_5.fields import CKEditor5Field
 from treebeard.mp_tree import MP_Node
 from autoslug import AutoSlugField
 
+from core.html import clean_html
 from core.models import BaseModel, UploadPath, FileSizeValidator
 
 User = get_user_model()
@@ -335,6 +336,10 @@ class Product(BaseModel):
             models.Index(fields=["product_type"]),
             models.Index(fields=["is_active"]),
         ]
+
+    def save(self, *args, **kwargs):
+        self.description = clean_html(self.description)
+        super().save(*args, **kwargs)
 
     def __str__(self):
         return f"{self.name} ({self.sku})"

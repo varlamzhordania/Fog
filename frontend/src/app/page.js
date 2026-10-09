@@ -21,7 +21,7 @@ import BackgroundImage from "@/components/BackgroundImage";
 import DealsBand from "@/components/bands/DealsBand";
 import ResearchBand from "@/components/bands/ResearchBand";
 import React from "react";
-import {Deals, LastFew, NewArrivals} from "@/components/home/HomeSections";
+import {BestSellers, Deals, LastFew, NewArrivals} from "@/components/home/HomeSections";
 
 const RESEARCH_URL = process.env.NEXT_PUBLIC_RESEARCH_URL;
 const btnPrimary = "inline-flex items-center gap-2 rounded-full bg-accent px-6 py-3 font-medium text-accent-foreground no-underline transition-opacity hover:opacity-90";
@@ -81,14 +81,27 @@ export default function Home() {
             <CategoriesShowCase title="Shop by category"/>
 
             <section className="container">
-                <FeaturedProducts title="Featured products" featured/>
+                <FeaturedProducts
+                    title="hand picked"
+                    cardVariant="image"
+                    page_size={12}
+                    slidesPerView={1.15}
+                    breakpoints={{
+                        640: {slidesPerView: 1.5, spaceBetween: 16},
+                        768: {slidesPerView: 2, spaceBetween: 20},
+                        1024: {slidesPerView: 3, spaceBetween: 24},
+                    }}
+                    showDescription={false}
+                    cardHeight="min-h-85"
+                    actionLabel="Show Now"
+                />
             </section>
 
             <DealsBand/>
 
             <NewArrivals/>
 
-            <ShopByNeed/>
+            <BestSellers/>
 
             <Deals/>
 
@@ -136,58 +149,6 @@ function TrustStrip() {
             </ul>
         </section>
     );
-}
-
-function ShopByNeed() {
-    const tiles = [{
-        title: "Start growing",
-        text: "Ready-to-fruit blocks and log kits for first harvests at home.",
-        href: "/products?category=fruiting-blocks", // IMAGE: Blue oyster mushrooms fruiting from a grow block on a kitchen counter,
-        // warm daylight, wide 16:10 crop, empty space on the left for text.
-    }, {
-        title: "Extracts and powders",
-        text: "Dual extracts and micronized powders with batch documentation.",
-        href: "/products?category=dual-extracts", // IMAGE: Row of three amber dropper bottles and a small bowl of fine mushroom powder,
-        // moody dark backdrop, wide 16:10 crop.
-    }, {
-        title: "Lab and microscopy",
-        text: "Sterile media, slides and tools for the bench.",
-        href: "/products?category=microscopy-tools", // IMAGE: Compound microscope with prepared spore slides and petri dishes on a clean
-        // lab bench, cool light, wide 16:10 crop.
-    },];
-
-    return (<section className="container container-space">
-        <div className="mb-6 flex flex-row items-center justify-between gap-4">
-            <Typography
-                type="h3"
-                className="text-2xl font-bold uppercase tracking-tight text-accent/80 lg:text-4xl 2xl:text-5xl"
-            >
-                find what you neeed
-            </Typography>
-        </div>
-
-        <div className="grid gap-4 md:grid-cols-3">
-            {tiles.map((tile) => (<Link
-                key={tile.title}
-                href={tile.href}
-                className="group relative flex min-h-85 flex-col justify-end overflow-hidden rounded-3xl bg-default p-6 no-underline"
-            >
-                {/* Place the tile image here as a next/image with `fill` and object-cover. */}
-                <div
-                    className="absolute inset-0 bg-linear-to-t from-black/75 via-black/20 to-transparent"/>
-                <div className="relative text-white">
-                    <p className="text-xl font-semibold">{tile.title}</p>
-                    <p className="mt-1 text-sm text-white/80">{tile.text}</p>
-                    <span
-                        className="mt-4 inline-flex items-center gap-2 text-sm font-medium">
-                                Shop now
-                                <Icon icon={ArrowRight}
-                                      className="size-4 transition-transform group-hover:translate-x-1"/>
-                            </span>
-                </div>
-            </Link>))}
-        </div>
-    </section>);
 }
 
 function HowItWorks() {

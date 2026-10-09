@@ -24,19 +24,8 @@ def update_last_ip_address(sender, request, user, **kwargs):
                      0] or request.META.get('REMOTE_ADDR')
 
     if not ip_address:
-        log.warning(
-            f"User {user.pk} logged in, but no IP address found in request."
-        )
         return
 
     if user.last_ip != ip_address:
         user.last_ip = ip_address
         user.save(update_fields=['last_ip'])
-
-        log.info(
-            f"User {user.pk} IP address updated to {ip_address}."
-        )
-    else:
-        log.info(
-            f"User {user.pk} logged in from the same IP address: {ip_address}."
-        )

@@ -5,6 +5,8 @@ from django.utils.translation import gettext_lazy as _
 from unfold.contrib.constance.settings import \
     UNFOLD_CONSTANCE_ADDITIONAL_FIELDS
 
+from core.permissions import is_store_admin
+
 
 # ------------------------------------------------------------------------------
 # Navigation helpers
@@ -21,6 +23,10 @@ changelist = lazy(_changelist_url, str)
 
 def superuser_only(request):
     return request.user.is_superuser
+
+
+def store_admin_only(request):
+    return is_store_admin(request.user)
 
 
 def can_view(model):
@@ -301,6 +307,7 @@ UNFOLD_SETTINGS = {
                         "title": _("Analytics"),
                         "icon": "insights",
                         "link": reverse_lazy("admin-analytics"),
+                        "permission": store_admin_only,
                     },
                 ],
             },

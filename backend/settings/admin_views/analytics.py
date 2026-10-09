@@ -23,6 +23,8 @@ from django.views.generic import TemplateView
 from unfold.admin import ModelAdmin
 from unfold.views import UnfoldModelAdminViewMixin
 
+from core.permissions import is_store_admin
+
 from checkout.models import Order, OrderItem, OrderPayment, ShoppingCart
 from inventory.models import ProductStock
 
@@ -33,9 +35,6 @@ CHART_W, CHART_H = 1000, 300
 CHART_TOP, CHART_BOTTOM = 14, 4
 
 
-# ----------------------------------------------------------------------
-# Formatting helpers
-# ----------------------------------------------------------------------
 
 def _dec(value):
     return Decimal(str(value or 0))
@@ -89,9 +88,7 @@ def _ratio(part, whole):
     return (part / whole * 100) if whole else 0
 
 
-# ----------------------------------------------------------------------
-# SVG helpers
-# ----------------------------------------------------------------------
+
 
 def _nice_ceiling(value):
     if value <= 0:
@@ -139,9 +136,7 @@ def _sparkline(values, width=96, height=32, pad=3):
     return {"line": line, "area": f"{line} L{width} {height} L0 {height} Z"}
 
 
-# ----------------------------------------------------------------------
-# Query helpers
-# ----------------------------------------------------------------------
+
 
 def _payments(start, end):
     return OrderPayment.objects.filter(
@@ -179,15 +174,8 @@ class AnalyticsDashboardView(UnfoldModelAdminViewMixin, TemplateView):
         365: _("12 months"),
     }
 
-    # ------------------------------------------------------------------
-    # HTMX plumbing
-    #
-    #   full page            -> admin/analytics.html
-    #   hx-get (period)      -> admin/analytics/_body.html
-    #   hx-get (panel=orders)-> admin/analytics/_orders.html
-    #
-    # History restores (back button after a cache miss) need the full page.
-    # ------------------------------------------------------------------
+    def has_permission(self):
+        return is_store_admin(self.request.user)
 
     def _is_htmx(self):
         headers = self.request.headers

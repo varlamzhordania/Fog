@@ -2,6 +2,7 @@ from checkout.models import Order
 from account.models import Address
 from rest_framework.test import APITestCase
 from django.contrib.auth import get_user_model
+from django.core.cache import cache
 
 User = get_user_model()
 
@@ -49,3 +50,16 @@ class AddressTests(APITestCase):
         theirs = Address.objects.create(user=other, full_name="O", line1="1", city="C",
                                         postal_code="1", country="X")
         self.assertEqual(self.client.delete(f"{self.URL}{theirs.pk}/").status_code, 404)
+
+
+
+class PasswordResetThrottleTests(APITestCase):
+    URL = "/api/v1/account/password-reset/"
+
+    def setUp(self):
+        cache.clear()
+
+    def test_same_email_is_limited_after_three_requests(self):
+        for _ in range(3):
+            self.assertEqual(self.client.post(self.URL, {"email": "a@x.com"}).status_code, 200)
+        self.assertEqual(self.client.post(self.URL, {"email": "A@x.com"}).status_code, 429)

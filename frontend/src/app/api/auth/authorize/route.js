@@ -1,14 +1,11 @@
 import {NextResponse} from "next/server";
 import {cookies} from "next/headers";
-
+import {clearAuthCookies, setAuthCookies} from "@/lib/auth-cookies";
 import {retrieveSelf, refreshToken} from "@/lib/api/auth";
 
 const AUTH_CLIENT_ID = process.env.AUTH_CLIENT_ID;
 const AUTH_CLIENT_SECRET = process.env.AUTH_CLIENT_SECRET;
 
-const cookieOptions = {
-    httpOnly: true, sameSite: "lax", secure: process.env.NODE_ENV === "production", path: "/",
-};
 
 export async function GET() {
     const cookieStore = await cookies();
@@ -56,34 +53,21 @@ export async function GET() {
             user, access_token: newAccessToken, expires_in
         }, {status: 200});
 
-        // 4. Store new access token
-        response.cookies.set("access_token", newAccessToken, {
-            ...cookieOptions, maxAge: expires_in,
-        });
-
-        // 5. Store rotated refresh token if provided
-        if (newRefreshToken) {
-            response.cookies.set("refresh_token", newRefreshToken, {
-                ...cookieOptions, maxAge: 60 * 60 * 24 * 7,
-            });
-        }
+        setAuthCookies(response, {access_token: newAccessToken, expires_in, refresh_token: newRefreshToken});
 
         return response;
 
     } catch (error) {
-        console.error("Authorization failed:", error);
+
+        if (![400, 401].includes(error?.status)) {
+            return NextResponse.json({error: "Service temporarily unavailable."}, {status: 503});
+        }
 
         response = NextResponse.json({
             error: "Session expired. Please log in again.",
         }, {status: 401});
 
-        response.cookies.set("access_token", "", {
-            ...cookieOptions, maxAge: 0,
-        });
-
-        response.cookies.set("refresh_token", "", {
-            ...cookieOptions, maxAge: 0,
-        });
+        clearAuthCookies(response);
 
         return response;
     }

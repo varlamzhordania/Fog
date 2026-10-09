@@ -21,7 +21,9 @@ USE_X_FORWARDED_HOST = True
 SESSION_COOKIE_SECURE = USE_HTTPS_IN_ABSOLUTE_URLS
 CSRF_COOKIE_SECURE = USE_HTTPS_IN_ABSOLUTE_URLS
 
-CORS_ALLOWED_ORIGINS = [FRONTEND_URL, f"https://www.{FRONTEND_DOMAIN}"]
+_scheme = "https" if USE_HTTPS_IN_ABSOLUTE_URLS else "http"
+CSRF_TRUSTED_ORIGINS = [f"{_scheme}://{FRONTEND_DOMAIN}", f"{_scheme}://www.{FRONTEND_DOMAIN}"]
+CORS_ALLOWED_ORIGINS = [FRONTEND_URL, f"{_scheme}://www.{FRONTEND_DOMAIN}"]
 
 CACHES = {"default": {
     "BACKEND": "django.core.cache.backends.redis.RedisCache",

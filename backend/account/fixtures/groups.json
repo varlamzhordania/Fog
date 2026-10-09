@@ -4,266 +4,49 @@
     "fields": {
       "name": "admin",
       "permissions": [
-        [
-          "view_product",
-          "inventory",
-          "product"
-        ],
-        [
-          "add_product",
-          "inventory",
-          "product"
-        ],
-        [
-          "change_product",
-          "inventory",
-          "product"
-        ],
-        [
-          "delete_product",
-          "inventory",
-          "product"
-        ],
-        [
-          "view_category",
-          "inventory",
-          "category"
-        ],
-        [
-          "add_category",
-          "inventory",
-          "category"
-        ],
-        [
-          "change_category",
-          "inventory",
-          "category"
-        ],
-        [
-          "delete_category",
-          "inventory",
-          "category"
-        ],
-        [
-          "view_tag",
-          "inventory",
-          "tag"
-        ],
-        [
-          "add_tag",
-          "inventory",
-          "tag"
-        ],
-        [
-          "change_tag",
-          "inventory",
-          "tag"
-        ],
-        [
-          "delete_tag",
-          "inventory",
-          "tag"
-        ],
-        [
-          "view_productstock",
-          "inventory",
-          "productstock"
-        ],
-        [
-          "add_productstock",
-          "inventory",
-          "productstock"
-        ],
-        [
-          "change_productstock",
-          "inventory",
-          "productstock"
-        ],
-        [
-          "delete_productstock",
-          "inventory",
-          "productstock"
-        ],
-        [
-          "view_stockreservation",
-          "inventory",
-          "stockreservation"
-        ],
-        [
-          "add_stockreservation",
-          "inventory",
-          "stockreservation"
-        ],
-        [
-          "change_stockreservation",
-          "inventory",
-          "stockreservation"
-        ],
-        [
-          "delete_stockreservation",
-          "inventory",
-          "stockreservation"
-        ],
-        [
-          "view_stocktransactionlog",
-          "inventory",
-          "stocktransactionlog"
-        ],
-        [
-          "add_stocktransactionlog",
-          "inventory",
-          "stocktransactionlog"
-        ],
-        [
-          "change_stocktransactionlog",
-          "inventory",
-          "stocktransactionlog"
-        ],
-        [
-          "delete_stocktransactionlog",
-          "inventory",
-          "stocktransactionlog"
-        ],
-        [
-          "view_order",
-          "checkout",
-          "order"
-        ],
-        [
-          "add_order",
-          "checkout",
-          "order"
-        ],
-        [
-          "change_order",
-          "checkout",
-          "order"
-        ],
-        [
-          "delete_order",
-          "checkout",
-          "order"
-        ],
-        [
-          "view_orderpayment",
-          "checkout",
-          "orderpayment"
-        ],
-        [
-          "add_orderpayment",
-          "checkout",
-          "orderpayment"
-        ],
-        [
-          "change_orderpayment",
-          "checkout",
-          "orderpayment"
-        ],
-        [
-          "delete_orderpayment",
-          "checkout",
-          "orderpayment"
-        ],
-        [
-          "view_ordershipment",
-          "checkout",
-          "ordershipment"
-        ],
-        [
-          "add_ordershipment",
-          "checkout",
-          "ordershipment"
-        ],
-        [
-          "change_ordershipment",
-          "checkout",
-          "ordershipment"
-        ],
-        [
-          "delete_ordershipment",
-          "checkout",
-          "ordershipment"
-        ],
-        [
-          "view_paymentmethod",
-          "checkout",
-          "paymentmethod"
-        ],
-        [
-          "add_paymentmethod",
-          "checkout",
-          "paymentmethod"
-        ],
-        [
-          "change_paymentmethod",
-          "checkout",
-          "paymentmethod"
-        ],
-        [
-          "delete_paymentmethod",
-          "checkout",
-          "paymentmethod"
-        ],
-        [
-          "view_shoppingcart",
-          "checkout",
-          "shoppingcart"
-        ],
-        [
-          "add_shoppingcart",
-          "checkout",
-          "shoppingcart"
-        ],
-        [
-          "change_shoppingcart",
-          "checkout",
-          "shoppingcart"
-        ],
-        [
-          "delete_shoppingcart",
-          "checkout",
-          "shoppingcart"
-        ],
-        [
-          "view_user",
-          "account",
-          "user"
-        ],
-        [
-          "add_user",
-          "account",
-          "user"
-        ],
-        [
-          "change_user",
-          "account",
-          "user"
-        ],
-        [
-          "delete_user",
-          "account",
-          "user"
-        ],
-        [
-          "view_address",
-          "account",
-          "address"
-        ],
-        [
-          "add_address",
-          "account",
-          "address"
-        ],
-        [
-          "change_address",
-          "account",
-          "address"
-        ],
-        [
-          "delete_address",
-          "account",
-          "address"
-        ]
+        ["view_product", "inventory", "product"],
+        ["add_product", "inventory", "product"],
+        ["change_product", "inventory", "product"],
+        ["delete_product", "inventory", "product"],
+        ["view_category", "inventory", "category"],
+        ["add_category", "inventory", "category"],
+        ["change_category", "inventory", "category"],
+        ["delete_category", "inventory", "category"],
+        ["view_tag", "inventory", "tag"],
+        ["add_tag", "inventory", "tag"],
+        ["change_tag", "inventory", "tag"],
+        ["delete_tag", "inventory", "tag"],
+
+        ["view_productstock", "inventory", "productstock"],
+        ["add_productstock", "inventory", "productstock"],
+        ["change_productstock", "inventory", "productstock"],
+        ["view_stockreservation", "inventory", "stockreservation"],
+        ["view_stocktransactionlog", "inventory", "stocktransactionlog"],
+
+        ["view_order", "checkout", "order"],
+        ["add_order", "checkout", "order"],
+        ["change_order", "checkout", "order"],
+        ["view_orderpayment", "checkout", "orderpayment"],
+        ["change_orderpayment", "checkout", "orderpayment"],
+        ["view_ordershipment", "checkout", "ordershipment"],
+        ["add_ordershipment", "checkout", "ordershipment"],
+        ["change_ordershipment", "checkout", "ordershipment"],
+
+        ["view_paymentmethod", "checkout", "paymentmethod"],
+        ["add_paymentmethod", "checkout", "paymentmethod"],
+        ["change_paymentmethod", "checkout", "paymentmethod"],
+        ["delete_paymentmethod", "checkout", "paymentmethod"],
+
+        ["view_shoppingcart", "checkout", "shoppingcart"],
+        ["view_user", "account", "user"],
+        ["add_user", "account", "user"],
+        ["change_user", "account", "user"],
+        ["view_address", "account", "address"],
+        ["add_address", "account", "address"],
+        ["change_address", "account", "address"],
+
+        ["view_contact", "settings", "contact"],
+        ["change_contact", "settings", "contact"]
       ]
     }
   },
@@ -272,46 +55,17 @@
     "fields": {
       "name": "support",
       "permissions": [
-        [
-          "view_order",
-          "checkout",
-          "order"
-        ],
-        [
-          "change_order",
-          "checkout",
-          "order"
-        ],
-        [
-          "view_orderpayment",
-          "checkout",
-          "orderpayment"
-        ],
-        [
-          "view_ordershipment",
-          "checkout",
-          "ordershipment"
-        ],
-        [
-          "change_ordershipment",
-          "checkout",
-          "ordershipment"
-        ],
-        [
-          "view_user",
-          "account",
-          "user"
-        ],
-        [
-          "view_address",
-          "account",
-          "address"
-        ],
-        [
-          "change_address",
-          "account",
-          "address"
-        ]
+        ["view_order", "checkout", "order"],
+        ["change_order", "checkout", "order"],
+        ["view_orderpayment", "checkout", "orderpayment"],
+        ["view_ordershipment", "checkout", "ordershipment"],
+        ["change_ordershipment", "checkout", "ordershipment"],
+
+        ["view_user", "account", "user"],
+        ["view_address", "account", "address"],
+
+        ["view_contact", "settings", "contact"],
+        ["change_contact", "settings", "contact"]
       ]
     }
   },
@@ -320,102 +74,29 @@
     "fields": {
       "name": "inventory-manager",
       "permissions": [
-        [
-          "view_product",
-          "inventory",
-          "product"
-        ],
-        [
-          "add_product",
-          "inventory",
-          "product"
-        ],
-        [
-          "change_product",
-          "inventory",
-          "product"
-        ],
-        [
-          "delete_product",
-          "inventory",
-          "product"
-        ],
-        [
-          "view_category",
-          "inventory",
-          "category"
-        ],
-        [
-          "add_category",
-          "inventory",
-          "category"
-        ],
-        [
-          "change_category",
-          "inventory",
-          "category"
-        ],
-        [
-          "delete_category",
-          "inventory",
-          "category"
-        ],
-        [
-          "view_tag",
-          "inventory",
-          "tag"
-        ],
-        [
-          "add_tag",
-          "inventory",
-          "tag"
-        ],
-        [
-          "change_tag",
-          "inventory",
-          "tag"
-        ],
-        [
-          "delete_tag",
-          "inventory",
-          "tag"
-        ],
-        [
-          "view_productstock",
-          "inventory",
-          "productstock"
-        ],
-        [
-          "add_productstock",
-          "inventory",
-          "productstock"
-        ],
-        [
-          "change_productstock",
-          "inventory",
-          "productstock"
-        ],
-        [
-          "delete_productstock",
-          "inventory",
-          "productstock"
-        ],
-        [
-          "view_stockreservation",
-          "inventory",
-          "stockreservation"
-        ],
-        [
-          "view_stocktransactionlog",
-          "inventory",
-          "stocktransactionlog"
-        ],
-        [
-          "add_stocktransactionlog",
-          "inventory",
-          "stocktransactionlog"
-        ]
+        ["view_product", "inventory", "product"],
+        ["add_product", "inventory", "product"],
+        ["change_product", "inventory", "product"],
+        ["delete_product", "inventory", "product"],
+
+        ["view_category", "inventory", "category"],
+        ["add_category", "inventory", "category"],
+        ["change_category", "inventory", "category"],
+        ["delete_category", "inventory", "category"],
+
+        ["view_tag", "inventory", "tag"],
+        ["add_tag", "inventory", "tag"],
+        ["change_tag", "inventory", "tag"],
+        ["delete_tag", "inventory", "tag"],
+
+        ["view_productstock", "inventory", "productstock"],
+        ["add_productstock", "inventory", "productstock"],
+        ["change_productstock", "inventory", "productstock"],
+
+        ["view_stockreservation", "inventory", "stockreservation"],
+        ["view_stocktransactionlog", "inventory", "stocktransactionlog"]
       ]
     }
   }
 ]
+

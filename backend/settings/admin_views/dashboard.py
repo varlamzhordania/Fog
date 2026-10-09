@@ -10,6 +10,7 @@ from django.urls import reverse
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 from django.views.generic import TemplateView
+from django.core.exceptions import PermissionDenied
 from unfold.admin import ModelAdmin
 from unfold.views import UnfoldModelAdminViewMixin
 
@@ -54,7 +55,10 @@ class DashboardView(UnfoldModelAdminViewMixin, TemplateView):
     def post(self, request, *args, **kwargs):
         if not request.user.has_perm("settings.change_contact"):
             return HttpResponseForbidden()
-        get_object_or_404(Contact, pk=request.POST.get("id")).mark_as_responded()
+        get_object_or_404(
+            Contact,
+            pk=request.POST.get("id")
+            ).mark_as_responded()
         return self.get(request, *args, **kwargs)
 
     def _period(self):
@@ -68,15 +72,26 @@ class DashboardView(UnfoldModelAdminViewMixin, TemplateView):
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
         user = self.request.user
+        flags = {
+            "can_sales": user.has_perm("checkout.view_orderpayment"),
+            "can_orders": user.has_perm("checkout.view_order"),
+            "can_contacts": user.has_perm("settings.view_contact"),
+            "can_stock": user.has_perm("inventory.view_productstock"),
+        }
         ctx.update(
             title=self.title,
             base_url=self.request.path,
             period=self._period(),
-            periods=[{"value": p, "active": p == self._period()} for p in self.PERIODS],
+            periods=[{"value": p, "active": p == self._period()} for p in
+                     self.PERIODS],
             can_reply=user.has_perm("settings.change_contact"),
             now=timezone.localtime(),
         )
-        ctx.update(self._contacts())
+
+        if flags["can_contacts"]:
+            ctx.update(self._contacts())
+        elif self._panel() == "contacts":
+            raise PermissionDenied
         if self._panel() == "contacts":
             return ctx
 
@@ -88,20 +103,31 @@ class DashboardView(UnfoldModelAdminViewMixin, TemplateView):
 
         def paid(a, b):
             return OrderPayment.objects.filter(
-                status=COMPLETED, paid_at__gte=a, paid_at__lt=b)
+                status=COMPLETED, paid_at__gte=a, paid_at__lt=b
+            )
 
         cur = paid(start, end).aggregate(rev=Sum("amount"), n=Count("id"))
-        prv = paid(prev_start, start).aggregate(rev=Sum("amount"), n=Count("id"))
-        customers = User.objects.filter(is_staff=False, date_joined__gte=start).count()
+        prv = paid(prev_start, start).aggregate(
+            rev=Sum("amount"),
+            n=Count("id")
+            )
+        customers = User.objects.filter(
+            is_staff=False,
+            date_joined__gte=start
+            ).count()
         prev_customers = User.objects.filter(
-            is_staff=False, date_joined__gte=prev_start, date_joined__lt=start).count()
+            is_staff=False,
+            date_joined__gte=prev_start,
+            date_joined__lt=start
+        ).count()
 
         daily = {
             r["d"]: _dec(r["t"])
             for r in paid(start, end).annotate(d=TruncDate("paid_at"))
             .order_by().values("d").annotate(t=Sum("amount"))
         }
-        days = [today - timedelta(days=period - 1 - i) for i in range(period)]
+        days = [today - timedelta(days=period - 1 - i) for i in
+                range(period)]
         values = [daily.get(d, Decimal("0")) for d in days]
         top = max(values) or Decimal("1")
         bars = [
@@ -113,37 +139,48 @@ class DashboardView(UnfoldModelAdminViewMixin, TemplateView):
         ctx.update(
             revenue=_money(_dec(cur["rev"]), 0),
             revenue_delta=_delta(cur["rev"], prv["rev"]),
-            orders=cur["n"], orders_delta=_delta(cur["n"], prv["n"]),
-            customers=customers, customers_delta=_delta(customers, prev_customers),
+            orders=cur["n"],
+            orders_delta=_delta(cur["n"], prv["n"]),
+            customers=customers,
+            customers_delta=_delta(customers, prev_customers),
             aov=_money(_dec(cur["rev"]) / cur["n"] if cur["n"] else 0, 2),
             bars=bars,
             range_label=f"{_fmt_day(days[0])} – {_fmt_day(days[-1])}",
             recent_orders=self._recent_orders(),
             low_stock=self._low_stock(),
-            attention=self._attention(start, end),
+            attention=self._attention(start, end, flags),
             quick=[
-                (_("Add product"), "add_box", reverse("admin:inventory_product_add")),
-                (_("Orders"), "receipt_long", reverse("admin:checkout_order_changelist")),
-                (_("Stock levels"), "warehouse", reverse("admin:inventory_productstock_changelist")),
+                (_("Add product"), "add_box",
+                 reverse("admin:inventory_product_add")),
+                (_("Orders"), "receipt_long",
+                 reverse("admin:checkout_order_changelist")),
+                (_("Stock levels"), "warehouse",
+                 reverse("admin:inventory_productstock_changelist")),
                 (_("Analytics"), "insights", reverse("admin-analytics")),
-                (_("Live config"), "tune", reverse("admin:constance_config_changelist")),
+                (_("Live config"), "tune",
+                 reverse("admin:constance_config_changelist")),
             ],
+            **flags,
         )
         return ctx
 
-    # --- Pieces -------------------------------------------------------------
     def _contacts(self):
         show = "all" if self.request.GET.get("show") == "all" else "open"
         base = Contact.objects.filter(is_active=True)
         qs = base if show == "all" else base.filter(has_responded=False)
         items = []
         for c in qs.order_by("has_responded", "-created_at")[:6]:
-            items.append({
-                "id": c.id, "name": c.name, "email": c.email, "subject": c.subject,
-                "message": c.message, "done": c.has_responded,
-                "initials": _initials(c.name, c.email),
-                "created": timezone.localtime(c.created_at) if c.created_at else None,
-            })
+            items.append(
+                {
+                    "id": c.id, "name": c.name, "email": c.email,
+                    "subject": c.subject,
+                    "message": c.message, "done": c.has_responded,
+                    "initials": _initials(c.name, c.email),
+                    "created": timezone.localtime(
+                        c.created_at
+                        ) if c.created_at else None,
+                }
+            )
         return {
             "contacts": items, "contacts_show": show,
             "contacts_open": base.filter(has_responded=False).count(),
@@ -153,45 +190,120 @@ class DashboardView(UnfoldModelAdminViewMixin, TemplateView):
 
     def _recent_orders(self):
         rows = []
-        for o in Order.objects.select_related("user", "payment").order_by("-created_at")[:6]:
+        for o in Order.objects.select_related("user", "payment").order_by(
+                "-created_at"
+                )[:6]:
             name = o.user.get_full_name().strip()
-            rows.append({
-                "id": o.id, "url": reverse("admin:checkout_order_change", args=[o.id]),
-                "name": name, "email": o.user.email,
-                "initials": _initials(name, o.user.email),
-                "total": _money(o.total_price), "status": o.get_status_display(),
-                "tone": ORDER_TONE.get(o.status, "neutral"), "created": o.created_at,
-            })
+            rows.append(
+                {
+                    "id": o.id, "url": reverse(
+                    "admin:checkout_order_change",
+                    args=[o.id]
+                    ),
+                    "name": name, "email": o.user.email,
+                    "initials": _initials(name, o.user.email),
+                    "total": _money(o.total_price),
+                    "status": o.get_status_display(),
+                    "tone": ORDER_TONE.get(o.status, "neutral"),
+                    "created": o.created_at,
+                }
+            )
         return rows
 
     def _low_stock_qs(self):
-        return ProductStock.objects.filter(product__is_active=True).annotate(
-            avail=ExpressionWrapper(F("quantity") - F("reserved_quantity"),
-                                    output_field=IntegerField())
+        return ProductStock.objects.filter(
+            product__is_active=True
+            ).annotate(
+            avail=ExpressionWrapper(
+                F("quantity") - F("reserved_quantity"),
+                output_field=IntegerField()
+                )
         ).filter(avail__lte=F("low_stock_threshold"))
 
     def _low_stock(self):
-        qs = self._low_stock_qs().select_related("product").order_by("avail")[:5]
+        qs = self._low_stock_qs().select_related("product").order_by(
+            "avail"
+            )
         return [{
-            "name": s.product.name, "sku": s.product.sku, "avail": max(s.avail, 0),
-            "tone": "danger" if (s.avail <= 0 or not s.is_available) else "warning",
-            "status": _("Out of stock") if (s.avail <= 0 or not s.is_available) else _("Running low"),
-            "fill": min(round(_ratio(max(s.avail, 0), max(s.low_stock_threshold * 2, 1))), 100),
+            "name": s.product.name, "sku": s.product.sku,
+            "avail": max(s.avail, 0),
+            "tone": "danger" if (
+                        s.avail <= 0 or not s.is_available) else "warning",
+            "status": _("Out of stock") if (
+                        s.avail <= 0 or not s.is_available) else _(
+                "Running low"
+                ),
+            "fill": min(
+                round(
+                    _ratio(
+                        max(s.avail, 0),
+                        max(s.low_stock_threshold * 2, 1)
+                        )
+                    ),
+                100
+                ),
         } for s in qs.order_by("avail")[:5]]
 
-    def _attention(self, start, end):
+    def _attention(self, start, end, flags):
         cl = lambda m, q="": reverse(f"admin:{m}_changelist") + q
-        stock = self._low_stock_qs().count()
-        rows = [
-            (Order.objects.filter(status=Order.StatusChoices.PENDING).count(),
-             _("orders to review"), "warning", cl("checkout_order", "?status__exact=pending")),
-            (OrderShipment.objects.filter(status="pending").count(),
-             _("shipments to send"), "info", cl("checkout_ordershipment", "?status__exact=pending")),
-            (OrderPayment.objects.filter(status="FAILED", created_at__gte=start, created_at__lt=end).count(),
-             _("failed payments"), "danger", cl("checkout_orderpayment", "?status__exact=FAILED")),
-            (stock, _("products low on stock"), "danger", cl("inventory_productstock")),
+        rows = []
+
+        if flags["can_orders"]:
+            rows.extend(
+                [
+                    (
+                        Order.objects.filter(
+                            status=Order.StatusChoices.PENDING
+                        ).count(),
+                        _("orders to review"),
+                        "warning",
+                        cl("checkout_order", "?status__exact=pending"),
+                    ),
+                    (
+                        OrderShipment.objects.filter(
+                            status="pending"
+                            ).count(),
+                        _("shipments to send"),
+                        "info",
+                        cl(
+                            "checkout_ordershipment",
+                            "?status__exact=pending"
+                            ),
+                    ),
+                ]
+            )
+
+        if flags["can_sales"]:
+            rows.append(
+                (
+                    OrderPayment.objects.filter(
+                        status="FAILED",
+                        created_at__gte=start,
+                        created_at__lt=end,
+                    ).count(),
+                    _("failed payments"),
+                    "danger",
+                    cl("checkout_orderpayment", "?status__exact=FAILED"),
+                )
+            )
+
+        if flags["can_stock"]:
+            rows.append(
+                (
+                    self._low_stock_qs().count(),
+                    _("products low on stock"),
+                    "danger",
+                    cl("inventory_productstock"),
+                )
+            )
+
+        return [
+            {"n": n, "label": label, "tone": tone, "url": url}
+            for n, label, tone, url in rows
+            if n
         ]
-        return [{"n": n, "label": l, "tone": t, "url": u} for n, l, t, u in rows if n]
+
+
 
 
 def dashboard_view(request, *args, **kwargs):

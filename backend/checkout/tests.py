@@ -7,10 +7,7 @@ from django.test import TestCase
 
 from account.models import Address
 from checkout.exceptions import CheckoutError, GatewayError
-from checkout.models import (
-    Order, OrderPayment, PaymentMethod, Order,
-    OrderPayment, PaymentMethod, ShippingMethod,
-)
+from checkout.models import Order, OrderPayment, PaymentMethod, ShippingMethod
 from checkout.payments.manual import ManualProvider
 from checkout.services.cart import CartService
 from checkout.services.checkout import CheckoutService
@@ -26,18 +23,19 @@ class CheckoutFlowTests(TestCase):
     URL = "/api/v1/checkout/orders/create/"
 
     def setUp(self):
-        patch("checkout.events.order_event").start()
+        self.order_event = patch("checkout.events.order_event").start()
         patch("checkout.events.order_paid").start()
         self.addCleanup(patch.stopall)
         self.user = User.objects.create_user(email="api@x.com", password="Str0ng-pass-123")
         self.address = Address.objects.create(user=self.user, full_name="A", line1="1 St",
                                               city="C", postal_code="1", country="X")
         PaymentMethod.objects.create(name="Manual", code="manual", provider="manual")
+        PaymentMethod.objects.create(name="Other", code="other", provider="manual")
         ShippingMethod.objects.create(name="Standard", code="standard", price=5)
         product = Product.objects.create(name="P", sku="S1", base_price=20, store_price=20)
-        ProductStock.objects.create(product=product, quantity=10)
-        CartService.add_to_cart(self.user, product.id, 1)
-        self.client.force_login(self.user)
+        self.stock = ProductStock.objects.create(product=product, quantity=10)
+        CartService.add_to_cart(self.user, product.id, 2)
+        self.client.login(email="api@x.com",password="Str0ng-pass-123")
 
     def _create(self):
         return CheckoutService.create_order(

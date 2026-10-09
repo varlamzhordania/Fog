@@ -18,10 +18,11 @@ import {useConfig} from "@/queries/settings";
 import CartQuantityControl from "@/components/inventory/CartQuantityControl";
 import ProductReviews from "@/components/inventory/ProductReviews";
 import Stars from "@/components/inventory/Stars";
+import FeaturedProducts from "@/components/inventory/FeaturedProducts";
+import React from "react";
 
 
 export default function ProductDetailClient({product: initialProduct}) {
-    const {incrementItem} = useCartStore(state => state)
     const {data: config} = useConfig();
     const product = initialProduct;
 
@@ -47,11 +48,7 @@ export default function ProductDetailClient({product: initialProduct}) {
 
     const isOnSale = product.discount_percentage > 0;
     const isDownloadable = product.product_type === "downloadable";
-    const isInStock = product.available_stock > 0;
 
-    const handleAddToCart = () => {
-        incrementItem(product, 1)
-    };
 
     return (<div className="container container-space md:py-12">
 
@@ -224,12 +221,19 @@ export default function ProductDetailClient({product: initialProduct}) {
 
         {/* Featured */}
         <section className={"container-space pb-0"}>
-            <ProductSlider
-                title="Featured Products"
-                productData={featuredProducts?.results}
-                featured
-                cardDepth
-                isLoading={isFeaturedLoading}
+            <FeaturedProducts
+                title="hand picked"
+                cardVariant="image"
+                page_size={12}
+                slidesPerView={1.15}
+                breakpoints={{
+                    640: {slidesPerView: 1.5, spaceBetween: 16},
+                    768: {slidesPerView: 2, spaceBetween: 20},
+                    1024: {slidesPerView: 3, spaceBetween: 24},
+                }}
+                showDescription={false}
+                cardHeight="min-h-85"
+                actionLabel="Show Now"
             />
         </section>
     </div>);

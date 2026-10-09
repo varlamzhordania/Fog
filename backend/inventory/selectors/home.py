@@ -19,13 +19,21 @@ def home_sections():
         "new_arrivals": base.order_by("-created_at")[:10],
         "best_sellers": (
             base.filter(order_items__order__payment__status=paid)
-            .annotate(sold=Sum("order_items__quantity")).order_by("-sold")[:10]
+            .annotate(sold=Sum("order_items__quantity"))
+            .order_by("-sold", "-created_at")[:10]
         ),
         "deals": deals,
         "last_few": (
             base.filter(product_type="physical")
-            .annotate(avail=F("product_stock__quantity") - F("product_stock__reserved_quantity"))
-            .filter(avail__gt=0, avail__lte=F("product_stock__low_stock_threshold"))
+            .annotate(
+                avail=F("product_stock__quantity") - F(
+                    "product_stock__reserved_quantity"
+                )
+            )
+            .filter(
+                avail__gt=0,
+                avail__lte=F("product_stock__low_stock_threshold")
+            )
             .order_by("avail")[:10]
         ),
         "stats": {
@@ -33,9 +41,16 @@ def home_sections():
             # order_by() clears Meta.ordering, which would otherwise leak into DISTINCT
             "countries": (
                 Order.objects.filter(payment__status=paid)
-                .order_by().values("delivery_address__country").distinct().count()
+                .order_by().values(
+                    "delivery_address__country"
+                ).distinct().count()
             ),
-            "orders_delivered": Order.objects.filter(status=Order.StatusChoices.DELIVERED).count(),
-            "max_discount": max((p.discount_percentage for p in deals), default=0),
+            "orders_delivered": Order.objects.filter(
+                status=Order.StatusChoices.DELIVERED
+            ).count(),
+            "max_discount": max(
+                (p.discount_percentage for p in deals),
+                default=0
+            ),
         },
     }

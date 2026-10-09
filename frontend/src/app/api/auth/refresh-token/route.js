@@ -1,6 +1,7 @@
 import {NextResponse} from "next/server";
 import {cookies} from "next/headers";
 import {refreshToken} from "@/lib/api/auth";
+import {clearAuthCookies, setAuthCookies} from "@/lib/auth-cookies";
 
 const AUTH_CLIENT_ID = process.env.AUTH_CLIENT_ID;
 const AUTH_CLIENT_SECRET = process.env.AUTH_CLIENT_SECRET;
@@ -26,32 +27,12 @@ export async function POST() {
             client_id: AUTH_CLIENT_ID,
             client_secret: AUTH_CLIENT_SECRET,
         });
-
-        const secure = process.env.NODE_ENV === "production";
-
         const response = NextResponse.json(
             {access_token, expires_in},
             {status: 200}
         );
 
-        response.cookies.set("access_token", access_token, {
-            httpOnly: true,
-            sameSite: "lax",
-            secure,
-            path: "/",
-            maxAge: expires_in,
-        });
-
-        // Rotate the refresh token if the backend issues a new one
-        if (newRefreshToken) {
-            response.cookies.set("refresh_token", newRefreshToken, {
-                httpOnly: true,
-                sameSite: "lax",
-                secure,
-                path: "/",
-                maxAge: 60 * 60 * 24 * 7, // 7 days
-            });
-        }
+        setAuthCookies(response, {access_token, expires_in, refresh_token: newRefreshToken});
 
         return response;
     } catch (e) {
@@ -61,14 +42,7 @@ export async function POST() {
             {status: 401}
         );
 
-        const secure = process.env.NODE_ENV === "production";
-
-        response.cookies.set("access_token", "", {
-            httpOnly: true, sameSite: "lax", secure, path: "/", maxAge: 0,
-        });
-        response.cookies.set("refresh_token", "", {
-            httpOnly: true, sameSite: "lax", secure, path: "/", maxAge: 0,
-        });
+        clearAuthCookies(response);
 
         return response;
     }

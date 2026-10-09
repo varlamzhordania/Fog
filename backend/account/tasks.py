@@ -14,3 +14,8 @@ def send_password_reset_email_task(user_id: int):
     user = User.objects.get(pk=user_id)
     send_password_reset_email(user)
     log.info("account.password_reset.email_sent", extra={"user_id": user_id})
+
+@shared_task
+def clear_expired_oauth_tokens():
+    from oauth2_provider.models import clear_expired
+    clear_expired()

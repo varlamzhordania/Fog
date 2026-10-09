@@ -1,37 +1,12 @@
-import {create} from 'zustand';
-import {persist} from 'zustand/middleware';
+import {create} from "zustand";
 
-export const useAuthStore = create(
-    persist(
-        (set) => ({
-            access_token: null,
-            refresh_token: null,
-            logged_in: false,
-            user: null,
+export const useAuthStore = create((set) => ({
+    access_token: null,
+    logged_in: false,
+    user: null,
 
-            setAuth: ({
-                          access_token,
-                          refresh_token = null,
-                          user = null,
-                      }) =>
-                set({
-                    access_token,
-                    refresh_token,
-                    logged_in: true,
-                    user,
-                }),
+    setAuth: ({access_token = null, user = null}) =>
+        set({access_token, logged_in: true, user}),
 
-            clearAuth: () =>
-                set({
-                    access_token: null,
-                    refresh_token: null,
-                    logged_in: false,
-                    user: null,
-                }),
-        }),
-        {
-            name: 'fog_auth',
-            skipHydration: true,
-        }
-    )
-);
+    clearAuth: () => set({access_token: null, logged_in: false, user: null}),
+}));
