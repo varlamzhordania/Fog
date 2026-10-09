@@ -5,7 +5,7 @@ import Link from "next/link";
 import {usePathname, useRouter} from "next/navigation";
 import {Skeleton, Typography} from "@heroui/react";
 import {ClipboardList, LayoutDashboard, MapPinHouse, UserRound} from "lucide-react";
-import Icon from "@/components/Icon/Icon";
+import Icon from "@/components/icon/Icon";
 import {useAuthStore} from "@/stores/auth";
 import {useCurrentUser} from "@/queries/auth";
 

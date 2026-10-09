@@ -1,7 +1,7 @@
 import Link from "next/link";
 import {Typography} from "@heroui/react";
 import {ChevronRight} from "lucide-react";
-import Icon from "@/components/Icon/Icon";
+import Icon from "@/components/icon/Icon";
 import OrderStatusChip from "@/components/dashboard/OrderStatusChip";
 import {formatPrice} from "@/lib/payments";
 import {formatDate, summarizeItems} from "@/lib/orders";

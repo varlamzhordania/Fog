@@ -2,7 +2,6 @@ import Link from "next/link";
 import {Separator, Typography} from "@heroui/react";
 import {
     ArrowRight,
-    Bitcoin,
     ExternalLink,
     PackageCheck,
     ShieldCheck,
@@ -24,7 +23,7 @@ import ResearchBand from "@/components/bands/ResearchBand";
 import React from "react";
 import {Deals, LastFew, NewArrivals} from "@/components/home/HomeSections";
 
-const RESEARCH_URL = "https://example.com";
+const RESEARCH_URL = process.env.NEXT_PUBLIC_RESEARCH_URL;
 const btnPrimary = "inline-flex items-center gap-2 rounded-full bg-accent px-6 py-3 font-medium text-accent-foreground no-underline transition-opacity hover:opacity-90";
 const btnGhost = "inline-flex items-center gap-2 rounded-full border border-border px-6 py-3 font-medium text-foreground no-underline transition-colors hover:border-accent hover:text-accent";
 
@@ -246,6 +245,7 @@ function HowItWorks() {
 }
 
 function Research() {
+    if (!RESEARCH_URL) return null;
     return (<section className="container  max-w-7xl">
         <div
             className="grid items-center gap-8 overflow-hidden rounded-3xl border border-border bg-surface p-6 sm:p-10 lg:grid-cols-2">

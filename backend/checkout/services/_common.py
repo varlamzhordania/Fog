@@ -21,7 +21,7 @@ def lock_order(order_id):
 
 
 def append_note(order, text):
-    order.notes = f"{order.notes}\n{text}".strip() if order.notes else text
+    order.internal_notes = f"{order.internal_notes}\n{text}".strip() if order.internal_notes else text
 
 
 def get_method(code):

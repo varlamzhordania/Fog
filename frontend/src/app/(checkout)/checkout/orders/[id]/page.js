@@ -109,7 +109,10 @@ export default function OrderPage() {
     }
 
     const status = STATUS[order.status] ?? {label: order.status, color: "default"};
-    const currentMethod = methods.find((m) => m.name === order.payment?.method);
+    const currentMethod =
+        methods.find((m) => m.code === order.payment?.method_code) ??
+        methods.find((m) => m.name === order.payment?.method);
+
     const chosen = selected ?? currentMethod?.code ?? methods[0]?.code ?? "";
     const invoiceExpired =
         Boolean(instructions?.invoice_expires_at) && invoiceRemaining === 0
@@ -168,10 +171,9 @@ export default function OrderPage() {
                                     <Typography type="body-sm" className="font-medium">This order
                                         was cancelled</Typography>
                                     <Typography type="body-xs" className="mt-1 text-muted">
-                                        Reserved items were released back to stock.
-                                        {order.notes ? ` ${order.notes.split("\n").pop()}` : ""} If
-                                        you sent a payment,
-                                        contact support with your order number.
+                                        Reserved items were released back to stock. If you
+                                        already sent a payment, contact support with your
+                                        order number.
                                     </Typography>
                                 </div>
                             </Card.Content>
@@ -325,7 +327,8 @@ export default function OrderPage() {
                                     </div>
                                     {order.shipping_method_name && (
                                         <div className="flex justify-between text-sm">
-                                            <span className="text-muted">Shipping ({order.shipping_method_name})</span>
+                                            <span
+                                                className="text-muted">Shipping ({order.shipping_method_name})</span>
                                             <span>{Number(order.shipping_cost) ? formatPrice(order.shipping_cost) : "Free"}</span>
                                         </div>
                                     )}

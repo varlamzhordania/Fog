@@ -1,5 +1,5 @@
 import {Card, Skeleton, Typography} from "@heroui/react";
-import Icon from "@/components/Icon/Icon";
+import Icon from "@/components/icon/Icon";
 
 const StatCard = ({label, value, hint, icon, isLoading = false}) => {
     return (

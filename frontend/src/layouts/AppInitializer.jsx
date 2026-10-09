@@ -9,30 +9,20 @@ import {useConfig} from "@/queries/settings";
 import {useCurrentUser} from "@/queries/auth";
 import {useAuthStore} from "@/stores/auth";
 import {useCartStore} from "@/stores/cart";
+import {useThemeStore} from "@/stores/theme";
 
 export default function AppInitializer({children}) {
-    const [mounted, setMounted] = useState(false);
-
     const {setAuth, clearAuth, logged_in} = useAuthStore();
-
-    const { syncGuestCart } = useCartStore();
-
-    const {
-        isLoading,
-        isError,
-        error,
-        refetch,
-    } = useConfig();
-
-    const {
-        data,
-        isError: userIsError,
-    } = useCurrentUser();
+    const syncGuestCart = useCartStore((s) => s.syncGuestCart);
+    const {data: config, isError, error, refetch, isFetching} = useConfig();
+    const {data, isError: userIsError} = useCurrentUser();
 
     useEffect(() => {
-        // eslint-disable-next-line react-hooks/set-state-in-effect
-        setMounted(true);
+        useAuthStore.persist.rehydrate();
+        useCartStore.persist.rehydrate();
+        useThemeStore.persist.rehydrate();
     }, []);
+
 
     // Existing Auth Synchronization Effect
     useEffect(() => {
@@ -78,7 +68,7 @@ export default function AppInitializer({children}) {
         }
     }, [logged_in, syncGuestCart]);
 
-    if (!mounted || isLoading) {
+     if (isError && !config) {
         return (
             <div
                 className="fixed inset-0 z-50 flex flex-col items-center justify-center"

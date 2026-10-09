@@ -20,7 +20,7 @@ export const API_ENDPOINTS = {
     auth: {
         authorize: `/api/auth/authorize/`,
         token: `${API_BASE_URL}/api/auth/token/`,
-        refresh: `/api/auth/refresh-token`,
+        refresh: `/api/auth/refresh-token/`,
         convertToken: `${API_BASE_URL}/api/auth/convert-token/`,
         revokeToken: `${API_BASE_URL}/api/auth/revoke-token/`,
         invalidateSessions:

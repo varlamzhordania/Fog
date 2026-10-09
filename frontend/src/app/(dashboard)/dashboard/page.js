@@ -5,7 +5,7 @@ import {Button, Card, Skeleton, Typography} from "@heroui/react";
 import {
     ArrowRight, ClipboardList, Clock, MapPinHouse, PackageCheck, PackageSearch, Wallet,
 } from "lucide-react";
-import Icon from "@/components/Icon/Icon";
+import Icon from "@/components/icon/Icon";
 import StatCard from "@/components/dashboard/StatCard";
 import OrderRow from "@/components/dashboard/OrderRow";
 import {useOrders} from "@/queries/checkout";

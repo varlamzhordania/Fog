@@ -89,7 +89,7 @@ class OrderCreateView(APIView):
             ) else None,
             save_address=data["save_address"],
             notes=data.get("notes", ""),
-            shipping_method_code=data.get("shipping_method_code"),
+            shipping_method_code=data.get("shipping_method"),
         )
         return Response(
             _order_payload(order.pk, request, instructions),

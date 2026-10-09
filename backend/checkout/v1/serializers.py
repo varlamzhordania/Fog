@@ -145,6 +145,7 @@ class OrderPaymentPublicSerializer(serializers.ModelSerializer):
             'status',
             'provider',
             'method',
+            'method_code',
             'transaction_id',
             'paid_at',
             'created_at',

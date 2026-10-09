@@ -5,7 +5,7 @@ import {
     Button, Card, FieldError, Form, Input, Label, Skeleton, TextField, toast, Typography,
 } from "@heroui/react";
 import {KeyRound, LogOut, Save} from "lucide-react";
-import Icon from "@/components/Icon/Icon";
+import Icon from "@/components/icon/Icon";
 import {useAccount, useUpdateAccount} from "@/queries/account";
 import {useLogout, useRequestPasswordReset} from "@/queries/auth";
 import {getApiErrorMessage} from "@/lib/utils";

@@ -14,7 +14,7 @@ const Footer = () => {
         page_size: 4,
         is_featured: true
     })
-    const logo = theme === 'dark' ? config.WEBSITE_SECONDARY_ICON : config.WEBSITE_PRIMARY_ICON
+    const logo = theme === 'dark' ? config.WEBSITE_SECONDARY_ICON : config?.WEBSITE_PRIMARY_ICON
 
     const categories = isLoading ? [] : data?.results ?? []
 
@@ -33,10 +33,6 @@ const Footer = () => {
         {
             label: "Research Policy",
             href: "/research/",
-        },
-        {
-            label: "Mycology",
-            href: "/mycology/",
         },
         {
             label: "About",
@@ -223,7 +219,7 @@ const Footer = () => {
                         </Link>
 
                         <Link
-                            href="/research-policy"
+                            href="/research/"
                             className="text-xs opacity-50 transition-opacity hover:opacity-100"
                         >
                             Research Policy

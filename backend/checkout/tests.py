@@ -23,45 +23,21 @@ User = get_user_model()
 
 @override_config(MINIMUM_ORDER_AMOUNT_USD=0.0)
 class CheckoutFlowTests(TestCase):
+    URL = "/api/v1/checkout/orders/create/"
+
     def setUp(self):
-        self.order_event = patch("checkout.events.order_event").start()
+        patch("checkout.events.order_event").start()
         patch("checkout.events.order_paid").start()
         self.addCleanup(patch.stopall)
-
-        self.user = User.objects.create_user(
-            email="a@x.com",
-            password="Str0ng-pass-123"
-            )
-        self.address = Address.objects.create(
-            user=self.user,
-            full_name="A",
-            line1="1 St",
-            city="C",
-            postal_code="1",
-            country="X"
-        )
-        PaymentMethod.objects.create(
-            name="Manual",
-            code="manual",
-            provider="manual"
-            )
-        PaymentMethod.objects.create(
-            name="Other",
-            code="other",
-            provider="manual"
-            )
-        ShippingMethod.objects.create(name="Standard", code="standard", price=5, free_over=100)
-        product = Product.objects.create(
-            name="P",
-            sku="S1",
-            base_price=20,
-            store_price=20
-            )
-        self.stock = ProductStock.objects.create(
-            product=product,
-            quantity=10
-            )
-        CartService.add_to_cart(self.user, product.id, 2)
+        self.user = User.objects.create_user(email="api@x.com", password="Str0ng-pass-123")
+        self.address = Address.objects.create(user=self.user, full_name="A", line1="1 St",
+                                              city="C", postal_code="1", country="X")
+        PaymentMethod.objects.create(name="Manual", code="manual", provider="manual")
+        ShippingMethod.objects.create(name="Standard", code="standard", price=5)
+        product = Product.objects.create(name="P", sku="S1", base_price=20, store_price=20)
+        ProductStock.objects.create(product=product, quantity=10)
+        CartService.add_to_cart(self.user, product.id, 1)
+        self.client.force_login(self.user)
 
     def _create(self):
         return CheckoutService.create_order(
@@ -150,7 +126,8 @@ class CheckoutFlowTests(TestCase):
         self.assertEqual(self.stock.quantity, 10)
         self.assertEqual(order.status, Order.StatusChoices.CANCELLED)
         self.assertEqual(order.payment.status, "REFUNDED")
-        self.assertIn("ACTION: refund the customer manually", order.notes)
+        self.assertIn("ACTION: refund the customer manually",order.internal_notes)
+        self.assertNotIn("ACTION", order.notes or "")
 
     @override_config(TAX_ENABLED=True, TAX_RATE=18.0, TAX_NAME="VAT",
                      PRICES_INCLUDE_TAX=False, TAX_ON_SHIPPING=True)
@@ -185,6 +162,14 @@ class CheckoutFlowTests(TestCase):
         order, _ = CheckoutService.create_order(self.user, "manual", address_id=self.address.id)
         self.assertIsNone(order.shipping_method)
         self.assertEqual(order.shipping_cost, Decimal("0.00"))
+
+    def test_shipping_method_is_applied(self):
+        r = self.client.post(self.URL, {
+            "payment_method": "manual", "address_id": self.address.id,
+            "shipping_method": "standard",
+        }, format="json")
+        self.assertEqual(r.status_code, 201, r.content)
+        self.assertEqual(r.json()["order"]["shipping_method_name"], "Standard")
 
 
 class SettlePaymentTests(TestCase):

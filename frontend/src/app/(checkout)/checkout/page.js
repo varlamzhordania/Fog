@@ -22,6 +22,7 @@ import {notFoundImage} from "@/lib/config";
 import {useConfig} from "@/queries/settings";
 import {useCreateOrder, usePaymentMethods, useShippingMethods} from "@/queries/checkout";
 import {computeTotals, shippingCost, servesCountry, taxLabel} from "@/lib/pricing";
+import CountrySelect from "@/components/forms/CountrySelect";
 
 const EMPTY_ADDRESS = {
     full_name: "", line1: "", line2: "", city: "", state: "", postal_code: "", country: "",
@@ -62,7 +63,7 @@ export default function CheckoutPage() {
     const goodsTotal = Number(getTotalPrice());
     const minimum = Number(config?.MINIMUM_ORDER_AMOUNT_USD ?? 0);
     const maintenance = Boolean(config?.STORE_MAINTENANCE_MODE);
-    const paymentWindow = config?.CRYPTO_PAYMENT_WINDOW_MINUTES ?? 60;
+    const paymentWindow = config?.PAYMENT_WINDOW_MINUTES ?? 60;
 
     const defaultAddress = addresses.find((a) => a.is_default) ?? addresses[0];
     const selectedAddress = addressChoice ?? (defaultAddress ? String(defaultAddress.id) : "new");
@@ -500,7 +501,7 @@ export default function CheckoutPage() {
                                 our{" "}
                                 <Link href="/terms"
                                       className="underline underline-offset-2">Terms</Link> and{" "}
-                                <Link href="/research-policy"
+                                <Link href="/research/"
                                       className="underline underline-offset-2">Research
                                     Policy</Link>.
                             </Typography>
@@ -688,7 +689,7 @@ function NewAddressForm({value, onChange, saveAddress, onSaveChange}) {
             {field("city", "City", {isRequired: true, autoComplete: "address-level2"})}
             {field("state", "State / province (optional)", {autoComplete: "address-level1"})}
             {field("postal_code", "Postal code", {isRequired: true, autoComplete: "postal-code"})}
-            {field("country", "Country", {isRequired: true, autoComplete: "country-name"})}
+            <CountrySelect isRequired value={value.country} onChange={set("country")}/>
 
             <div className="sm:col-span-2">
                 <Checkbox isSelected={saveAddress} onChange={onSaveChange}>

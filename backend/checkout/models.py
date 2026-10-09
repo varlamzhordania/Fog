@@ -91,7 +91,7 @@ class ShippingMethod(BaseModel):
         blank=True,
         default="",
         verbose_name=_("Description")
-        )
+    )
     price = models.DecimalField(
         max_digits=12,
         decimal_places=2,
@@ -109,33 +109,33 @@ class ShippingMethod(BaseModel):
         verbose_name=_("Free over (USD)"),
         help_text=_(
             "Shipping becomes free when the product subtotal reaches this amount. Leave empty to never discount."
-            ),
+        ),
     )
     min_days = models.PositiveSmallIntegerField(
         null=True,
         blank=True,
         verbose_name=_("Min. business days")
-        )
+    )
     max_days = models.PositiveSmallIntegerField(
         null=True,
         blank=True,
         verbose_name=_("Max. business days")
-        )
+    )
     includes_tracking = models.BooleanField(
         default=False,
         verbose_name=_("Includes tracking")
-        )
+    )
     countries = models.TextField(
         blank=True, default="", verbose_name=_("Countries"),
         help_text=_(
-            "Comma-separated. Empty = ships everywhere. Must match what customers enter as the country, "
-            "so list the variants, e.g. US, USA, United States."
+            "Comma-separated. Empty = ships everywhere. Use the exact names from the checkout country "
+            "list, e.g. United States, Germany, United Kingdom."
         ),
     )
     display_order = models.PositiveIntegerField(
         default=0,
         verbose_name=_("Display order")
-        )
+    )
 
     class Meta:
         verbose_name = _("Shipping Method")
@@ -149,7 +149,7 @@ class ShippingMethod(BaseModel):
         if self.min_days and self.max_days and self.min_days > self.max_days:
             raise DjangoValidationError(
                 {"max_days": _("Max days must be at least the min days.")}
-                )
+            )
 
     @property
     def country_list(self):
@@ -163,7 +163,7 @@ class ShippingMethod(BaseModel):
     def cost_for(self, subtotal) -> Decimal:
         if self.free_over is not None and Decimal(
                 subtotal
-                ) >= self.free_over:
+        ) >= self.free_over:
             return Decimal("0.00")
         return self.price
 
@@ -368,7 +368,7 @@ class Order(BaseModel):
         blank=True,
         default="",
         verbose_name=_("Shipping method name")
-        )
+    )
     shipping_cost = models.DecimalField(
         max_digits=12,
         decimal_places=2,
@@ -379,6 +379,10 @@ class Order(BaseModel):
         blank=True,
         null=True,
         verbose_name=_('Notes'),
+    )
+    internal_notes = models.TextField(
+        blank=True, default="", verbose_name=_("Internal notes"),
+        help_text=_("Staff-only. Never shown to the customer."),
     )
 
     class Meta:

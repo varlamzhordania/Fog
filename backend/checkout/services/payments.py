@@ -1,5 +1,4 @@
 from django.db import transaction
-from django.db.models import F
 from django.shortcuts import get_object_or_404
 
 from checkout import events
@@ -13,7 +12,6 @@ from checkout.services._common import (
 from checkout.services.orders import OrderService
 from core.logging import get_logger
 from core.logging.audit import audit, audit_on_commit
-from inventory.models import ProductStock, StockTransactionLog
 from inventory.services.stock import StockService
 
 log = get_logger(__name__)
@@ -23,7 +21,6 @@ _EXPIRED = "The payment window expired and the order was cancelled."
 class PaymentService:
     """Everything that talks to a gateway or changes payment state."""
 
-    # ── Reads ─────────────────────────────────────────────────────────
     @staticmethod
     def instructions(order):
         payment = getattr(order, "payment", None)
@@ -35,7 +32,6 @@ class PaymentService:
         )
         return get_provider(payment.provider).instructions(order, payment, method)
 
-    # ── Start / switch ────────────────────────────────────────────────
     @classmethod
     def start(cls, order_id, method):
         """
@@ -113,7 +109,6 @@ class PaymentService:
         if old_reference:  # the superseded session must not stay payable
             transaction.on_commit(lambda: cancel_remote(old_provider, old_reference))
 
-    # ── Confirm / settle ──────────────────────────────────────────────
     @classmethod
     def confirm_payment(cls, order_id, transaction_id=None):
         if OrderService.expire_if_needed(order_id):
@@ -175,7 +170,7 @@ class PaymentService:
             f"LATE PAYMENT received ({transaction_id or 'no tx id'}) "
             "after the order was closed. Refund or re-open manually.",
         )
-        order.save(update_fields=["notes", "updated_at"])
+        order.save(update_fields=["internal_notes", "updated_at"])
         events.order_event(order_id, "late_payment", extra={"transaction_id": transaction_id})
         audit_on_commit("payment.late", order_id=order_id, transaction_id=transaction_id)
         return "late"
@@ -188,7 +183,6 @@ class PaymentService:
             payment.save(update_fields=["provider_data", "updated_at"])
             attempts.sync_data(payment, data)
 
-    # ── Refund ────────────────────────────────────────────────────────
     @staticmethod
     def _assert_refundable(order):
         payment = getattr(order, "payment", None)
@@ -215,7 +209,7 @@ class PaymentService:
                 append_note(order, "Refunded before dispatch.")
                 if not automatic:
                     append_note(order, "ACTION: refund the customer manually (provider has no refund API).")
-                order.save(update_fields=["status", "notes", "updated_at"])
+                order.save(update_fields=["status", "internal_notes", "updated_at"])
                 attempts.mark_refunded(payment)
                 events.order_event(order.id, "order_refunded")
         except Exception:

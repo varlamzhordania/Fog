@@ -28,7 +28,7 @@ EXPIRED_REASON = "Payment window expired."
 
 
 def _window_minutes():
-    return int(getattr(config, "CRYPTO_PAYMENT_WINDOW_MINUTES", 60) or 60)
+    return int(getattr(config, "PAYMENT_WINDOW_MINUTES", 60) or 60)
 
 
 class OrderService:
@@ -57,7 +57,6 @@ class OrderService:
         # Lock in pk order so two overlapping carts can't deadlock each other.
         stocks = StockService.lock([i.product_id for i in items])
 
-        total = cls._price(items, stocks)
         subtotal = cls._price(items, stocks)
         minimum = Decimal(
             str(getattr(config, "MINIMUM_ORDER_AMOUNT_USD", 0) or 0)
@@ -170,7 +169,7 @@ class OrderService:
 
         order.status = S.CANCELLED
         append_note(order, reason)
-        order.save(update_fields=["status", "notes", "updated_at"])
+        order.save(update_fields=["status", "internal_notes", "updated_at"])
 
         expired = reason == EXPIRED_REASON
         payment = getattr(order, "payment", None)

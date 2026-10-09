@@ -1,7 +1,6 @@
 import axios from 'axios';
 import { API_ENDPOINTS } from '@/lib/config';
 import { useAuthStore } from '@/stores/auth';
-import {useLogout} from "@/queries/auth";
 
 const apiClient = axios.create({
     headers: {
@@ -89,9 +88,9 @@ apiClient.interceptors.response.use(
                 return apiClient(originalRequest);
 
             } catch {
-                useLogout().mutate();
-
-                throw error;
+                useAuthStore.getState().clearAuth();
+                fetch("/api/auth/logout/", {method: "POST", credentials: "include"}).catch(() => {});
+                return Promise.reject(error);
             }
         }
 

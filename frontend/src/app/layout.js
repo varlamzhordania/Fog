@@ -1,3 +1,6 @@
+import {dehydrate, HydrationBoundary, QueryClient} from "@tanstack/react-query";
+import {getSiteConfig} from "@/lib/api/config.server";
+import {configQueryKey} from "@/lib/queryKeys";
 import {Atomic_Age, Roboto, Poppins} from "next/font/google";
 import "./globals.css";
 import AppInitializer from "@/layouts/AppInitializer";
@@ -37,30 +40,24 @@ export async function generateMetadata() {
     let keywords = 'mycology, spore microscopy, research genetics, lab supplies, crypto checkout';
     let ogImage = null;
 
-    try {
-        const res = await serverFetch(API_ENDPOINTS.website.config, {revalidate: 0});
+    const config = await getSiteConfig();
 
-        const config = res?.data || res;
-
-        if (config) {
-            if (config.WEBSITE_FAVICON) {
-                faviconUrl = config.WEBSITE_FAVICON;
-            }
-            if (config.WEBSITE_TITLE) {
-                title = config.WEBSITE_TITLE;
-            }
-            if (config.WEBSITE_META_DESCRIPTION) {
-                description = config.WEBSITE_META_DESCRIPTION;
-            }
-            if (config.WEBSITE_META_KEYWORDS) {
-                keywords = config.WEBSITE_META_KEYWORDS;
-            }
-            if (config.WEBSITE_OG_IMAGE) {
-                ogImage = config.WEBSITE_OG_IMAGE;
-            }
+    if (config) {
+        if (config.WEBSITE_FAVICON) {
+            faviconUrl = config.WEBSITE_FAVICON;
         }
-    } catch (err) {
-        console.error('Failed to fetch site config for metadata:', err);
+        if (config.WEBSITE_TITLE) {
+            title = config.WEBSITE_TITLE;
+        }
+        if (config.WEBSITE_META_DESCRIPTION) {
+            description = config.WEBSITE_META_DESCRIPTION;
+        }
+        if (config.WEBSITE_META_KEYWORDS) {
+            keywords = config.WEBSITE_META_KEYWORDS;
+        }
+        if (config.WEBSITE_OG_IMAGE) {
+            ogImage = config.WEBSITE_OG_IMAGE;
+        }
     }
 
     return {
@@ -83,7 +80,10 @@ export async function generateMetadata() {
     };
 }
 
-export default function RootLayout({children}) {
+export default async function RootLayout({children}) {
+    const queryClient = new QueryClient();
+    const config = await getSiteConfig();
+    if (config) queryClient.setQueryData(configQueryKey, config);
 
     return (
         <html
@@ -95,15 +95,17 @@ export default function RootLayout({children}) {
         >
         <body className="min-h-screen font-sans antialiased" suppressHydrationWarning>
         <RootProvider>
-            <AppInitializer>
-                <AnnouncementBar/>
-                <Navbar/>
-                <main>
-                    {children}
-                </main>
-                <Footer/>
-                <GoToTop />
-            </AppInitializer>
+            <HydrationBoundary state={dehydrate(queryClient)}>
+                <AppInitializer>
+                    <AnnouncementBar/>
+                    <Navbar/>
+                    <main>
+                        {children}
+                    </main>
+                    <Footer/>
+                    <GoToTop/>
+                </AppInitializer>
+            </HydrationBoundary>
         </RootProvider>
         </body>
         </html>

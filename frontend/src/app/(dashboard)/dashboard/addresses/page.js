@@ -3,7 +3,7 @@
 import {useState} from "react";
 import {Button, Card, Chip, Skeleton, toast, Typography} from "@heroui/react";
 import {MapPinHouse, Pencil, Plus, Trash2} from "lucide-react";
-import Icon from "@/components/Icon/Icon";
+import Icon from "@/components/icon/Icon";
 import AddressDrawer from "@/components/dashboard/AddressDrawer";
 import {useAddresses, useDeleteAddress, useSaveAddress} from "@/queries/account";
 import {getApiErrorMessage} from "@/lib/utils";
@@ -26,7 +26,7 @@ export default function AddressesPage() {
 
     const makeDefault = (address) =>
         saveAddress.mutate(
-            {id: address.id, data: {is_default: true}, addresses},
+            {id: address.id, data: {is_default: true}},
             {
                 onSuccess: () => toast.success("Default address updated."),
                 onError: (error) => toast.danger(getApiErrorMessage(error)),

@@ -80,6 +80,7 @@ services:
         NEXT_PUBLIC_API_BASE_URL: ${PUBLIC_URL:?set PUBLIC_URL in env/prod/compose.env}
         NEXT_PUBLIC_MEDIA_BASE_URL: http://backend:8000
         NEXT_PUBLIC_SITE_URL: ${PUBLIC_URL}
+        NEXT_PUBLIC_RESEARCH_URL: https://fleshofgod.org
     image: fog-frontend:prod
     env_file: env/prod/frontend.env
     environment:

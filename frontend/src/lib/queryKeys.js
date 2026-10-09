@@ -1,0 +1,1 @@
+export const configQueryKey = ["fog_config"];

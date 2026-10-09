@@ -164,11 +164,14 @@ class DashboardView(UnfoldModelAdminViewMixin, TemplateView):
             })
         return rows
 
-    def _low_stock(self):
-        qs = ProductStock.objects.filter(product__is_active=True).annotate(
+    def _low_stock_qs(self):
+        return ProductStock.objects.filter(product__is_active=True).annotate(
             avail=ExpressionWrapper(F("quantity") - F("reserved_quantity"),
                                     output_field=IntegerField())
-        ).filter(avail__lte=F("low_stock_threshold")).select_related("product")
+        ).filter(avail__lte=F("low_stock_threshold"))
+
+    def _low_stock(self):
+        qs = self._low_stock_qs().select_related("product").order_by("avail")[:5]
         return [{
             "name": s.product.name, "sku": s.product.sku, "avail": max(s.avail, 0),
             "tone": "danger" if (s.avail <= 0 or not s.is_available) else "warning",
@@ -178,7 +181,7 @@ class DashboardView(UnfoldModelAdminViewMixin, TemplateView):
 
     def _attention(self, start, end):
         cl = lambda m, q="": reverse(f"admin:{m}_changelist") + q
-        stock = len(self._low_stock())
+        stock = self._low_stock_qs().count()
         rows = [
             (Order.objects.filter(status=Order.StatusChoices.PENDING).count(),
              _("orders to review"), "warning", cl("checkout_order", "?status__exact=pending")),

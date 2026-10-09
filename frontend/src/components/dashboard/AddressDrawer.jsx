@@ -6,15 +6,13 @@ import {
 } from "@heroui/react";
 import {useSaveAddress} from "@/queries/account";
 import {getApiErrorMessage} from "@/lib/utils";
+import CountrySelect from "@/components/forms/CountrySelect";
 
 const EMPTY_ADDRESS = {
     full_name: "", line1: "", line2: "", city: "", state: "", postal_code: "", country: "",
 };
 
-/**
- * `address` null = add a new one, otherwise edit it.
- * `addresses` is the current list, used to move the "default" flag.
- */
+
 const AddressDrawer = ({isOpen, onOpenChange, address = null, addresses = []}) => {
     return (
         <Drawer.Backdrop isOpen={isOpen} onOpenChange={onOpenChange}>
@@ -67,7 +65,7 @@ const AddressForm = ({address, addresses, onClose}) => {
         e.preventDefault();
 
         save.mutate(
-            {id: address?.id, data: {...form, is_default: isDefault}, addresses},
+            {id: address?.id, data: {...form, is_default: isDefault}},
             {
                 onSuccess: () => {
                     toast.success(address ? "Address updated." : "Address added.");
@@ -86,7 +84,7 @@ const AddressForm = ({address, addresses, onClose}) => {
             {field("city", "City", {isRequired: true, autoComplete: "address-level2"})}
             {field("state", "State / province (optional)", {autoComplete: "address-level1"})}
             {field("postal_code", "Postal code", {isRequired: true, autoComplete: "postal-code"})}
-            {field("country", "Country", {isRequired: true, autoComplete: "country-name"})}
+            <CountrySelect isRequired value={value("country")} onChange={set("country")}/>
 
             <Checkbox isSelected={isDefault} onChange={setIsDefault}>
                 <Checkbox.Content>

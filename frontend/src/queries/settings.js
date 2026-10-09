@@ -2,8 +2,8 @@ import {useMutation, useQuery} from "@tanstack/react-query";
 import {API_ENDPOINTS} from "@/lib/config";
 import apiClient from "@/lib/api/client";
 import {createContact} from "@/lib/api/settings";
+import {configQueryKey} from "@/lib/queryKeys";
 
-export const configQueryKey = ["fog_config"];
 
 async function fetchConfig() {
     const response = await apiClient.get(

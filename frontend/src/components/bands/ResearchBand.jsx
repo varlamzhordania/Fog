@@ -4,6 +4,8 @@ import BaseBand from "@/components/bands/BaseBand";
 
 
 export default function ResearchBand() {
+    const RESEARCH_URL = process.env.NEXT_PUBLIC_RESEARCH_URL;
+
     return (
         <BaseBand
             darkImage="/banner-research.jpg"
@@ -23,7 +25,7 @@ export default function ResearchBand() {
 
             description="Discover experiments, observations, and research exploring the hidden intelligence of fungi."
 
-            href="/research"
+            href={RESEARCH_URL}
             linkText="Explore research"
         />
     );

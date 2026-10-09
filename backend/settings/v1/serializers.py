@@ -158,15 +158,6 @@ class ConstanceConfigSerializer(serializers.Serializer):
                 help_text=help_text,
             )
 
-    def create(self, validated_data: dict):
-        return self.update(config, validated_data)
-
-    def update(self, instance, validated_data: dict):
-        for key, value in validated_data.items():
-            if hasattr(config, key):
-                setattr(config, key, value)
-        return config
-
 class ContactSerializer(serializers.ModelSerializer):
     class Meta:
         model = Contact

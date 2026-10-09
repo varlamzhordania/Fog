@@ -4,7 +4,7 @@ import {useState} from "react";
 import Link from "next/link";
 import {Button, Skeleton, Typography} from "@heroui/react";
 import {PackageSearch} from "lucide-react";
-import Icon from "@/components/Icon/Icon";
+import Icon from "@/components/icon/Icon";
 import OrderRow from "@/components/dashboard/OrderRow";
 import {useOrders} from "@/queries/checkout";
 import {ORDER_STATUS} from "@/lib/orders";

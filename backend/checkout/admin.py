@@ -304,7 +304,7 @@ class OrderAdmin(UnfoldImportExportHistoryAdmin):
         (
             _("Fulfillment & Delivery Notes"),
             {
-                "fields": ("notes",),
+                "fields": ("notes", "internal_notes"),
             },
         ),
         (

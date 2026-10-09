@@ -1,8 +1,9 @@
 "use client";
 
-import {useMutation, useQuery} from "@tanstack/react-query";
+import {useMutation, useQuery, useQueryClient} from "@tanstack/react-query";
 import {useAuthStore} from "@/stores/auth";
 import {authorize} from "@/lib/api/auth";
+import {useCartStore} from "@/stores/cart";
 
 /**
  * Thin fetch wrapper for Next.js auth API routes.
@@ -84,18 +85,19 @@ export function useRegister() {
 
 export function useLogout() {
     const clearAuth = useAuthStore((s) => s.clearAuth);
+    const resetLocalCart = useCartStore((s) => s.resetLocalCart);
+    const qc = useQueryClient();
+    const finish = () => {
+        clearAuth();
+        resetLocalCart();
+        qc.removeQueries({queryKey: ["account"]});
+        qc.removeQueries({queryKey: ["checkout"]});
+    };
 
     return useMutation({
-        mutationFn: () =>
-            authFetch("/api/auth/logout/", undefined, "GET"),
-
-        onSuccess: () => {
-            clearAuth();
-        },
-
-        onError: () => {
-            clearAuth();
-        },
+        mutationFn: () => authFetch("/api/auth/logout/", undefined, "POST"),
+        onSuccess: finish,
+        onError: finish,
     });
 }
 

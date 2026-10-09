@@ -152,18 +152,22 @@ export default async function ShippingPage() {
 
                                     <td className="px-5 py-4">
                                         {tier.name}
+                                       {tier.includes_tracking && (
+                                            <span className="ml-2 text-xs text-muted">Tracking included</span>
+                                        )}
                                     </td>
 
                                     <td className="px-5 py-4 text-muted">
-                                        {tier.price != null
-                                            ? formatPrice(tier.price)
-                                            : "Calculated at checkout"}
+                                        {Number(tier.price) === 0 ? "Free" : formatPrice(tier.price)}
+                                        {tier.free_over != null && (
+                                            <span className="block text-xs">
+                                                Free on orders over {formatPrice(tier.free_over)}
+                                            </span>
+                                        )}
                                     </td>
 
                                     <td className="px-5 py-4 text-muted">
-                                        {tier.estimated_days
-                                            ? `${tier.estimated_days} days`
-                                            : "See checkout"}
+                                        {tier.estimate || "See checkout"}
                                     </td>
 
                                 </tr>

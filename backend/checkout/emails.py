@@ -109,7 +109,9 @@ def _order_context(order, audience, extra):
             ("Total", _money(order.total_price))]
 
     if order.shipping_method_name:
-        cost = _money(order.shipping_cost) if order.shipping_cost else "Free"
+        cost = _money(
+            order.shipping_cost
+            ) if order.shipping_cost else "Free"
         rows.append(("Shipping", f"{order.shipping_method_name} · {cost}"))
 
     if order.tax_amount:
@@ -117,7 +119,7 @@ def _order_context(order, audience, extra):
         rows.append(
             (f"{prefix}{order.tax_name or 'Tax'} ({order.tax_rate.normalize():f}%)",
              _money(order.tax_amount))
-            )
+        )
 
     if payment:
         rows.append(
@@ -196,10 +198,10 @@ def send(order_id, event, audience, extra=None):
     subject_t, headline, intro = SPEC[event][audience]
 
     with transaction.atomic():
-        log, _ = N.objects.select_for_update().get_or_create(
+        notification, _ = N.objects.select_for_update().get_or_create(
             order=order, event=event, audience=audience
         )
-        if log.status in (N.Status.SENT, N.Status.SKIPPED):
+        if notification.status in (N.Status.SENT, N.Status.SKIPPED):
             return "duplicate"
 
         if audience == CUSTOMER:
@@ -211,8 +213,8 @@ def send(order_id, event, audience, extra=None):
         else:
             to = admin_emails()
         if not to:
-            log.status = N.Status.SKIPPED
-            log.save(update_fields=["status", "updated_at"])
+            notification.status = N.Status.SKIPPED
+            notification.save(update_fields=["status", "updated_at"])
             return "skipped"
 
         subject, text, html = _build(
@@ -232,12 +234,12 @@ def send(order_id, event, audience, extra=None):
                        "audience": audience}
             )
 
-        log.recipients, log.subject, log.error = ", ".join(
-            to
+        notification.recipients, notification.subject, notification.error = ", ".join(
+        to
         ), subject, error
-        log.status = N.Status.FAILED if error else N.Status.SENT
-        log.sent_at = None if error else timezone.now()
-        log.save()
+        notification.status = N.Status.FAILED if error else N.Status.SENT
+        notification.sent_at = None if error else timezone.now()
+        notification.save()
 
     if error:
         raise EmailDeliveryError(

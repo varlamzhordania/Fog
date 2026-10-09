@@ -5,6 +5,7 @@ import os
 def _env(name, default=""):
     return os.environ.get(name, default)
 
+
 CONSTANCE_CONFIG = OrderedDict(
     [
         # =========================================================================
@@ -190,10 +191,10 @@ CONSTANCE_CONFIG = OrderedDict(
         # Crypto Payments
         # -------------------------------------------------------------------------
         (
-            "CRYPTO_PAYMENT_WINDOW_MINUTES",
+            "PAYMENT_WINDOW_MINUTES",
             (
                 60,
-                "Expiration window for pending crypto payments, in minutes.",
+                "Expiration window for pending payments, in minutes.",
                 int,
             ),
         ),
@@ -364,7 +365,6 @@ CONSTANCE_CONFIG = OrderedDict(
     ]
 )
 
-
 CONSTANCE_CONFIG_FIELDSETS = OrderedDict(
     [
         # =========================================================================
@@ -436,10 +436,10 @@ CONSTANCE_CONFIG_FIELDSETS = OrderedDict(
         # Payments
         # =========================================================================
         (
-            "Crypto Payments",
+            "Payments",
             {
                 "fields": (
-                    "CRYPTO_PAYMENT_WINDOW_MINUTES",
+                    "PAYMENT_WINDOW_MINUTES",
                 ),
             },
         ),
@@ -511,7 +511,6 @@ CONSTANCE_CONFIG_FIELDSETS = OrderedDict(
     ]
 )
 
-
 CONSTANCE_PUBLIC_KEYS = {
     "WEBSITE_TITLE",
     "WEBSITE_TAGLINE",
@@ -538,4 +537,5 @@ CONSTANCE_PUBLIC_KEYS = {
     "TAX_NAME",
     "PRICES_INCLUDE_TAX",
     "TAX_ON_SHIPPING",
+    "PAYMENT_WINDOW_MINUTES",
 }

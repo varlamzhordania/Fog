@@ -48,7 +48,7 @@ class StripeProvider(PaymentProvider):
         expires = max(
             payment_deadline(order),
             timezone.now() + timedelta(
-                minutes=config.CRYPTO_PAYMENT_WINDOW_MINUTES
+                minutes=config.PAYMENT_WINDOW_MINUTES
             ),
         )
         order_url = f"{settings.FRONTEND_URL}/checkout/orders/{order.id}/"

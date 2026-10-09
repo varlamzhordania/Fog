@@ -243,6 +243,7 @@ export const useCartStore = create(
         {
             name: "fog_cart",
             partialize: (state) => ({items: state.items}),
+            skipHydration: true,
         }
     )
 );

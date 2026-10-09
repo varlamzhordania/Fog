@@ -25,13 +25,7 @@ export function useAddresses() {
 export function useSaveAddress() {
     const qc = useQueryClient();
     return useMutation({
-        mutationFn: async ({id, data, addresses = []}) => {
-            if (data.is_default) {
-                const others = addresses.filter((a) => a.is_default && a.id !== id);
-                await Promise.all(others.map((a) => patchAddress(a.id, {is_default: false})));
-            }
-            return id ? patchAddress(id, data) : createAddress(data);
-        },
+        mutationFn: ({id, data}) => (id ? patchAddress(id, data) : createAddress(data)),
         onSuccess: () => qc.invalidateQueries({queryKey: addressesKey}),
     });
 }

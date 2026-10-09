@@ -39,9 +39,6 @@ _USER_ERRORS = {
 }
 
 
-# ----------------------------------------------------------------------
-# Helpers shared with the webhook / reconciliation code
-# ----------------------------------------------------------------------
 
 def sign(
         hmac_key: str,
@@ -117,7 +114,7 @@ def _invoice_minutes(order) -> int:
     remaining = int(
         (payment_deadline(order) - timezone.now()).total_seconds() // 60
     )
-    configured = int(config.CRYPTO_PAYMENT_WINDOW_MINUTES)
+    configured = int(config.PAYMENT_WINDOW_MINUTES)
     return max(MIN_DURATION, min(MAX_DURATION, configured, remaining))
 
 

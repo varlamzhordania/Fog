@@ -44,7 +44,7 @@ export const useThemeStore = create(
         {
             name: "fog_theme",
             storage: createJSONStorage(() => localStorage),
-
+            skipHydration: true,
             onRehydrateStorage: () => (state) => {
                 if (!state || typeof document === "undefined") {
                     return;
