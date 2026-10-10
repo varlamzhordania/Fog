@@ -161,7 +161,7 @@ export default function ProductDetailClient({product: initialProduct}) {
                                 type="body-sm"
                                 className="text-center"
                             >
-                                {isDownloadable ? "Instant download after payment confirmation." : `${product.available_stock} ${stockLabel(product)}`}
+                                {isDownloadable ? "Instant download after payment confirmation." : `${stockLabel(product)}`}
                             </Typography>
                         </div>
                     </div>

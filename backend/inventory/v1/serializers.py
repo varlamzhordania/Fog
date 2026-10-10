@@ -186,16 +186,33 @@ class ProductListSerializer(serializers.ModelSerializer):
     discount_percentage = serializers.IntegerField(read_only=True)
     rating_average = serializers.FloatField(read_only=True)
     rating_count = serializers.IntegerField(read_only=True)
+    prices = serializers.SerializerMethodField()
 
     class Meta:
         model = Product
         fields = [
             "id", "name", "slug", "product_type", "short_description",
-            "base_price", "store_price", "discount_percentage",
+            "base_price", "store_price","prices", "discount_percentage",
             "rating_average", "rating_count", "is_featured",
             "primary_image", "available_stock", "is_available", "created_at",
         ]
         read_only_fields = fields
+
+    def get_prices(self, obj):
+        rows = getattr(obj, "active_prices", None)
+        if rows is None:
+            rows = list(obj.prices.filter(is_active=True))
+        if not rows:
+            rows = [obj.get_default_price()]
+        try:
+            available = obj.product_stock.available_quantity
+        except ObjectDoesNotExist:
+            available = 0
+        return ProductPriceSerializer(
+            rows,
+            many=True,
+            context={"available": available}
+        ).data
 
 
 class ProductReviewSerializer(serializers.ModelSerializer):
