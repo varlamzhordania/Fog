@@ -21,7 +21,8 @@
       "is_active": true,
       "is_featured": true,
       "created_at": "2026-08-10T10:00:00Z",
-      "updated_at": "2026-08-10T10:00:00Z"
+      "updated_at": "2026-08-10T10:00:00Z",
+      "stock_unit": "unit"
     }
   },
   {
@@ -45,7 +46,8 @@
       "is_active": true,
       "is_featured": true,
       "created_at": "2026-08-10T11:00:00Z",
-      "updated_at": "2026-08-10T11:00:00Z"
+      "updated_at": "2026-08-10T11:00:00Z",
+      "stock_unit": "unit"
     }
   },
   {
@@ -69,7 +71,8 @@
       "is_active": true,
       "is_featured": false,
       "created_at": "2026-08-10T12:00:00Z",
-      "updated_at": "2026-08-10T12:00:00Z"
+      "updated_at": "2026-08-10T12:00:00Z",
+      "stock_unit": "unit"
     }
   },
   {
@@ -94,7 +97,8 @@
       "is_active": true,
       "is_featured": false,
       "created_at": "2026-08-10T13:00:00Z",
-      "updated_at": "2026-08-10T13:00:00Z"
+      "updated_at": "2026-08-10T13:00:00Z",
+      "stock_unit": "unit"
     }
   },
   {
@@ -117,7 +121,8 @@
       "is_active": true,
       "is_featured": false,
       "created_at": "2026-08-10T14:00:00Z",
-      "updated_at": "2026-08-10T14:00:00Z"
+      "updated_at": "2026-08-10T14:00:00Z",
+      "stock_unit": "unit"
     }
   },
   {
@@ -141,7 +146,8 @@
       "is_active": true,
       "is_featured": false,
       "created_at": "2026-08-10T15:00:00Z",
-      "updated_at": "2026-08-10T15:00:00Z"
+      "updated_at": "2026-08-10T15:00:00Z",
+      "stock_unit": "unit"
     }
   },
   {
@@ -165,7 +171,8 @@
       "is_active": true,
       "is_featured": false,
       "created_at": "2026-08-10T16:00:00Z",
-      "updated_at": "2026-08-10T16:00:00Z"
+      "updated_at": "2026-08-10T16:00:00Z",
+      "stock_unit": "unit"
     }
   },
   {
@@ -190,7 +197,8 @@
       "is_active": true,
       "is_featured": false,
       "created_at": "2026-08-10T17:00:00Z",
-      "updated_at": "2026-08-10T17:00:00Z"
+      "updated_at": "2026-08-10T17:00:00Z",
+      "stock_unit": "unit"
     }
   },
   {
@@ -214,7 +222,8 @@
       "is_active": true,
       "is_featured": false,
       "created_at": "2026-08-10T18:00:00Z",
-      "updated_at": "2026-08-10T18:00:00Z"
+      "updated_at": "2026-08-10T18:00:00Z",
+      "stock_unit": "unit"
     }
   },
   {
@@ -240,7 +249,8 @@
       "is_active": true,
       "is_featured": true,
       "created_at": "2026-08-10T19:00:00Z",
-      "updated_at": "2026-08-10T19:00:00Z"
+      "updated_at": "2026-08-10T19:00:00Z",
+      "stock_unit": "unit"
     }
   },
   {
@@ -264,7 +274,8 @@
       "is_active": true,
       "is_featured": false,
       "created_at": "2026-08-10T20:00:00Z",
-      "updated_at": "2026-08-10T20:00:00Z"
+      "updated_at": "2026-08-10T20:00:00Z",
+      "stock_unit": "unit"
     }
   },
   {
@@ -289,7 +300,8 @@
       "is_active": true,
       "is_featured": true,
       "created_at": "2026-08-10T21:00:00Z",
-      "updated_at": "2026-08-10T21:00:00Z"
+      "updated_at": "2026-08-10T21:00:00Z",
+      "stock_unit": "unit"
     }
   },
   {
@@ -314,7 +326,8 @@
       "is_active": true,
       "is_featured": true,
       "created_at": "2026-08-10T22:00:00Z",
-      "updated_at": "2026-08-10T22:00:00Z"
+      "updated_at": "2026-08-10T22:00:00Z",
+      "stock_unit": "unit"
     }
   },
   {
@@ -338,7 +351,8 @@
       "is_active": true,
       "is_featured": false,
       "created_at": "2026-08-10T23:00:00Z",
-      "updated_at": "2026-08-10T23:00:00Z"
+      "updated_at": "2026-08-10T23:00:00Z",
+      "stock_unit": "unit"
     }
   },
   {
@@ -362,7 +376,8 @@
       "is_active": true,
       "is_featured": false,
       "created_at": "2026-08-11T00:00:00Z",
-      "updated_at": "2026-08-11T00:00:00Z"
+      "updated_at": "2026-08-11T00:00:00Z",
+      "stock_unit": "unit"
     }
   },
   {
@@ -385,7 +400,8 @@
       "is_active": true,
       "is_featured": false,
       "created_at": "2026-08-11T01:00:00Z",
-      "updated_at": "2026-08-11T01:00:00Z"
+      "updated_at": "2026-08-11T01:00:00Z",
+      "stock_unit": "unit"
     }
   },
   {
@@ -409,7 +425,8 @@
       "is_active": true,
       "is_featured": false,
       "created_at": "2026-08-11T02:00:00Z",
-      "updated_at": "2026-08-11T02:00:00Z"
+      "updated_at": "2026-08-11T02:00:00Z",
+      "stock_unit": "unit"
     }
   },
   {
@@ -432,7 +449,8 @@
       "is_active": true,
       "is_featured": false,
       "created_at": "2026-08-11T03:00:00Z",
-      "updated_at": "2026-08-11T03:00:00Z"
+      "updated_at": "2026-08-11T03:00:00Z",
+      "stock_unit": "unit"
     }
   },
   {
@@ -456,7 +474,8 @@
       "is_active": true,
       "is_featured": false,
       "created_at": "2026-08-11T04:00:00Z",
-      "updated_at": "2026-08-11T04:00:00Z"
+      "updated_at": "2026-08-11T04:00:00Z",
+      "stock_unit": "unit"
     }
   },
   {
@@ -480,7 +499,8 @@
       "is_active": true,
       "is_featured": false,
       "created_at": "2026-08-11T05:00:00Z",
-      "updated_at": "2026-08-11T05:00:00Z"
+      "updated_at": "2026-08-11T05:00:00Z",
+      "stock_unit": "unit"
     }
   },
   {
@@ -504,7 +524,8 @@
       "is_active": true,
       "is_featured": false,
       "created_at": "2026-08-11T06:00:00Z",
-      "updated_at": "2026-08-11T06:00:00Z"
+      "updated_at": "2026-08-11T06:00:00Z",
+      "stock_unit": "unit"
     }
   },
   {
@@ -527,7 +548,8 @@
       "is_active": true,
       "is_featured": false,
       "created_at": "2026-08-11T07:00:00Z",
-      "updated_at": "2026-08-11T07:00:00Z"
+      "updated_at": "2026-08-11T07:00:00Z",
+      "stock_unit": "unit"
     }
   },
   {
@@ -551,7 +573,8 @@
       "is_active": true,
       "is_featured": false,
       "created_at": "2026-08-11T08:00:00Z",
-      "updated_at": "2026-08-11T08:00:00Z"
+      "updated_at": "2026-08-11T08:00:00Z",
+      "stock_unit": "unit"
     }
   },
   {
@@ -575,7 +598,8 @@
       "is_active": true,
       "is_featured": false,
       "created_at": "2026-08-11T09:00:00Z",
-      "updated_at": "2026-08-11T09:00:00Z"
+      "updated_at": "2026-08-11T09:00:00Z",
+      "stock_unit": "unit"
     }
   },
   {
@@ -599,7 +623,8 @@
       "is_active": true,
       "is_featured": false,
       "created_at": "2026-08-11T10:00:00Z",
-      "updated_at": "2026-08-11T10:00:00Z"
+      "updated_at": "2026-08-11T10:00:00Z",
+      "stock_unit": "unit"
     }
   },
   {
@@ -623,7 +648,8 @@
       "is_active": true,
       "is_featured": true,
       "created_at": "2026-08-11T11:00:00Z",
-      "updated_at": "2026-08-11T11:00:00Z"
+      "updated_at": "2026-08-11T11:00:00Z",
+      "stock_unit": "unit"
     }
   },
   {
@@ -647,7 +673,8 @@
       "is_active": true,
       "is_featured": true,
       "created_at": "2026-08-11T12:00:00Z",
-      "updated_at": "2026-08-11T12:00:00Z"
+      "updated_at": "2026-08-11T12:00:00Z",
+      "stock_unit": "unit"
     }
   },
   {
@@ -670,7 +697,8 @@
       "is_active": true,
       "is_featured": false,
       "created_at": "2026-08-11T13:00:00Z",
-      "updated_at": "2026-08-11T13:00:00Z"
+      "updated_at": "2026-08-11T13:00:00Z",
+      "stock_unit": "unit"
     }
   },
   {
@@ -692,7 +720,8 @@
       "is_active": true,
       "is_featured": false,
       "created_at": "2026-08-11T14:00:00Z",
-      "updated_at": "2026-08-11T14:00:00Z"
+      "updated_at": "2026-08-11T14:00:00Z",
+      "stock_unit": "unit"
     }
   },
   {
@@ -715,7 +744,8 @@
       "is_active": true,
       "is_featured": false,
       "created_at": "2026-08-11T15:00:00Z",
-      "updated_at": "2026-08-11T15:00:00Z"
+      "updated_at": "2026-08-11T15:00:00Z",
+      "stock_unit": "unit"
     }
   },
   {
@@ -737,7 +767,8 @@
       "is_active": true,
       "is_featured": false,
       "created_at": "2026-08-11T16:00:00Z",
-      "updated_at": "2026-08-11T16:00:00Z"
+      "updated_at": "2026-08-11T16:00:00Z",
+      "stock_unit": "unit"
     }
   },
   {
@@ -760,7 +791,8 @@
       "is_active": true,
       "is_featured": false,
       "created_at": "2026-08-11T17:00:00Z",
-      "updated_at": "2026-08-11T17:00:00Z"
+      "updated_at": "2026-08-11T17:00:00Z",
+      "stock_unit": "unit"
     }
   },
   {
@@ -783,7 +815,8 @@
       "is_active": true,
       "is_featured": false,
       "created_at": "2026-08-11T18:00:00Z",
-      "updated_at": "2026-08-11T18:00:00Z"
+      "updated_at": "2026-08-11T18:00:00Z",
+      "stock_unit": "unit"
     }
   },
   {
@@ -806,7 +839,8 @@
       "is_active": true,
       "is_featured": false,
       "created_at": "2026-08-11T19:00:00Z",
-      "updated_at": "2026-08-11T19:00:00Z"
+      "updated_at": "2026-08-11T19:00:00Z",
+      "stock_unit": "unit"
     }
   },
   {
@@ -828,7 +862,8 @@
       "is_active": true,
       "is_featured": false,
       "created_at": "2026-08-11T20:00:00Z",
-      "updated_at": "2026-08-11T20:00:00Z"
+      "updated_at": "2026-08-11T20:00:00Z",
+      "stock_unit": "unit"
     }
   },
   {
@@ -850,7 +885,8 @@
       "is_active": true,
       "is_featured": false,
       "created_at": "2026-08-11T21:00:00Z",
-      "updated_at": "2026-08-11T21:00:00Z"
+      "updated_at": "2026-08-11T21:00:00Z",
+      "stock_unit": "unit"
     }
   },
   {
@@ -873,7 +909,8 @@
       "is_active": true,
       "is_featured": false,
       "created_at": "2026-08-11T22:00:00Z",
-      "updated_at": "2026-08-11T22:00:00Z"
+      "updated_at": "2026-08-11T22:00:00Z",
+      "stock_unit": "unit"
     }
   },
   {
@@ -897,7 +934,8 @@
       "is_active": false,
       "is_featured": false,
       "created_at": "2026-08-11T23:00:00Z",
-      "updated_at": "2026-08-11T23:00:00Z"
+      "updated_at": "2026-08-11T23:00:00Z",
+      "stock_unit": "unit"
     }
   }
 ]

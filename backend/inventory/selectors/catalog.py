@@ -40,13 +40,12 @@ def serializer_context():
     return {"category_lookups": category_lookups()}
 
 
-def catalog_products():
-    return (
+def catalog_products(detail=True):
+    qs = (
         Product.objects.filter(is_active=True)
-        .select_related("category", "product_stock")
-        .prefetch_related(
-            "tags", "product_media_items__media",
-            Prefetch("prices", queryset=ProductPrice.objects.filter(is_active=True),
-                     to_attr="active_prices"),
-        )
+        .select_related("product_stock")
+        .prefetch_related("product_media_items__media")
     )
+    if detail:
+        qs = qs.select_related("category").prefetch_related("tags")
+    return qs

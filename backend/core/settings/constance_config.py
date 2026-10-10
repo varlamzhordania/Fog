@@ -345,9 +345,12 @@ CONSTANCE_CONFIG = OrderedDict(
         (
             "LEGAL_RESEARCH_DISCLAIMER",
             (
-                """"
-                Products are sold for research, microscopy, taxonomy and educational purposes only. You are responsible for knowing and following the laws that apply to you. Sales are void where prohibited.
-                """,
+                (
+                    "Products are sold for research, microscopy, taxonomy and educational "
+                    "purposes only. You are responsible for knowing and following the laws "
+                    "that apply to you. Sales are void where prohibited."
+                ),
+                "Legal disclaimer displayed on the website.",
                 str,
             ),
         ),

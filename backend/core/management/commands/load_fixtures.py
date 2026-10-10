@@ -15,6 +15,7 @@ FIXTURES = [
     ("inventory", "categories"),
     ("inventory", "tags"),
     ("inventory", "products"),
+    ("inventory", "product_prices"),
     ("inventory", "product_stocks"),
     ("checkout", "payment_methods"),
     ("checkout", "shipping_methods"),
@@ -24,17 +25,16 @@ FIXTURES = [
     ("checkout", "shopping_carts"),
 ]
 
-# Fixtures each fixture references. `--only` loads these too, so a partial
-# load never fails on a missing foreign key.
 DEPENDENCIES = {
     "users": {"groups"},
     "addresses": {"users"},
     "products": {"categories", "tags"},
+    "product_prices": {"products"},
     "product_stocks": {"products"},
-    "orders": {"users", "addresses", "products"},
+    "orders": {"users", "addresses", "products", "product_prices"},
     "stock_reservations": {"orders", "product_stocks"},
     "stock_logs": {"product_stocks", "users"},
-    "shopping_carts": {"users", "products"},
+    "shopping_carts": {"users", "products", "product_prices"},
 }
 
 
