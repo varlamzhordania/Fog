@@ -17,7 +17,8 @@ export const formatDate = (value, options = {dateStyle: "medium"}) =>
 
 // "2 × Product A, 1 × Product B +3 more"
 export const summarizeItems = (items = [], visible = 2) => {
-    const names = items.map((item) => `${item.quantity} × ${item.product_name ?? "Removed product"}`);
+    const names = items.map((item) =>
+        `${item.quantity} × ${item.product_name ?? "Removed product"}${item.price_label ? ` (${item.price_label})` : ""}`);
     const extra = names.length - visible;
 
     return names.slice(0, visible).join(", ") + (extra > 0 ? ` +${extra} more` : "");
@@ -32,5 +33,3 @@ export const getOrderStats = (orders = []) => ({
     awaitingPayment: orders.filter((order) => order.status === "payment").length,
 });
 
-const names = items.map((item) =>
-    `${item.quantity} × ${item.product_name ?? "Removed product"}${item.price_label ? ` (${item.price_label})` : ""}`);

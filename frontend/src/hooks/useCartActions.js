@@ -35,9 +35,12 @@ export function useCartActions(product, priceProp) {
         toast.danger(error?.response?.data?.detail || fallback);
 
     const handleAdd = async (onAddCallback) => {
+        console.log("try to add")
         if (!product || !price) return;
+             console.log("1")
         if (stock <= 0) return toast.danger("Maximum available stock reached.");
         try {
+            console.log("2")
             await addItem(product, price);
             toast.success(`${product.name} (${price.label}) added to cart.`);
             onAddCallback?.({product, price});
