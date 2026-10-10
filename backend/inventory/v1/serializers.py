@@ -86,8 +86,8 @@ class ProductPriceSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = ProductPrice
-        fields = ["id", "label", "stock_quantity", "base_price", "store_price",
-                  "discount_percentage", "is_default", "max_quantity"]
+        fields = ["id", "label", "amount", "unit", "stock_quantity", "base_price",
+                  "store_price", "discount_percentage", "is_default", "max_quantity"]
         read_only_fields = fields
 
     def get_max_quantity(self, obj):
@@ -136,6 +136,7 @@ class ProductSerializer(serializers.ModelSerializer):
             "description",
 
             "stock_unit",
+            "unit_size",
             "prices",
             "base_price",
             "store_price",
@@ -191,10 +192,24 @@ class ProductListSerializer(serializers.ModelSerializer):
     class Meta:
         model = Product
         fields = [
-            "id", "name", "slug", "product_type", "short_description",
-            "base_price", "store_price","prices", "discount_percentage",
-            "rating_average", "rating_count", "is_featured",
-            "primary_image", "available_stock", "is_available", "created_at",
+            "id",
+            "name",
+            "slug",
+            "product_type",
+            "short_description",
+            "base_price",
+            "store_price",
+            "stock_unit",
+            "unit_size",
+            "prices",
+            "discount_percentage",
+            "rating_average",
+            "rating_count",
+            "is_featured",
+            "primary_image",
+            "available_stock",
+            "is_available",
+            "created_at",
         ]
         read_only_fields = fields
 

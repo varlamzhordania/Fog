@@ -37,8 +37,6 @@ export default function ProductDetailClient({product: initialProduct}) {
     const isDownloadable = product.product_type === "downloadable";
 
 
-
-
     return (<div className="container container-space md:py-12">
 
         {/* Breadcrumbs */}
@@ -163,6 +161,9 @@ export default function ProductDetailClient({product: initialProduct}) {
                             >
                                 {isDownloadable ? "Instant download after payment confirmation." : `${stockLabel(product)}`}
                             </Typography>
+                            <span className="text-xs text-muted">
+                                {product.max_quantity < 1 ? " · out of stock" : product.max_quantity <= 5 ? ` · ${product.max_quantity} left` : ""}
+                            </span>
                         </div>
                     </div>
 

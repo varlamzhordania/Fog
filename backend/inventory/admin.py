@@ -85,13 +85,20 @@ class ProductMediaInline(
         )
 
 
-class ProductPriceInline(admin.TabularInline, nested_admin.NestedTabularInline):
+class ProductPriceInline(admin.StackedInline, nested_admin.NestedStackedInline):
     model = ProductPrice
     extra = 0
     min_num = 1
     validate_min = True
-    fields = ["label", "stock_quantity", "base_price", "store_price",
-              "is_default", "display_order", "is_active"]
+    fields = ["amount", "unit", "label", "base_price", "store_price",
+              "uses_stock", "is_default", "display_order", "is_active"]
+    readonly_fields = ["uses_stock"]
+
+    @django_admin.display(description=_("Uses from stock"))
+    def uses_stock(self, obj):
+        if not obj or not obj.pk:
+            return "—"
+        return f"{obj.stock_quantity} {obj.product.stock_unit}"
 
 
 class MediaInline(admin.StackedInline):
@@ -302,16 +309,6 @@ class ProductAdmin(
             },
         ),
         (
-            _("Pricing"),
-            {
-                "fields": ("stock_unit", ("base_price", "store_price")),
-                "description": _(
-                    "Prices are set per option in the Product Prices table below. "
-                    "The figures here show the cheapest option and update automatically."
-                ),
-            },
-        ),
-        (
             _("Descriptions"),
             {
                 "fields": (
@@ -325,6 +322,17 @@ class ProductAdmin(
             {
                 "fields": (
                     ("is_active", "is_featured"),
+                ),
+            },
+        ),
+        (
+            _("Pricing"),
+            {
+                "fields": (("stock_unit", "unit_size"),
+                           ("base_price", "store_price")),
+                "description": _(
+                    "Prices are set per option in the Product Prices table below. "
+                    "The figures here show the cheapest option and update automatically."
                 ),
             },
         ),

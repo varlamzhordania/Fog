@@ -89,3 +89,15 @@ def _price_saved(sender, instance, raw=False, **kwargs):
 @receiver(post_delete, sender=ProductPrice)
 def _price_deleted(sender, instance, **kwargs):
     sync_product_price(instance.product_id)
+
+@receiver(post_save, sender=Product)
+def _product_saved(sender, instance, raw=False, **kwargs):
+    if raw:
+        return
+    for price in instance.prices.all():
+        try:
+            new_units = instance.stock_units_for(price.amount, price.unit)
+        except Exception:      # unit no longer fits (e.g. kg on a unit product)
+            continue           # the admin sees this when they next edit the option
+        if new_units != price.stock_quantity:
+            ProductPrice.objects.filter(pk=price.pk).update(stock_quantity=new_units)

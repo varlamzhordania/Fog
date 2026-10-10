@@ -7,6 +7,10 @@ from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 from django.core.validators import MinValueValidator, MaxValueValidator
 from django.contrib.auth import get_user_model
+from django.core.exceptions import (
+    ObjectDoesNotExist,
+    ValidationError as DjangoValidationError,
+)
 from django_ckeditor_5.fields import CKEditor5Field
 from treebeard.mp_tree import MP_Node
 from autoslug import AutoSlugField
@@ -15,6 +19,17 @@ from core.html import clean_html
 from core.models import BaseModel, UploadPath, FileSizeValidator
 
 User = get_user_model()
+
+UNIT_FACTORS = {
+    "piece": ("piece", None),
+    "g": ("g", Decimal("1")),
+    "kg": ("g", Decimal("1000")),
+    "oz": ("g", Decimal("28.349523")),
+    "lb": ("g", Decimal("453.59237")),
+    "ml": ("ml", Decimal("1")),
+    "l": ("ml", Decimal("1000")),
+    "fl_oz": ("ml", Decimal("29.57353")),
+}
 
 
 class Media(BaseModel):
@@ -186,6 +201,11 @@ class Product(BaseModel):
         DOWNLOADABLE = "downloadable", _("Downloadable File / Guide")
         OTHER = "other", _("Other")
 
+    class StockUnit(models.TextChoices):
+        UNIT = "unit", _("Units (pieces)")
+        GRAM = "g", _("Grams")
+        ML = "ml", _("Milliliters")
+
     category = models.ForeignKey(
         Category,
         on_delete=models.SET_NULL,
@@ -269,10 +289,20 @@ class Product(BaseModel):
         ),
     )
     stock_unit = models.CharField(
-        max_length=20, default="unit", verbose_name=_("Stock Unit"),
+        max_length=10,
+        choices=StockUnit.choices,
+        default=StockUnit.UNIT,
+        verbose_name=_("Stock Unit"),
         help_text=_(
-            "Unit the stock is counted in: unit, g, ml… Stock quantity, "
-            "reserved stock and the low-stock threshold use this unit."
+            "What the stock quantity is counted in. Stock, reserved stock and "
+            "the low-stock threshold all use this unit."
+        ),
+    )
+    unit_size = models.PositiveIntegerField(
+        default=1, validators=[MinValueValidator(1)], verbose_name=_("Piece size"),
+        help_text=_(
+            "How many stock units one piece contains (e.g. 50 when counting in "
+            "grams and a pouch is 50 g). Ignored when counting in units."
         ),
     )
     base_price = models.DecimalField(
@@ -360,8 +390,9 @@ class Product(BaseModel):
         if price is None:
             price = ProductPrice.objects.create(
                 product=self,
+                amount=1,
+                unit="piece",
                 label="Each",
-                stock_quantity=1,
                 base_price=self.base_price,
                 store_price=self.store_price,
                 is_default=True,
@@ -401,6 +432,21 @@ class Product(BaseModel):
         return (self.base_price - self.store_price).quantize(
             Decimal("0.01")
         )
+
+    def stock_units_for(self, amount, unit):
+        family, factor = UNIT_FACTORS[unit]
+        amount = Decimal(amount)
+        if family == "piece":
+            per_piece = 1 if self.stock_unit == self.StockUnit.UNIT else self.unit_size
+            raw = amount * per_piece
+        else:
+            if family != self.stock_unit:
+                raise DjangoValidationError(
+                    f"'{unit}' can't be used: this product's stock is counted in "
+                    f"{self.get_stock_unit_display().lower()}."
+                )
+            raw = amount * factor
+        return max(1, int(raw.quantize(Decimal("1"), rounding=ROUND_HALF_UP)))
 
 
 class ProductMedia(BaseModel):
@@ -444,35 +490,60 @@ class ProductMedia(BaseModel):
 
 
 class ProductPrice(BaseModel):
+    class UnitChoices(models.TextChoices):
+        PIECE = "piece", _("Piece(s)")
+        GRAM = "g", _("g")
+        KILOGRAM = "kg", _("kg")
+        OUNCE = "oz", _("oz")
+        POUND = "lb", _("lb")
+        MILLILITER = "ml", _("ml")
+        LITER = "l", _("l")
+        FLUID_OUNCE = "fl_oz", _("fl oz")
+
     product = models.ForeignKey(
         Product,
         on_delete=models.CASCADE,
         related_name="prices"
     )
-    label = models.CharField(
-        max_length=60, verbose_name=_("Label"),
-        help_text=_("Shown to the buyer, e.g. Each, 0.5 lb, 1 kg.")
+    amount = models.DecimalField(
+        max_digits=10,
+        decimal_places=3,
+        default=Decimal("1"),
+        validators=[MinValueValidator(Decimal("0.001"))],
+        verbose_name=_("Amount"),
+        help_text=_("How much the buyer gets, e.g. 0.5 with unit lb."),
     )
-    stock_quantity = models.PositiveIntegerField(
-        default=1, validators=[MinValueValidator(1)],
-        verbose_name=_("Stock used per purchase"),
+    unit = models.CharField(
+        max_length=10,
+        choices=UnitChoices,
+        default=UnitChoices.PIECE,
+        verbose_name=_("Unit")
+    )
+    label = models.CharField(
+        max_length=60,
+        blank=True,
+        verbose_name=_("Label"),
         help_text=_(
-            "How many of the product's stock units one purchase of this "
-            "option uses (e.g. 1000 for '1 kg' when stock is in grams)."
+            "Shown to the buyer. Leave empty to generate it (Each, 0.5 lb, 1 kg)."
         ),
     )
+    stock_quantity = models.PositiveIntegerField(
+        default=1,
+        editable=False,
+        verbose_name=_("Stock used per purchase"),
+        help_text=_("Calculated from amount, unit and the product's stock unit."),
+    )
     base_price = models.DecimalField(
-        max_digits=12, decimal_places=2,
+        max_digits=12,
+        decimal_places=2,
         validators=[MinValueValidator(Decimal("0.00"))]
     )
     store_price = models.DecimalField(
-        max_digits=12, decimal_places=2,
+        max_digits=12,
+        decimal_places=2,
         validators=[MinValueValidator(Decimal("0.00"))]
     )
-    is_default = models.BooleanField(
-        default=False,
-        verbose_name=_("Preselected")
-    )
+    is_default = models.BooleanField(default=False, verbose_name=_("Preselected"))
     display_order = models.PositiveIntegerField(default=0)
 
     class Meta:
@@ -484,12 +555,31 @@ class ProductPrice(BaseModel):
     def __str__(self):
         return f"{self.product.name} · {self.label}"
 
+    def _auto_label(self):
+        amount = f"{self.amount.normalize():f}"
+        if self.unit == self.UnitChoices.PIECE:
+            return "Each" if self.amount == 1 else f"{amount} pcs"
+        return f"{amount} {self.unit.replace('_', ' ')}"
+
+    def clean(self):
+        try:
+            product = self.product
+        except ObjectDoesNotExist:
+            return
+        try:
+            product.stock_units_for(self.amount, self.unit)
+        except DjangoValidationError as exc:
+            raise DjangoValidationError({"unit": exc.messages})
+
     def save(self, *args, **kwargs):
+        self.stock_quantity = self.product.stock_units_for(self.amount, self.unit)
+        if not self.label:
+            self.label = self._auto_label()
         super().save(*args, **kwargs)
         if self.is_default:
-            ProductPrice.objects.filter(
-                product_id=self.product_id
-            ).exclude(pk=self.pk).update(is_default=False)
+            ProductPrice.objects.filter(product_id=self.product_id).exclude(
+                pk=self.pk
+            ).update(is_default=False)
 
     @property
     def discount_percentage(self) -> int:
