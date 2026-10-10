@@ -28,9 +28,10 @@ const ProductCard = ({
     const formattedBasePrice = isNaN(Number(data.base_price)) ? data.base_price : Number(data.base_price).toFixed(2);
     const formattedPrice = isNaN(Number(data.store_price)) ? data.store_price : Number(data.store_price).toFixed(2);
     const isOnSale = data.discount_percentage > 0
-    const isAvailableToPurchase = data.is_available || false
     const outOfStock = typeof data.available_stock === "number" && data.available_stock <= 0;
+    const isAvailableToPurchase = Boolean(data.is_available) && !outOfStock;
     const productPage = `/products/${data.slug}/`
+    const hasOptions = (data.prices?.length ?? 0) > 1;
 
     return (<Card className={cn("h-full w-full", depth && "bg-transparent shadow-none border-0")}>
         <Link href={productPage}>
@@ -51,7 +52,7 @@ const ProductCard = ({
 
                 {/* Image gradient */}
                 <div
-                    className="absolute inset-0 bg-gradient-to-t from-background/40 via-background/10 to-transparent z-10"/>
+                    className="absolute inset-0 bg-linear-to-t from-background/40 via-background/10 to-transparent z-10"/>
 
                 {/* Unavailable overlay */}
                 {!isAvailableToPurchase && (
@@ -81,10 +82,9 @@ const ProductCard = ({
                 {/* Featured price */}
                 {featured && (
                     <div className="absolute left-4 bottom-4 z-30">
-                        <Typography
-                            type="span"
-                            className="text-foreground text-lg font-bold"
-                        >
+                        <Typography type="span" className="text-foreground text-lg font-bold">
+                            {hasOptions &&
+                                <span className="mr-1 text-xs font-normal text-muted">From</span>}
                             ${formattedPrice}
                         </Typography>
                     </div>
@@ -115,10 +115,9 @@ const ProductCard = ({
                             </Typography>
                         )}
 
-                        <Typography
-                            type="span"
-                            className="text-foreground text-lg font-bold"
-                        >
+                        <Typography type="span" className="text-foreground text-lg font-bold">
+                            {hasOptions &&
+                                <span className="mr-1 text-xs font-normal text-muted">From</span>}
                             ${formattedPrice}
                         </Typography>
                     </div>
@@ -136,10 +135,10 @@ const ProductCard = ({
         <Card.Footer>
             {featured ? <Link href={getProductHref(data.slug)}
                               className={"group flex gap-2 items-center text-accent font-semibold no-underline "}>
-                Show Now
+                View product
                 <Icon icon={MoveRight}
                       className={"group-hover:translate-x-0.5 transition"}/>
-            </Link> : <CartQuantityControl product={data} limitWidth={false}/>}
+            </Link> : <CartQuantityControl product={data}/>}
 
         </Card.Footer>
     </Card>);

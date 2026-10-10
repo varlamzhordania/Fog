@@ -13,7 +13,7 @@ const PAID_STATUSES = ["pending", "processing", "shipped", "delivered"];
 const IN_PROGRESS_STATUSES = ["pending", "processing", "shipped"];
 
 export const formatDate = (value, options = {dateStyle: "medium"}) =>
-    value ? new Date(value).toLocaleDateString(undefined, options) : "";
+    value ? new Date(value).toLocaleString(undefined, options) : "";
 
 // "2 × Product A, 1 × Product B +3 more"
 export const summarizeItems = (items = [], visible = 2) => {
@@ -31,3 +31,6 @@ export const getOrderStats = (orders = []) => ({
     inProgress: orders.filter((order) => IN_PROGRESS_STATUSES.includes(order.status)).length,
     awaitingPayment: orders.filter((order) => order.status === "payment").length,
 });
+
+const names = items.map((item) =>
+    `${item.quantity} × ${item.product_name ?? "Removed product"}${item.price_label ? ` (${item.price_label})` : ""}`);

@@ -34,7 +34,10 @@ COMPLETED = OrderPayment.StatusChoices.COMPLETED
 CHART_W, CHART_H = 1000, 300
 CHART_TOP, CHART_BOTTOM = 14, 4
 
-
+ORDER_TONE = {
+    "payment": "info", "pending": "warning", "processing": "warning",
+    "shipped": "primary", "delivered": "success", "cancelled": "danger",
+}
 
 def _dec(value):
     return Decimal(str(value or 0))
@@ -777,14 +780,7 @@ class AnalyticsDashboardView(UnfoldModelAdminViewMixin, TemplateView):
                 search |= Q(id=int(query.lstrip("#")))
             qs = qs.filter(search)
 
-        order_tone = {
-            Order.StatusChoices.PAYMENT: "info",
-            Order.StatusChoices.PENDING: "warning",
-            Order.StatusChoices.PROCESSING: "warning",
-            Order.StatusChoices.SHIPPED: "primary",
-            Order.StatusChoices.DELIVERED: "success",
-            Order.StatusChoices.CANCELLED: "danger",
-        }
+
         payment_tone = {
             OrderPayment.StatusChoices.PENDING: "warning",
             OrderPayment.StatusChoices.COMPLETED: "success",
@@ -808,7 +804,7 @@ class AnalyticsDashboardView(UnfoldModelAdminViewMixin, TemplateView):
                     "initials": _initials(name, order.user.email),
                     "total": _money(order.total_price),
                     "status": order.get_status_display(),
-                    "status_tone": order_tone.get(order.status, "neutral"),
+                    "status_tone": ORDER_TONE.get(order.status, "neutral"),
                     "payment": payment.get_status_display() if payment else _("No payment"),
                     "payment_tone": payment_tone.get(payment.status, "neutral")
                     if payment

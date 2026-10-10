@@ -20,7 +20,6 @@ import Image from "@/components/Image";
 import BackgroundImage from "@/components/BackgroundImage";
 import DealsBand from "@/components/bands/DealsBand";
 import ResearchBand from "@/components/bands/ResearchBand";
-import React from "react";
 import {BestSellers, Deals, LastFew, NewArrivals} from "@/components/home/HomeSections";
 
 const RESEARCH_URL = process.env.NEXT_PUBLIC_RESEARCH_URL;
@@ -93,7 +92,7 @@ export default function Home() {
                     }}
                     showDescription={false}
                     cardHeight="min-h-85"
-                    actionLabel="Show Now"
+                    actionLabel="View product"
                 />
             </section>
 
@@ -264,7 +263,7 @@ function FinalCta() {
                             Ready when you are
                         </Typography>
                         <Typography type="body" className="max-w-md text-muted">
-                            Pick your products, pay privately, and we pack it plain.
+                            Pick your products, check out securely, and we pack it plain.
                         </Typography>
                         <Link href="/products" className={btnPrimary}>
                             Browse the shop <Icon icon={ArrowRight} className="size-4"/>

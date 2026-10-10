@@ -6,8 +6,6 @@ import "./globals.css";
 import AppInitializer from "@/layouts/AppInitializer";
 import RootProvider from "@/providers/RootProvider";
 import Navbar from "@/components/Navbar";
-import {serverFetch} from "@/lib/api/server";
-import {API_ENDPOINTS} from "@/lib/config";
 import Footer from "@/components/Footer";
 import {AnnouncementBar} from "@/components/AnnouncementBar";
 import GoToTop from "@/components/GoToTop";
@@ -36,8 +34,8 @@ const poppins = Poppins({
 export async function generateMetadata() {
     let faviconUrl = '/default-fallback.ico';
     let title = 'FOG - Mycology Research & Supplies';
-    let description = 'Anonymous crypto e-commerce for mycology research.';
-    let keywords = 'mycology, spore microscopy, research genetics, lab supplies, crypto checkout';
+    let description = 'Mycology research materials and laboratory supplies. Pay by card or cryptocurrency.';
+    let keywords = 'mycology, spore microscopy, lab supplies, grow kits, cultivation media';
     let ogImage = null;
 
     const config = await getSiteConfig();
@@ -85,6 +83,10 @@ export default async function RootLayout({children}) {
     const config = await getSiteConfig();
     if (config) queryClient.setQueryData(configQueryKey, config);
 
+    const themeScript = `try{var t=JSON.parse(localStorage.getItem("fog_theme")).state.theme;
+        if(t==="light"||t==="dark"){var d=document.documentElement;d.classList.remove("dark","light");
+        d.classList.add(t);d.setAttribute("data-theme",t)}}catch(e){}`;
+
     return (
         <html
             lang="en"
@@ -93,6 +95,7 @@ export default async function RootLayout({children}) {
             suppressHydrationWarning
             data-scroll-behavior="smooth"
         >
+        <head><script dangerouslySetInnerHTML={{__html: themeScript}}/></head>
         <body className="min-h-screen font-sans antialiased" suppressHydrationWarning>
         <RootProvider>
             <HydrationBoundary state={dehydrate(queryClient)}>

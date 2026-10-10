@@ -1,6 +1,6 @@
 import ProductDetailClient from "./ProductDetailClient";
-import {fetchProductBySlug} from "@/lib/api/inventory";
 import {notFound} from "next/navigation";
+import {getProduct} from "@/lib/api/inventory.server";
 
 export const dynamicParams = true;
 
@@ -8,7 +8,7 @@ export async function generateMetadata({params}) {
     const {slug} = await params;
 
     try {
-        const product = await fetchProductBySlug(slug);
+        const product = await getProduct(slug);
 
         const description =
             product.short_description ||
@@ -78,7 +78,7 @@ export default async function ProductDetail({params}) {
     let product;
 
     try {
-        product = await fetchProductBySlug(slug);
+        product = await getProduct(slug);
     } catch (e) {
         if (e?.status === 404) {
             notFound();
@@ -154,7 +154,7 @@ function ProductJsonLd({product}) {
 
             priceCurrency: "USD",
 
-            price: product.base_price,
+            price: product.store_price,
 
             availability:
                 product.available_stock > 0
@@ -170,7 +170,7 @@ function ProductJsonLd({product}) {
         <script
             type="application/ld+json"
             dangerouslySetInnerHTML={{
-                __html: JSON.stringify(jsonLd),
+                __html: JSON.stringify(jsonLd).replace(/</g, "\\u003c"),
             }}
         />
     );

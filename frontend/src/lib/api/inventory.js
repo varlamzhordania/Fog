@@ -124,18 +124,6 @@ export async function fetchPriceRange() {
 }
 
 
-export async function fetchProductBySlug(slug) {
-    if (!slug) {
-        throw new Error("Product slug is required");
-    }
-
-    const response = await apiClient.get(
-        API_ENDPOINTS.inventory.productDetail(slug)
-    );
-
-    return response.data;
-}
-
 export const fetchReviews = async (slug, page = 1) =>
     (await apiClient.get(API_ENDPOINTS.inventory.reviews(slug), {params: {page, page_size: 10}})).data;
 

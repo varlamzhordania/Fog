@@ -10,12 +10,13 @@ from rest_framework.viewsets import ReadOnlyModelViewSet
 
 from core.logging import get_logger
 from checkout.models import PaymentMethod
-from checkout.selectors.orders import order_detail, orders_for_user
 from checkout.services.cart import CartService
 from checkout.services.checkout import CheckoutService
 from checkout.services.orders import OrderService
 from checkout.services.payments import PaymentService
 from checkout.services.shipping import ShippingService
+from checkout.selectors.orders import order_detail, orders_for_user, order_list_for_user
+
 
 from .serializers import (
     OrderSerializer,
@@ -23,6 +24,7 @@ from .serializers import (
     ShoppingCartInputSerializer,
     ShoppingCartSerializer, ShoppingCartItemUpdateSerializer,
     OrderCreateSerializer, OrderPaySerializer, ShippingMethodSerializer,
+    OrderListSerializer,
 )
 
 log = get_logger(__name__)
@@ -51,7 +53,12 @@ class UserOrderView(ReadOnlyModelViewSet):
     permission_classes = [IsAuthenticated]
     serializer_class = OrderSerializer
 
+    def get_serializer_class(self):
+        return OrderListSerializer if self.action == "list" else OrderSerializer
+
     def get_queryset(self):
+        if self.action == "list":
+            return order_list_for_user(self.request.user)
         return orders_for_user(self.request.user)
 
     def retrieve(self, request, *args, **kwargs):
@@ -148,6 +155,7 @@ class ShoppingCartItemAPIView(APIView):
                 user=request.user,
                 product_id=serializer.validated_data["product_id"],
                 quantity=serializer.validated_data["quantity"],
+                price_id=serializer.validated_data.get("price_id"),
             )
             return Response(
                 ShoppingCartSerializer(
@@ -168,10 +176,10 @@ class ShoppingCartItemAPIView(APIView):
 
         try:
             cart = CartService.update_item_quantity(
-                user=request.user,
-                product_id=product_id,
+                user=request.user, product_id=product_id,
                 quantity=serializer.validated_data["quantity"],
                 action=serializer.validated_data["action"],
+                price_id=serializer.validated_data.get("price_id"),
             )
             return Response(
                 ShoppingCartSerializer(
@@ -189,8 +197,8 @@ class ShoppingCartItemAPIView(APIView):
     def delete(self, request: Request, product_id: int) -> Response:
         try:
             cart = CartService.remove_item(
-                user=request.user,
-                product_id=product_id
+                user=request.user, product_id=product_id,
+                price_id=request.query_params.get("price_id"),
             )
             return Response(
                 ShoppingCartSerializer(

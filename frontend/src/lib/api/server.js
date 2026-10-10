@@ -1,3 +1,5 @@
+import {ApiError} from "@/lib/api/error";
+
 async function parseResponse(response) {
     const contentType =
         response.headers.get('content-type') || '';
@@ -58,10 +60,7 @@ export async function serverFetch(
         : response;
 
     if (!response.ok) {
-        throw {
-            status: response.status,
-            data,
-        };
+        throw new ApiError(response.status, data);
     }
 
     return data;

@@ -1,7 +1,7 @@
 "use client";
 
 import {useEffect, useState} from "react";
-import Image from "next/image";
+import Image from "@/components/Image";
 import Link from "next/link";
 import {A11y} from "swiper/modules";
 import {Swiper, SwiperSlide} from "swiper/react";
@@ -60,6 +60,7 @@ const ProductSlider = ({
     getDescription = (product) =>
         product.short_description || product.description || "",
     getImage = (product) =>
+        product.primary_image?.file ||
         product.image_url ||
         product.image ||
         product.thumbnail ||
@@ -174,12 +175,12 @@ const ProductSlider = ({
                     }}
                     onSlideChange={updateSlideStatus}
                     onResize={updateSlideStatus}
-                    className="w-full !pb-8 [&_.swiper-wrapper]:items-stretch"
+                    className="w-full pb-8! [&_.swiper-wrapper]:items-stretch"
                 >
                     {productData.map((product, index) => (
                         <SwiperSlide
                             key={product.id || product.slug || index}
-                            className="!h-auto flex"
+                            className="h-auto! flex"
                         >
                             {isImageCard ? (
                                 <ImageProductCard

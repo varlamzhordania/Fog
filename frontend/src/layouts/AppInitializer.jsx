@@ -67,37 +67,7 @@ export default function AppInitializer({children}) {
         }
     }, [logged_in, syncGuestCart]);
 
-     if (isError && !config) {
-        return (
-            <div
-                className="fixed inset-0 z-50 flex flex-col items-center justify-center"
-                role="status"
-                aria-live="polite"
-            >
-                <div className="relative flex items-center justify-center">
-                    <Loader/>
-                </div>
-
-                <div className="mt-2 flex flex-col items-center gap-1.5">
-                    <Typography
-                        type="span"
-                        className="font-atomic text-7xl text-accent uppercase hover:text-accent-hover"
-                    >
-                        FOG
-                    </Typography>
-
-                    <Typography
-                        type="body"
-                        className="text-foreground"
-                    >
-                        Welcome to FOG Ecommerce website
-                    </Typography>
-                </div>
-            </div>
-        );
-    }
-
-    if (isError) {
+    if (isError && !config) {
         return (
             <div className="fixed inset-0 z-50 flex flex-col items-center justify-center px-4">
                 <Card>
@@ -105,35 +75,14 @@ export default function AppInitializer({children}) {
                         <div className="mb-2 flex w-full items-center justify-center">
                             <TriangleAlert size={32}/>
                         </div>
-
-                        <Card.Title className="text-center">
-                            Configuration Sync Failed
-                        </Card.Title>
-
+                        <Card.Title className="text-center">We can't reach the store right now</Card.Title>
                         <Card.Description className="text-center">
-                            Unable to connect to service configuration.
-                            Verify your network connection or backend status.
+                            Please check your connection and try again. If this keeps happening, come back in a few minutes.
                         </Card.Description>
-
-                        {error?.message && (
-                            <Typography
-                                type="small"
-                                className="mt-2 text-center text-muted"
-                            >
-                                {error.message}
-                            </Typography>
-                        )}
                     </Card.Header>
-
                     <Card.Footer className="justify-center">
-                        <Button
-                            onPress={() => refetch()}
-                            isDisabled={isLoading}
-                        >
-                            {isLoading
-                                ? 'Retrying...'
-                                : 'Retry Connection'
-                            }
+                        <Button onPress={() => refetch()} isDisabled={isFetching}>
+                            {isFetching ? "Retrying…" : "Try again"}
                         </Button>
                     </Card.Footer>
                 </Card>

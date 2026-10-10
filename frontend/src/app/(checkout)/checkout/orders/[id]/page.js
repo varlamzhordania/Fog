@@ -17,15 +17,7 @@ import {
 } from "@/queries/checkout";
 import {getApiErrorMessage} from "@/lib/utils";
 import {chainLabel, explorerTxUrl, formatPrice, shortHash} from "@/lib/payments";
-
-const STATUS = {
-    payment: {label: "Awaiting payment", color: "warning"},
-    pending: {label: "Payment received", color: "accent"},
-    processing: {label: "Preparing your order", color: "accent"},
-    shipped: {label: "Shipped", color: "accent"},
-    delivered: {label: "Delivered", color: "success"},
-    cancelled: {label: "Cancelled", color: "danger"},
-};
+import {ORDER_STATUS, formatDate} from "@/lib/orders";
 
 const TRACK = [
     {key: "payment", label: "Order placed"},
@@ -52,11 +44,6 @@ const formatClock = (ms) => {
     return `${m}:${s}`;
 };
 
-const formatDate = (value) =>
-    value ? new Date(value).toLocaleString(undefined, {
-        dateStyle: "medium",
-        timeStyle: "short"
-    }) : "";
 
 export default function OrderPage() {
     const {id} = useParams();
@@ -108,7 +95,7 @@ export default function OrderPage() {
         );
     }
 
-    const status = STATUS[order.status] ?? {label: order.status, color: "default"};
+    const status = ORDER_STATUS[order.status] ?? {label: order.status, color: "default"};
     const currentMethod =
         methods.find((m) => m.code === order.payment?.method_code) ??
         methods.find((m) => m.name === order.payment?.method);
@@ -146,7 +133,7 @@ export default function OrderPage() {
             <header className="flex flex-wrap items-end justify-between gap-4 border-b pb-6">
                 <div>
                     <Typography type="body-sm" className="text-muted">
-                        Placed {formatDate(order.created_at)}
+                        Placed {formatDate(order.created_at, {dateStyle: "medium", timeStyle: "short"})}
                     </Typography>
                     <Typography type="h1"
                                 className="text-3xl font-light tracking-tight sm:text-4xl">
@@ -304,11 +291,11 @@ export default function OrderPage() {
                                                 href={`/products/${item.product_slug}/`}
                                                 className="min-w-0 truncate no-underline hover:text-accent"
                                             >
-                                                {item.quantity} × {item.product_name}
+                                                {item.quantity} × {item.product_name} {item.price_label ? item.price_label : ""}
                                             </Link>
                                         ) : (
                                             <span className="min-w-0 truncate">
-                                                {item.quantity} × {item.product_name ?? "Removed product"}
+                                                {item.quantity} × {item.product_name ?? "Removed product"} {item.price_label ? item.price_label : ""}
                                             </span>
                                         )}
                                         <span
@@ -758,10 +745,10 @@ function ShipmentCard({shipment}) {
                                    copy={shipment.tracking_number} copyLabel="tracking number"
                                    mono/>
                         {shipment.shipped_at &&
-                            <DetailRow label="Shipped" value={formatDate(shipment.shipped_at)}/>}
+                            <DetailRow label="Shipped" value={formatDate(shipment.shipped_at,{dateStyle: "medium", timeStyle: "short"})}/>}
                         {shipment.delivered_at &&
                             <DetailRow label="Delivered"
-                                       value={formatDate(shipment.delivered_at)}/>}
+                                       value={formatDate(shipment.delivered_at,{dateStyle: "medium", timeStyle: "short"})}/>}
                     </dl>
                 ) : (
                     <Typography type="body-sm" className="text-muted">

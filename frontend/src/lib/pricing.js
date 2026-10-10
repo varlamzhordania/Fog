@@ -36,3 +36,11 @@ export const servesCountry = (method, country) => {
     const value = String(country ?? "").trim().toLowerCase();
     return allowed.length === 0 || allowed.some((c) => c.toLowerCase() === value);
 };
+
+export const getDefaultPrice = (product) =>
+    product?.prices?.find((p) => p.is_default) ?? product?.prices?.[0] ?? null;
+
+export const stockLabel = (product) =>
+    product.stock_unit && product.stock_unit !== "unit"
+        ? `${product.available_stock} ${product.stock_unit} in stock`
+        : `${product.available_stock} available`;

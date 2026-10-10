@@ -18,13 +18,13 @@ import {
 import {Eye, EyeOff, UserPlus} from "lucide-react";
 import Icon from "@/components/icon/Icon";
 import {useRegister} from "@/queries/auth";
-import {validateEmail, validatePassword} from "@/lib/utils";
+import {isInvalidEmail, validatePassword} from "@/lib/utils";
 import {useAuthStore} from "@/stores/auth";
 
 export default function RegisterPage() {
     const router = useRouter();
-    const {mutate: register, isPending, error} = useRegister();
-    const {logged_in} = useAuthStore(state => state)
+    const {mutate: register, isPending} = useRegister();
+    const logged_in = useAuthStore((s) => s.logged_in)
 
     const [form, setForm] = useState({
         email: "",
@@ -46,12 +46,12 @@ export default function RegisterPage() {
         }
 
         if (form.password1.length < 8) {
-            toast.danger("Password must be at least 8 characters.");
+            toast.danger("Password must be at least 8 characters. Avoid common passwords and all-numeric ones.");
             return;
         }
 
         register(form, {
-            onSuccess: () => toast.success("Your account created successfully."),
+            onSuccess: () => toast.success("Your account has been created."),
             onError: (error) => {
                 const id = toast.danger("Register Failed", {
                     actionProps: {
@@ -93,7 +93,7 @@ export default function RegisterPage() {
                             name="email"
                             type="email"
                             validate={(value) => {
-                                return validateEmail(value) ? "Please enter a valid email address" : null
+                                return isInvalidEmail(value) ? "Please enter a valid email address" : null
                             }}
                             value={form.email}
                             onChange={(value) => handleChange(value, "email")}
@@ -149,7 +149,7 @@ export default function RegisterPage() {
                                 </InputGroup.Suffix>
                             </InputGroup>
                             <Description>
-                                Must be at least 8 characters with 1 uppercase and 1 number
+                                At least 8 characters. Avoid common passwords and all-numeric ones.
                             </Description>
                             <FieldError/>
                         </TextField>

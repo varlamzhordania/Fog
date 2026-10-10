@@ -8,7 +8,9 @@ from .catalog import catalog_products
 
 def home_sections():
     paid = OrderPayment.StatusChoices.COMPLETED
-    base = catalog_products().filter(product_stock__is_available=True)
+    base = catalog_products(detail=False).filter(
+        product_stock__is_available=True
+    )
 
     deals = list(
         base.filter(store_price__lt=F("base_price"))

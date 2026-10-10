@@ -42,7 +42,6 @@ DJANGO_APPS = [
 THIRD_PARTY_APPS = [
     "constance",
     "constance.backends.database",
-    "django_celery_beat",
     "django_ckeditor_5",
     "treebeard",
     "nested_admin",

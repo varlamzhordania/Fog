@@ -486,36 +486,6 @@ UNFOLD_SETTINGS = {
                     ),
                 ],
             },
-
-            # ------------------------------------------------------------------
-            # Automation
-            # ------------------------------------------------------------------
-            {
-                "title": _("Automation"),
-                "separator": True,
-                "collapsible": True,
-                "items": [
-                    nav_item(
-                        _("Periodic Tasks"),
-                        "schedule",
-                        "django_celery_beat.periodictask",
-                        permission=superuser_only,
-                    ),
-                    nav_item(
-                        _("Crontab Schedules"),
-                        "calendar_clock",
-                        "django_celery_beat.crontabschedule",
-                        permission=superuser_only,
-                    ),
-                    nav_item(
-                        _("Interval Schedules"),
-                        "timelapse",
-                        "django_celery_beat.intervalschedule",
-                        permission=superuser_only,
-                    ),
-                ],
-            },
-
             # ------------------------------------------------------------------
             # System
             # ------------------------------------------------------------------
@@ -559,7 +529,7 @@ UNFOLD_SETTINGS = {
             "items": status_tabs(
                 "checkout.order", [
                     (_("Awaiting Payment"), "payment"),
-                    (_("Pending"), "pending"),
+                    (_("Pending"), "Payment received"),
                     (_("Processing"), "processing"),
                     (_("Shipped"), "shipped"),
                     (_("Delivered"), "delivered"),

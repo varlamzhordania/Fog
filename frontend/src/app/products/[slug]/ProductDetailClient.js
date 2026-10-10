@@ -13,41 +13,30 @@ import Link from "next/link";
 import Icon from "@/components/icon/Icon";
 import ProductSlider from "@/components/Sliders/ProductSlider";
 import {useProducts} from "@/queries/inventory";
-import {useCartStore} from "@/stores/cart";
 import {useConfig} from "@/queries/settings";
 import CartQuantityControl from "@/components/inventory/CartQuantityControl";
 import ProductReviews from "@/components/inventory/ProductReviews";
 import Stars from "@/components/inventory/Stars";
 import FeaturedProducts from "@/components/inventory/FeaturedProducts";
-import React from "react";
+import {useState} from "react";
+import {Label, Radio, RadioGroup} from "@heroui/react";
+import {getDefaultPrice, stockLabel} from "@/lib/pricing";
 
 
 export default function ProductDetailClient({product: initialProduct}) {
     const {data: config} = useConfig();
     const product = initialProduct;
 
-    const {
-        data: relatedProducts, isLoading: isRelatedLoading,
-    } = useProducts({
-        category: product.category.slug,
-    });
+    const prices = product.prices ?? [];
+    const [selectedId, setSelectedId] = useState(() => String(getDefaultPrice(product)?.id ?? ""));
+    const price = prices.find((p) => String(p.id) === selectedId) ?? getDefaultPrice(product);
 
-    const {
-        data: featuredProducts, isLoading: isFeaturedLoading,
-    } = useProducts({
-        is_featured: true,
-    });
-
-    const formattedBasePrice = isNaN(Number(product.base_price))
-        ? product.base_price
-        : Number(product.base_price).toFixed(2);
-
-    const formattedPrice = isNaN(Number(product.store_price))
-        ? product.store_price
-        : Number(product.store_price).toFixed(2);
-
-    const isOnSale = product.discount_percentage > 0;
+    const formattedBasePrice = Number(price?.base_price ?? product.base_price).toFixed(2);
+    const formattedPrice = Number(price?.store_price ?? product.store_price).toFixed(2);
+    const isOnSale = (price?.discount_percentage ?? 0) > 0;
     const isDownloadable = product.product_type === "downloadable";
+
+
 
 
     return (<div className="container container-space md:py-12">
@@ -172,13 +161,49 @@ export default function ProductDetailClient({product: initialProduct}) {
                                 type="body-sm"
                                 className="text-center"
                             >
-                                {isDownloadable ? "Instant download after payment confirmation." : `${product.available_stock} available`}
+                                {isDownloadable ? "Instant download after payment confirmation." : `${product.available_stock} ${stockLabel(product)}`}
                             </Typography>
                         </div>
                     </div>
 
 
-                    <CartQuantityControl product={product}/>
+                    {prices.length > 1 && (
+                        <RadioGroup
+                            name="price_option"
+                            aria-label="Purchase option"
+                            value={selectedId}
+                            onChange={setSelectedId}
+                            className="mb-6 flex flex-row flex-wrap gap-3"
+                        >
+                            {prices.map((p) => (
+                                <Radio
+                                    key={p.id}
+                                    value={String(p.id)}
+                                    isDisabled={p.max_quantity < 1}
+                                    className={`w-auto flex-row rounded-xl border px-4 py-3 transition-colors ${
+                                        p.max_quantity < 1
+                                            ? "cursor-not-allowed opacity-50 border-border"
+                                            : String(p.id) === selectedId
+                                                ? "border-accent bg-accent/5"
+                                                : "border-border hover:border-accent/50"
+                                    }`}
+                                >
+                                    <Radio.Content>
+                                        <Radio.Control><Radio.Indicator/></Radio.Control>
+                                        <div className="flex flex-col">
+                                            <Label className="font-medium">{p.label}</Label>
+                                            <span className="text-xs text-muted">
+                                                ${Number(p.store_price).toFixed(2)}
+                                                {p.max_quantity < 1 && " · out of stock"}
+                                            </span>
+                                        </div>
+                                    </Radio.Content>
+                                </Radio>
+                            ))}
+                        </RadioGroup>
+                    )}
+
+                    <CartQuantityControl product={product} price={price}/>
                 </div>
             </div>
         </section>
@@ -212,11 +237,7 @@ export default function ProductDetailClient({product: initialProduct}) {
 
         {/* Related */}
         <section className={"container-space pb-0"}>
-            <ProductSlider
-                title="Related Products"
-                productData={relatedProducts?.results}
-                isLoading={isRelatedLoading}
-            />
+            {product.category && <RelatedProducts product={product}/>}
         </section>
 
         {/* Featured */}
@@ -233,7 +254,7 @@ export default function ProductDetailClient({product: initialProduct}) {
                 }}
                 showDescription={false}
                 cardHeight="min-h-85"
-                actionLabel="Show Now"
+                actionLabel="View product"
             />
         </section>
     </div>);
@@ -294,4 +315,18 @@ function ProductInformation({
 
         </dl>
     </section>);
+}
+
+
+function RelatedProducts({product}) {
+    const {data, isLoading} = useProducts({category: product.category.slug, page_size: 11});
+    const related = (data?.results ?? []).filter((p) => p.id !== product.id).slice(0, 10);
+
+    if (!isLoading && related.length === 0) return null;
+
+    return (
+        <section className="container-space pb-0">
+            <ProductSlider title="Related Products" productData={related} isLoading={isLoading}/>
+        </section>
+    );
 }

@@ -67,7 +67,7 @@ export function BestSellers() {
             imageOverlay="from-black/75 via-black/20 to-transparent"
             showDescription
             showAction
-            actionLabel="Show Now"
+            actionLabel="View product"
         />
         </section>
     );

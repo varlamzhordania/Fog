@@ -150,13 +150,7 @@ export default function ContactPage() {
                                         handleChange(value, "name")
                                     }
                                 >
-                                    <Label>
-                                        Name{" "}
-                                        <span className="text-muted/50">
-
-                                    </span>
-                                    </Label>
-
+                                    <Label>Name</Label>
                                     <Input placeholder="Your name"/>
                                     <FieldError/>
                                 </TextField>
@@ -171,11 +165,7 @@ export default function ContactPage() {
                                         handleChange(value, "email")
                                     }
                                 >
-                                    <Label>
-                                        Email{" "}
-                                        <span className="text-muted/50">
-                                    </span>
-                                    </Label>
+                                    <Label>Email</Label>
 
                                     <Input placeholder="you@example.com"/>
                                     <FieldError/>

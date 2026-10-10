@@ -55,6 +55,8 @@ class CheckoutFlowTests(TestCase):
             CartService.get_or_create_cart(self.user).items.exists()
             )
         self.assertIn("order_created", self._events())
+        self.assertEqual(order.items.get().product_name, "P")
+
 
     def test_gateway_failure_releases_stock_keeps_cart_and_sends_no_email(
             self

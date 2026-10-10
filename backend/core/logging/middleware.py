@@ -8,7 +8,7 @@ from .context import bind, clear
 
 log = get_logger("http")
 _VALID_ID = re.compile(r"^[A-Za-z0-9_-]{8,64}$")
-_QUIET_PREFIXES = ("/static/", "/media/")
+_QUIET_PREFIXES = ("/static/", "/media/", "/health/")
 
 
 class RequestLogMiddleware:

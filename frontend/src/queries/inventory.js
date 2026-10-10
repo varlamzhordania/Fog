@@ -3,7 +3,6 @@ import {
     fetchCategories,
     fetchTags,
     fetchProducts,
-    fetchProductBySlug,
     fetchPriceRange,
     createReview,
     deleteReview,
@@ -118,18 +117,6 @@ export function usePriceRange() {
     });
 }
 
-
-export function useProductBySlug(slug, options = {}) {
-    return useQuery({
-        queryKey: ["inventory", "product", slug,],
-
-        queryFn: () => fetchProductBySlug(slug),
-
-        enabled: Boolean(slug),
-
-        ...options,
-    });
-}
 
 
 export function useReviews(slug, page = 1) {

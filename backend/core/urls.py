@@ -1,7 +1,6 @@
 from django.contrib import admin
-from django.urls import path, include,re_path
+from django.urls import path, include
 from django.conf import settings
-from django.views.static import serve
 from django.conf.urls.static import static
 # from django.conf.urls.i18n import i18n_patterns # Wrap whole urls patterns to add translation to all urls
 from drf_spectacular.views import (
@@ -11,9 +10,10 @@ from drf_spectacular.views import (
 
 from settings.admin_views.dashboard import dashboard_view
 from settings.admin_views.analytics import analytics_view
-from .views import set_language
+from .views import set_language, health
 
 urlpatterns = [
+    path("health/", health, name="health"),
     path('admin/', dashboard_view, name='admin-dashboard'),
     path('admin/analytics/', analytics_view, name='admin-analytics'),
 

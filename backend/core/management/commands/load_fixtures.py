@@ -4,6 +4,7 @@ from django.apps import apps
 from django.conf import settings
 from django.core.management import call_command
 from django.core.management.base import BaseCommand, CommandError
+from inventory.services.pricing import ensure_default_prices
 
 # Every project fixture as (app label, fixture name), in dependency order:
 # a fixture must come after the fixtures it references.
@@ -124,6 +125,7 @@ class Command(BaseCommand):
             database=options["database"],
             verbosity=options["verbosity"],
         )
+        ensure_default_prices()
 
         self.stdout.write(
             self.style.SUCCESS("Fixtures loaded successfully.")

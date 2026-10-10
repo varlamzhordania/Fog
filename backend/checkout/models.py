@@ -51,7 +51,7 @@ class PaymentMethod(BaseModel):
     asset = models.CharField(
         max_length=30, blank=True, default="",
         help_text=_(
-            "Gateway symbol, e.g. BTC, XMR, ETH, TRX-USDT (SHKeeper)."
+            "Xcash asset, e.g. USDT@ethereum. Leave empty to let the customer choose on the gateway."
         ),
     )
     icon = models.ImageField(
@@ -199,9 +199,7 @@ class ShoppingCart(BaseModel):
 
     @property
     def total_price(self):
-        return sum(
-            item.total_price for item in self.items.filter(is_active=True)
-        )
+        return sum(item.total_price for item in self.items.all() if item.is_active)
 
 
 class ShoppingCartItem(BaseModel):
@@ -223,11 +221,16 @@ class ShoppingCartItem(BaseModel):
         validators=[MinValueValidator(1)],
         default=1,
     )
+    price = models.ForeignKey(
+        'inventory.ProductPrice', on_delete=models.PROTECT,
+        related_name='cart_items', verbose_name=_('Price option'),
+        null=True,
+    )
 
     class Meta:
         verbose_name = _('Shopping Cart Item')
         verbose_name_plural = _('Shopping Cart Items')
-        unique_together = ('cart', 'product')
+        unique_together = ('cart', 'product', 'price')
         ordering = ['cart', 'created_at']
         indexes = [
             models.Index(fields=['cart']),
@@ -239,11 +242,11 @@ class ShoppingCartItem(BaseModel):
         ]
 
     def __str__(self):
-        return f"{self.quantity}x {self.product.name}"
+        return f"{self.quantity}x {self.product.name} ({self.price.label})"
 
     @property
     def total_price(self):
-        return self.product.final_price * self.quantity
+        return self.price.store_price * self.quantity
 
     @property
     def available_stock(self) -> int:
@@ -252,8 +255,17 @@ class ShoppingCartItem(BaseModel):
         except ObjectDoesNotExist:
             return 0
 
+    @property
+    def max_quantity(self) -> int:
+        others = sum(
+            i.quantity * i.price.stock_quantity
+            for i in self.cart.items.filter(product_id=self.product_id)
+            .exclude(pk=self.pk).select_related("price")
+        )
+        return max(0, self.available_stock - others) // self.price.stock_quantity
+
     def increment(self, amount=1):
-        available = self.available_stock
+        available = self.max_quantity
         target = self.quantity + amount
 
         if target > available:
@@ -267,7 +279,7 @@ class ShoppingCartItem(BaseModel):
         self.save(update_fields=['quantity'])
 
     def decrement(self, amount=1):
-        available = self.available_stock
+        available = self.max_quantity
         target = max(1, self.quantity - amount)
 
         # If stock dropped behind the scenes, clamp down to what is actually available.
@@ -278,7 +290,7 @@ class ShoppingCartItem(BaseModel):
         self.save(update_fields=['quantity'])
 
     def set_quantity(self, amount=1):
-        available = self.available_stock
+        available = self.max_quantity
 
         if amount > available:
             if amount > self.quantity:
@@ -299,8 +311,8 @@ class ShoppingCartItem(BaseModel):
 
 class Order(BaseModel):
     class StatusChoices(models.TextChoices):
-        PAYMENT = 'payment', _('Payment')
-        PENDING = 'pending', _('Pending')
+        PAYMENT = 'payment', _('Awaiting payment')
+        PENDING = 'pending', _('Payment received')
         PROCESSING = 'processing', _('Processing')
         SHIPPED = 'shipped', _('Shipped')
         DELIVERED = 'delivered', _('Delivered')
@@ -408,11 +420,13 @@ class OrderItem(BaseModel):
     )
     product = models.ForeignKey(
         'inventory.Product',
-        on_delete=models.PROTECT,
+        on_delete=models.SET_NULL,
         null=True,
         related_name='order_items',
         verbose_name=_('Product'),
     )
+    product_name = models.CharField(max_length=255, blank=True, default="", verbose_name=_('Product name'))
+    product_sku = models.CharField(max_length=64, blank=True, default="", verbose_name=_('SKU'))
     quantity = models.PositiveSmallIntegerField(
         verbose_name=_('Quantity'),
         validators=[MinValueValidator(1)],
@@ -428,6 +442,12 @@ class OrderItem(BaseModel):
         decimal_places=2,
         verbose_name=_('Total Price'),
     )
+    price = models.ForeignKey(
+        'inventory.ProductPrice', on_delete=models.SET_NULL,
+        null=True, blank=True, related_name='order_items'
+        )
+    price_label = models.CharField(max_length=60, blank=True, default="")
+    stock_units = models.PositiveIntegerField(default=1)
 
     class Meta:
         verbose_name = _('Order Item')
@@ -578,7 +598,7 @@ class OrderPayment(BaseModel):
     )
     provider_reference = models.CharField(
         max_length=128, blank=True, default="", db_index=True,
-        help_text=_("Stripe session id / SHKeeper external id."),
+        help_text=_("Stripe session id / Xcash sys_no."),
     )
     method = models.CharField(
         max_length=50,

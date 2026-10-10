@@ -46,11 +46,11 @@ services:
   backend:
     <<: *backend
     command: >
-      sh -c "python manage.py makemigrations --noinput && python manage.py migrate --noinput &&
-             python manage.py runserver 0.0.0.0:8000"
+      sh -c "python manage.py migrate --noinput && python manage.py runserver 0.0.0.0:8000"
+#      sh -c "python manage.py makemigrations --noinput && python manage.py migrate --noinput && python manage.py runserver 0.0.0.0:8000"
     ports: ["8000:8000"]
     healthcheck:
-      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/api/v1/settings/')"]
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health/')"]
       interval: 10s
       timeout: 5s
       retries: 12

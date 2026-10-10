@@ -37,7 +37,6 @@ export async function POST(request) {
             e?.data?.email?.[0] ||
             e?.data?.detail ||
             e?.data?.error ||
-            e?.message ||
             "Failed to process password reset request.";
 
         return NextResponse.json({error: message}, {status});

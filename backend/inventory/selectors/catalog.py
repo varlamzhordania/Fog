@@ -1,6 +1,8 @@
 from collections import defaultdict
+from django.db.models import Prefetch
 
-from inventory.models import Category, Product
+from inventory.models import Category, Product, ProductPrice
+
 
 
 def visible_categories():
@@ -39,9 +41,12 @@ def serializer_context():
 
 
 def catalog_products():
-    """Active products with everything the serializers touch already loaded."""
     return (
         Product.objects.filter(is_active=True)
         .select_related("category", "product_stock")
-        .prefetch_related("tags", "product_media_items__media")
+        .prefetch_related(
+            "tags", "product_media_items__media",
+            Prefetch("prices", queryset=ProductPrice.objects.filter(is_active=True),
+                     to_attr="active_prices"),
+        )
     )

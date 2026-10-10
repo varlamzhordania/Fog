@@ -55,7 +55,7 @@ services:
     expose: ["8000"]
     volumes: [media:/home/app/media, static:/home/app/staticfiles]
     healthcheck:
-      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/api/v1/settings/')"]
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health/')"]
       interval: 10s
       timeout: 5s
       retries: 12

@@ -18,6 +18,7 @@ from .models import (
     Media,
     Product,
     ProductMedia,
+    ProductPrice,
     ProductStock,
     StockReservation,
     StockTransactionLog, ProductReview,
@@ -82,6 +83,15 @@ class ProductMediaInline(
             '<a href="{}" target="_blank">🔗 Open file</a>',
             url,
         )
+
+
+class ProductPriceInline(admin.TabularInline, nested_admin.NestedTabularInline):
+    model = ProductPrice
+    extra = 0
+    min_num = 1
+    validate_min = True
+    fields = ["label", "stock_quantity", "base_price", "store_price",
+              "is_default", "display_order", "is_active"]
 
 
 class MediaInline(admin.StackedInline):
@@ -247,7 +257,7 @@ class ProductAdmin(
     nested_admin.NestedModelAdmin,
 ):
     resource_classes = [ProductResource]
-    inlines = [ProductStockInline, ProductMediaInline]
+    inlines = [ProductPriceInline, ProductStockInline, ProductMediaInline]
 
     list_display = [
         "name",
@@ -294,12 +304,10 @@ class ProductAdmin(
         (
             _("Pricing"),
             {
-                "fields": (
-                    ("base_price", "store_price"),
-                ),
+                "fields": ("stock_unit", ("base_price", "store_price")),
                 "description": _(
-                    "Set the original product price and the current selling price. "
-                    "The discount percentage is calculated automatically."
+                    "Prices are set per option in the Product Prices table below. "
+                    "The figures here show the cheapest option and update automatically."
                 ),
             },
         ),
@@ -322,12 +330,8 @@ class ProductAdmin(
         ),
     ]
 
-    readonly_fields = [
-        "id",
-        "slug",
-        "created_at",
-        "updated_at",
-    ]
+    readonly_fields = ["id", "slug", "base_price", "store_price", "created_at",
+                       "updated_at"]
 
     @django_admin.display(
         description=_("Discount"),
@@ -393,12 +397,15 @@ class ProductAdmin(
                 '</span>', {}
             )
 
+
 @django_admin.register(ProductReview)
 class ProductReviewAdmin(SimpleHistoryAdmin, admin.ModelAdmin):
-    list_display = ["product", "user", "rating", "short_comment", "is_active", "created_at"]
+    list_display = ["product", "user", "rating", "short_comment", "is_active",
+                    "created_at"]
     list_filter = ["rating", "is_active", "created_at"]
     search_fields = ["product__name", "user__email", "comment"]
-    readonly_fields = ["product", "user", "rating", "comment", "created_at", "updated_at"]
+    readonly_fields = ["product", "user", "rating", "comment", "created_at",
+                       "updated_at"]
     actions = ["hide_reviews", "show_reviews"]
 
     def has_add_permission(self, request):
@@ -406,7 +413,9 @@ class ProductReviewAdmin(SimpleHistoryAdmin, admin.ModelAdmin):
 
     @django_admin.display(description=_("Comment"))
     def short_comment(self, obj):
-        return (obj.comment[:60] + "…") if len(obj.comment) > 60 else obj.comment or "—"
+        return (obj.comment[:60] + "…") if len(
+            obj.comment
+        ) > 60 else obj.comment or "—"
 
     def _toggle(self, request, queryset, value):
         for review in queryset:  # save() so the rating stats refresh
@@ -421,6 +430,7 @@ class ProductReviewAdmin(SimpleHistoryAdmin, admin.ModelAdmin):
     @django_admin.action(description=_("Show selected reviews"))
     def show_reviews(self, request, queryset):
         self._toggle(request, queryset, True)
+
 
 @django_admin.register(ProductStock)
 class ProductStockAdmin(UnfoldImportExportHistoryAdmin):

@@ -3,7 +3,8 @@ from django.http import HttpResponse, HttpResponseRedirect
 from django.urls import translate_url
 from django.utils.http import url_has_allowed_host_and_scheme
 from django.utils.translation import check_for_language
-
+from django.db import connection
+from django.http import JsonResponse
 
 def set_language(request, *args, **kwargs):
     """
@@ -55,3 +56,10 @@ def set_language(request, *args, **kwargs):
         response = HttpResponseRedirect(next_url) if next_url else HttpResponse(status=204)
 
     return response
+
+def health(request):
+    try:
+        connection.ensure_connection()
+    except Exception:
+        return JsonResponse({"status": "db_unavailable"}, status=503)
+    return JsonResponse({"status": "ok"})

@@ -19,10 +19,10 @@ const NAVIGATION = [
 const DashboardShell = ({children}) => {
     const router = useRouter();
     const pathname = usePathname().replace(/\/$/, "");
-    const {logged_in, user} = useAuthStore((state) => state);
+    const logged_in = useAuthStore((s) => s.logged_in);
+    const user = useAuthStore((s) => s.user);
     const {data, isPending} = useCurrentUser();
 
-    // The auth store is filled by AppInitializer, so wait for the session check before redirecting.
     const isAuthenticated = logged_in || Boolean(data);
 
     useEffect(() => {

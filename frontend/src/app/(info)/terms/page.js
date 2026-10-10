@@ -35,6 +35,7 @@ const sections = [
         title: "2. Accounts",
         items: [
             "Some store functionality requires a customer account.",
+            "You must be 18 or older to place an order.",
             "You are responsible for maintaining the security of your account credentials.",
             "You must provide accurate information when creating an account or placing an order.",
             "You must not access or attempt to access another person's account.",
@@ -55,7 +56,7 @@ const sections = [
         title: "4. Orders & Payment",
         items: [
             "Orders are subject to product availability, payment confirmation, shipping availability, and applicable restrictions.",
-            "Available payment methods may include manual payment confirmation, Stripe card payments, and cryptocurrency payments through XCash.",
+            "Available payment methods may include You can pay by card (Stripe) or cryptocurrency (Xcash). The options available are shown at checkout.",
             "The available payment methods are displayed during checkout.",
             "Customers are responsible for following payment instructions accurately.",
             "FOG Direct is not responsible for funds sent to an incorrect payment address or unsupported network.",
@@ -86,10 +87,10 @@ const sections = [
         icon: RefreshCw,
         title: "7. Cancellations & Refunds",
         items: [
-            "Cancellation eligibility depends on the order's current status.",
-            "Unpaid orders may be cancelled while they remain eligible for cancellation.",
-            "Refund availability depends on the payment method, order status, and applicable store policy.",
-            "Where supported, refunds may be processed through the original payment provider.",
+            "You can cancel an unpaid order from its order page.",
+            "A paid order can be cancelled and refunded if it has not shipped. Contact support with your order number.",
+            "Once an order has shipped it can’t be cancelled.",
+            "Card refunds go back to the original card. Cryptocurrency refunds are arranged with you directly by our team.",
         ],
     },
     {
@@ -209,19 +210,6 @@ export default function TermsPage() {
 
                     </div>
                 ))}
-
-            </div>
-
-            <div className="mt-12 p-5 rounded-xl border border-accent/30 bg-accent/5">
-
-                <Typography
-                    type="small"
-                    className="text-muted text-xs leading-relaxed"
-                >
-                    These terms should be reviewed and adapted to the laws and
-                    jurisdiction applicable to the business before the store
-                    is launched commercially.
-                </Typography>
 
             </div>
 

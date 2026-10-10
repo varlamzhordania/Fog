@@ -24,25 +24,25 @@ export async function deleteCart() {
     return response.data;
 }
 
-export async function addItemToCart({id, quantity = 1}) {
+export async function addItemToCart({id, quantity = 1, priceId}) {
     const response = await apiClient.post(API_ENDPOINTS.checkout.cartItem, {
-        product_id: id,
-        quantity
+        product_id: id, quantity, price_id: priceId,
     });
     return response.data;
 }
 
-export async function updateCartItem({productId, quantity, action = "set"}) {
+export async function updateCartItem({productId, priceId, quantity, action = "set"}) {
     const response = await apiClient.patch(
         API_ENDPOINTS.checkout.cartItemDetail(productId),
-        {quantity, action}
+        {quantity, action, price_id: priceId}
     );
     return response.data;
 }
 
-export async function deleteCartItem(productId) {
+export async function deleteCartItem(productId, priceId) {
     const response = await apiClient.delete(
-        API_ENDPOINTS.checkout.cartItemDetail(productId)
+        API_ENDPOINTS.checkout.cartItemDetail(productId),
+        {params: {price_id: priceId}}
     );
     return response.data;
 }

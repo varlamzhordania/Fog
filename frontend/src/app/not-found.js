@@ -1,10 +1,10 @@
 import {Typography} from "@heroui/react";
 import Link from "next/link";
-import {ArrowLeft, Home, SearchX} from "lucide-react";
+import {Home, SearchX} from "lucide-react";
 import Icon from "@/components/icon/Icon";
 
 export const metadata = {
-    title: "404 — Page Not Found",
+    title: "Page not found",
     description: "The page you're looking for doesn't exist in the FOG index.",
 };
 
@@ -43,8 +43,7 @@ export default function NotFound() {
 
             {/* Description */}
             <Typography type="body" className="text-muted max-w-md leading-relaxed mb-10">
-                The strain you&apos;re looking for doesn&apos;t exist in our index — it may have
-                been moved, delisted, or the URL may be incorrect.
+                The page you're looking for doesn't exist. It may have been moved, or the address may be incorrect.
             </Typography>
 
             {/* Actions */}

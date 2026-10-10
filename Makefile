@@ -5,7 +5,7 @@ PROD  := docker compose -f docker-compose.prod.yml  --env-file env/prod/compose.
 .PHONY: help secret \
     init-local local-up local-up-build local-down local-reset local-logs local-ps local-shell \
     local-superuser local-fixtures local-restart-workers \
-    init-prod prod-up prod-down prod-logs prod-ps prod-superuser prod-backup
+    init-prod prod-up prod-down prod-logs prod-ps prod-superuser prod-backup local-makemigrations
 
 help:
 	@echo "Local:       make local-up | local-down | local-logs | local-shell | local-superuser | local-fixtures | local-restart-workers | local-reset"
@@ -58,6 +58,8 @@ local-restart-frontend:
 local-restart-backend:
 	$(LOCAL) restart backend
 
+local-makemigrations:
+	$(LOCAL) exec backend python manage.py makemigrations
 # ----------------------------------------------------------- production ----
 
 init-prod:

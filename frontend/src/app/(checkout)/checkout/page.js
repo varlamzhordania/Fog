@@ -38,7 +38,7 @@ import {useAuthStore} from "@/stores/auth";
 import {useCartStore} from "@/stores/cart";
 import {useAddresses} from "@/queries/account";
 import {useCurrentUser} from "@/queries/auth";
-import {getApiErrorMessage} from "@/lib/utils";
+import {getApiErrorMessage, productImageUrl} from "@/lib/utils";
 import {describeMethod, formatPrice} from "@/lib/payments";
 import {notFoundImage} from "@/lib/config";
 import {useConfig} from "@/queries/settings";
@@ -55,10 +55,13 @@ const choiceClass = (selected, disabled) => `w-full flex-row rounded-xl border p
 
 export default function CheckoutPage() {
     const router = useRouter();
+    const {data: config} = useConfig();
     const logged_in = useAuthStore((s) => s.logged_in);
     const {isPending: sessionPending} = useCurrentUser();
     const user = useAuthStore((s) => s.user);
-    const {items, getTotalPrice, getTotalQuantity} = useCartStore();
+    const items = useCartStore((s) => s.items);
+    const totalQuantity = useCartStore((s) => s.getTotalQuantity());
+    const goodsTotal = Number(useCartStore((s) => s.getTotalPrice()));
 
     const {data: addressData, isLoading: addressesLoading} = useAddresses();
     const {data: methodData, isLoading: methodsLoading} = usePaymentMethods();
@@ -75,9 +78,7 @@ export default function CheckoutPage() {
     const [notes, setNotes] = useState("");
     const [summaryOpen, setSummaryOpen] = useState(false);
 
-    const {data: config} = useConfig();
-    const totalQuantity = getTotalQuantity();
-    const goodsTotal = Number(getTotalPrice());
+
     const minimum = Number(config?.MINIMUM_ORDER_AMOUNT_USD ?? 0);
     const maintenance = Boolean(config?.STORE_MAINTENANCE_MODE);
     const paymentWindow = config?.PAYMENT_WINDOW_MINUTES ?? 60;
@@ -111,8 +112,7 @@ export default function CheckoutPage() {
         const payload = {
             payment_method: selectedMethod, ...(needsShipping && selectedShipping ? {shipping_method: selectedShipping.code} : {}),
             notes, ...(selectedAddress === "new" ? {
-                address: newAddress,
-                save_address: saveAddress
+                address: newAddress, save_address: saveAddress
             } : {address_id: Number(selectedAddress)}),
         };
 
@@ -293,9 +293,8 @@ export default function CheckoutPage() {
                                                             </span>
                                             {m.description && (<span
                                                 className="text-xs text-muted">{m.description}</span>)}
-                                            {m.free_over != null && price > 0 && (
-                                                <span
-                                                    className="text-xs text-accent">
+                                            {m.free_over != null && price > 0 && (<span
+                                                className="text-xs text-accent">
                                                                     Free on orders over {formatPrice(m.free_over)}
                                                                 </span>)}
                                         </div>
@@ -336,12 +335,10 @@ export default function CheckoutPage() {
                         <Icon icon={ShieldCheck}
                               className="mt-0.5 size-5 shrink-0 text-accent"/>
                         <Typography type="body-xs" className="leading-relaxed text-muted">
-                            Crypto payments go straight to the store wallet and are never held
-                            by a third
-                            party. Your items are reserved while you pay
-                            (usually {paymentWindow} minutes).
-                            If the
-                            time runs out, the order is cancelled and the items go back on sale.
+                            Card payments are processed by Stripe and crypto payments by Xcash. We
+                            never see or store your card details. Your items are reserved while you
+                            pay (usually {paymentWindow} minutes). If the time runs out, the order
+                            is cancelled and the items go back on sale.
                         </Typography>
                     </div>
                 </Section>
@@ -386,37 +383,38 @@ export default function CheckoutPage() {
 
                         <div className={`${summaryOpen ? "block" : "hidden"} lg:block`}>
                             <ul className="mt-5 flex flex-col gap-4">
-                                {items.map((item) => (<li key={item.product.id}
-                                                          className="flex items-center gap-3">
-                                    <div
-                                        className="relative size-16 shrink-0 rounded-lg border bg-default">
+                                {items.map((item) => (
+                                    <li key={`${item.product.id}-${item.price?.id}`}
+                                        className="flex items-center gap-3">
                                         <div
-                                            className="relative size-full overflow-hidden rounded-lg">
-                                            <Image
-                                                src={item.product.primary_image || notFoundImage}
-                                                alt={item.product.name}
-                                                fill
-                                                sizes="64px"
-                                                className="object-cover"
-                                            />
-                                        </div>
-                                        <span
-                                            className="absolute -right-2 -top-2 flex size-5 items-center justify-center rounded-full bg-foreground text-xs text-background">
+                                            className="relative size-16 shrink-0 rounded-lg border bg-default">
+                                            <div
+                                                className="relative size-full overflow-hidden rounded-lg">
+                                                <Image
+                                                    src={productImageUrl(item.product) || notFoundImage}
+                                                    alt={item.product.name}
+                                                    fill
+                                                    sizes="64px"
+                                                    className="object-cover"
+                                                />
+                                            </div>
+                                            <span
+                                                className="absolute -right-2 -top-2 flex size-5 items-center justify-center rounded-full bg-foreground text-xs text-background">
                                                     {item.quantity}
                                                 </span>
-                                    </div>
-                                    <div className="min-w-0 flex-1">
-                                        <p className="line-clamp-2 text-sm font-medium leading-snug">
-                                            {item.product.name}
-                                        </p>
-                                        <p className="text-xs text-muted">
-                                            {formatPrice(item.product.store_price)} each
-                                        </p>
-                                    </div>
-                                    <span className="shrink-0 text-sm font-medium">
-                                                {formatPrice(Number(item.product.store_price) * Number(item.quantity))}
-                                            </span>
-                                </li>))}
+                                        </div>
+                                        <div className="min-w-0 flex-1">
+                                            <p className="line-clamp-2 text-sm font-medium leading-snug">
+                                                {item.product.name}{item.price ? ` · ${item.price.label}` : ""}
+                                            </p>
+                                            <p className="text-xs text-muted">
+                                                {formatPrice(item.price?.store_price ?? item.product.store_price)} each
+                                            </p>
+                                        </div>
+                                        <span className="shrink-0 text-sm font-medium">
+                                                {formatPrice(Number(item.price?.store_price ?? item.product.store_price) * Number(item.quantity))}
+                                        </span>
+                                    </li>))}
                             </ul>
 
                             <Separator className="my-5"/>
@@ -448,16 +446,14 @@ export default function CheckoutPage() {
                             </Link>
                         </div>
 
-                        {belowMinimum && (
-                            <Typography type="body-xs" className="mt-4 text-danger">
-                                {method.name} needs an order of at
-                                least {formatPrice(method.min_amount)}.
-                            </Typography>)}
+                        {belowMinimum && (<Typography type="body-xs" className="mt-4 text-danger">
+                            {method.name} needs an order of at
+                            least {formatPrice(method.min_amount)}.
+                        </Typography>)}
 
-                        {maintenance && (
-                            <Typography type="body-xs" className="mt-4 text-danger">
-                                Checkout is temporarily disabled for maintenance.
-                            </Typography>)}
+                        {maintenance && (<Typography type="body-xs" className="mt-4 text-danger">
+                            Checkout is temporarily disabled for maintenance.
+                        </Typography>)}
                         {!maintenance && belowStoreMinimum && (
                             <Typography type="body-xs" className="mt-4 text-danger">
                                 The minimum order is {formatPrice(minimum)}.
@@ -490,16 +486,16 @@ export default function CheckoutPage() {
 
                         <ul className="flex flex-col gap-2.5 text-xs text-muted">
                             <li className="flex items-center gap-2.5">
-                                <Icon icon={Lock} className="size-4 text-accent"/> Private
-                                checkout, no card data stored
+                                <Icon icon={Lock} className="size-4 text-accent"/>
+                                We never store card details
                             </li>
                             <li className="flex items-center gap-2.5">
-                                <Icon icon={Package} className="size-4 text-accent"/> Plain,
-                                discreet packaging
+                                <Icon icon={Package} className="size-4 text-accent"/>
+                                Plain, discreet packaging
                             </li>
                             <li className="flex items-center gap-2.5">
-                                <Icon icon={ShieldCheck} className="size-4 text-accent"/> Items
-                                reserved while you pay
+                                <Icon icon={ShieldCheck} className="size-4 text-accent"/>
+                                Items reserved while you pay
                             </li>
                         </ul>
                     </Card.Content>
@@ -545,8 +541,7 @@ function Steps({current}) {
                             {done ? <Icon icon={Check} className="size-3.5"/> : i + 1}
                         </span>
                 <span className={active ? "font-medium" : "text-muted"}>{label}</span>
-                {i < STEPS.length - 1 &&
-                    <span className="mx-1 h-px w-6 bg-border sm:w-10"/>}
+                {i < STEPS.length - 1 && <span className="mx-1 h-px w-6 bg-border sm:w-10"/>}
             </li>);
         })}
     </ol>);

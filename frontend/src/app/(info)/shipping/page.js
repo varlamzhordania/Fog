@@ -21,7 +21,10 @@ export const metadata = {
 
 async function getTiers() {
     try {
-        return (await serverFetch(API_ENDPOINTS.checkout.shippingMethods)) ?? [];
+        return (await serverFetch(API_ENDPOINTS.checkout.shippingMethods, {
+            cache: "force-cache",
+            nextOptions: {revalidate: 300},
+        })) ?? [];
     } catch {
         return [];
     }
@@ -32,7 +35,7 @@ const INFO_CARDS = [
         icon: Package,
         title: "Order Processing",
         description:
-            "Orders are processed after the applicable payment requirements have been satisfied. Processing time can vary depending on product availability, payment confirmation, order volume, and fulfillment requirements.",
+            "We prepare your order once payment is confirmed, and email you when it is processed and when it ships.",
     },
     {
         icon: Clock,
@@ -44,7 +47,7 @@ const INFO_CARDS = [
         icon: Globe,
         title: "International Shipping",
         description:
-            "International shipping depends on the destinations and shipping methods currently configured by the store. Customers are responsible for ensuring that their order can legally be imported into the destination country.",
+            "We ship to the countries offered for each method at checkout. If none appear for your address, we can’t ship there yet.",
     },
     {
         icon: Shield,
@@ -56,7 +59,7 @@ const INFO_CARDS = [
         icon: Truck,
         title: "Tracking",
         description:
-            "Some shipping methods support tracking. When tracking information is available, the carrier and tracking number can be added to the order and shown to the customer.",
+            "Methods marked ‘Tracking included’ come with a tracking number. It appears on your order page and in your shipping email.",
     },
     {
         icon: MapPin,

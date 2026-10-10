@@ -2,8 +2,6 @@
 .env
 env/*/*.env
 backups/
-shkeeper/.env
-shkeeper/shkeeper.env
 nginx/letsencrypt/
 nginx/certbot-webroot/
 sv-tunnel.bat

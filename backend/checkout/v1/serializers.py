@@ -4,7 +4,7 @@ from rest_framework import serializers
 from account.models import Address
 from checkout.services.orders import OrderService
 from checkout.services.payments import PaymentService
-from inventory.models import Product
+from inventory.models import Product, ProductPrice
 from checkout.models import (
     PaymentMethod,
     ShoppingCart,
@@ -57,16 +57,27 @@ class CartProductSerializer(serializers.ModelSerializer):
         return None
 
 
+class CartPriceSerializer(serializers.ModelSerializer):
+    discount_percentage = serializers.IntegerField(read_only=True)
+
+    class Meta:
+        model = ProductPrice
+        fields = ["id", "label", "stock_quantity", "base_price",
+                  "store_price", "discount_percentage"]
+
+
 class ShoppingCartItemSerializer(serializers.ModelSerializer):
     product = CartProductSerializer(read_only=True)
-
+    price = CartPriceSerializer(read_only=True)
     total_price = serializers.DecimalField(
-        max_digits=10, decimal_places=2, read_only=True
+        max_digits=10,
+        decimal_places=2,
+        read_only=True
     )
 
     class Meta:
         model = ShoppingCartItem
-        fields = ['product', 'quantity', 'total_price']
+        fields = ['product', 'price', 'quantity', 'total_price']
 
 
 class ShoppingCartSerializer(serializers.ModelSerializer):
@@ -89,6 +100,7 @@ class ShoppingCartInputSerializer(serializers.Serializer):
         min_value=1,
         default=1,
     )
+    price_id = serializers.IntegerField(required=False, min_value=1)
 
 
 class ShoppingCartItemUpdateSerializer(serializers.Serializer):
@@ -113,6 +125,7 @@ class ShoppingCartItemUpdateSerializer(serializers.Serializer):
             "invalid_choice": "Invalid action. Use 'increment', 'decrement', or 'set'."
         }
     )
+    price_id = serializers.IntegerField(required=False, min_value=1)
 
 
 class PaymentMethodSerializer(serializers.ModelSerializer):
@@ -173,10 +186,10 @@ class OrderItemSerializer(serializers.ModelSerializer):
     class Meta:
         model = OrderItem
         fields = ["id", "product", "product_name", "product_slug",
-                  "quantity", "unit_price", "total_price"]
+                  "quantity", "unit_price", "total_price", "price_label"]
 
     def get_product_name(self, obj):
-        return obj.product.name if obj.product else None
+        return obj.product_name or (obj.product.name if obj.product else None)
 
     def get_product_slug(self, obj):
         return obj.product.slug if obj.product else None
@@ -212,6 +225,20 @@ class OrderSerializer(serializers.ModelSerializer):
         return PaymentService.instructions(obj)
 
 
+class OrderListItemSerializer(OrderItemSerializer):
+    class Meta(OrderItemSerializer.Meta):
+        fields = ["id", "product_name", "product_slug", "quantity"]
+
+
+class OrderListSerializer(serializers.ModelSerializer):
+    items = OrderListItemSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = Order
+        fields = ["id", "status", "total_price", "created_at", "items"]
+        read_only_fields = fields
+
+
 class CheckoutAddressSerializer(serializers.ModelSerializer):
     class Meta:
         model = Address
@@ -232,7 +259,7 @@ class OrderCreateSerializer(serializers.Serializer):
     shipping_method = serializers.CharField(
         required=False,
         allow_blank=True
-        )
+    )
 
     def validate(self, attrs):
         if bool(attrs.get("address_id")) == bool(attrs.get("address")):

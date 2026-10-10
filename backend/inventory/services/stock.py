@@ -41,8 +41,10 @@ class StockService:
             ProductStock.objects.filter(pk=stock.pk).update(
                 reserved_quantity=F("reserved_quantity") + item.quantity
             )
-            cls._log(stock, A.RESERVE, item.quantity,
-                     f"Reservation {reservation.id} created for Order #{order.id}")
+            cls._log(
+                stock, A.RESERVE, item.quantity,
+                f"Reservation {reservation.id} created for Order #{order.id}"
+                )
 
     @classmethod
     @transaction.atomic
@@ -55,8 +57,10 @@ class StockService:
         )
         reservation.status = R.RELEASED
         reservation.save(update_fields=["status", "updated_at"])
-        cls._log(reservation.product_stock, A.RELEASE_RESERVATION, reservation.quantity,
-                 f"Reservation {reservation.id} released: {reason}")
+        cls._log(
+            reservation.product_stock, A.RELEASE_RESERVATION, reservation.quantity,
+            f"Reservation {reservation.id} released: {reason}"
+            )
         return True
 
     @classmethod
@@ -71,8 +75,10 @@ class StockService:
         )
         reservation.status = R.COMMITTED
         reservation.save(update_fields=["status", "updated_at"])
-        cls._log(reservation.product_stock, A.ORDER_DEDUCTION, reservation.quantity,
-                 f"Reservation {reservation.id} committed for Order #{reservation.order_id}")
+        cls._log(
+            reservation.product_stock, A.ORDER_DEDUCTION, reservation.quantity,
+            f"Reservation {reservation.id} committed for Order #{reservation.order_id}"
+            )
         return True
 
     @classmethod
@@ -84,9 +90,14 @@ class StockService:
             stock = stocks.get(item.product_id)
             if not stock:
                 continue
+            units = item.quantity * item.stock_units
             ProductStock.objects.filter(pk=stock.pk).update(
-                quantity=F("quantity") + item.quantity
+                quantity=F("quantity") + units
             )
-            cls._log(stock, A.RESTOCK, item.quantity,
-                     f"Order #{order.id} refunded before dispatch: units returned to stock.",
-                     performed_by)
+            cls._log(
+                stock,
+                A.RESTOCK,
+                units, item.quantity,
+                f"Order #{order.id} refunded before dispatch: units returned to stock.",
+                performed_by
+            )

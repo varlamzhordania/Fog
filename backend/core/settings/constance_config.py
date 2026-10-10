@@ -87,8 +87,7 @@ CONSTANCE_CONFIG = OrderedDict(
         (
             "WEBSITE_META_DESCRIPTION",
             (
-                "Source for premium mycology genetics, research spores, laboratory "
-                "equipment, and cultivation media. Secure anonymous cryptocurrency checkout.",
+                "Mycology research materials, laboratory supplies, grow kits and cultivation media. Pay by card or cryptocurrency.",
                 "Default fallback description used for meta tags and search crawlers.",
                 str,
             ),
@@ -96,7 +95,7 @@ CONSTANCE_CONFIG = OrderedDict(
         (
             "WEBSITE_META_KEYWORDS",
             (
-                "mycology, spore microscopy, research genetics, lab supplies, crypto checkout",
+                "mycology, spore microscopy, lab supplies, grow kits, cultivation media",
                 "Comma-separated default SEO keywords.",
                 str,
             ),
@@ -346,11 +345,9 @@ CONSTANCE_CONFIG = OrderedDict(
         (
             "LEGAL_RESEARCH_DISCLAIMER",
             (
-                "All psilocybe spore syringes and microscopy prints are sold exclusively "
-                "for research, taxonomy, and educational identification purposes under "
-                "high-power microscopy. Cultivation of regulated species is strictly "
-                "prohibited. Sales are void where prohibited.",
-                "Mandatory legal disclaimer displayed on product detail pages and footer.",
+                """"
+                Products are sold for research, microscopy, taxonomy and educational purposes only. You are responsible for knowing and following the laws that apply to you. Sales are void where prohibited.
+                """,
                 str,
             ),
         ),

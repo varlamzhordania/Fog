@@ -20,14 +20,10 @@ from inventory.models import ProductStock
 from settings.models import Contact
 from settings.admin_views.analytics import (
     _dec, _delta, _fmt_day, _initials, _local_start, _money, _ratio,
+    ORDER_TONE,
 )
 
 COMPLETED = OrderPayment.StatusChoices.COMPLETED
-
-ORDER_TONE = {
-    "payment": "info", "pending": "warning", "processing": "warning",
-    "shipped": "primary", "delivered": "success", "cancelled": "danger",
-}
 
 
 class DashboardView(UnfoldModelAdminViewMixin, TemplateView):
@@ -58,7 +54,7 @@ class DashboardView(UnfoldModelAdminViewMixin, TemplateView):
         get_object_or_404(
             Contact,
             pk=request.POST.get("id")
-            ).mark_as_responded()
+        ).mark_as_responded()
         return self.get(request, *args, **kwargs)
 
     def _period(self):
@@ -110,11 +106,11 @@ class DashboardView(UnfoldModelAdminViewMixin, TemplateView):
         prv = paid(prev_start, start).aggregate(
             rev=Sum("amount"),
             n=Count("id")
-            )
+        )
         customers = User.objects.filter(
             is_staff=False,
             date_joined__gte=start
-            ).count()
+        ).count()
         prev_customers = User.objects.filter(
             is_staff=False,
             date_joined__gte=prev_start,
@@ -178,7 +174,7 @@ class DashboardView(UnfoldModelAdminViewMixin, TemplateView):
                     "initials": _initials(c.name, c.email),
                     "created": timezone.localtime(
                         c.created_at
-                        ) if c.created_at else None,
+                    ) if c.created_at else None,
                 }
             )
         return {
@@ -192,14 +188,14 @@ class DashboardView(UnfoldModelAdminViewMixin, TemplateView):
         rows = []
         for o in Order.objects.select_related("user", "payment").order_by(
                 "-created_at"
-                )[:6]:
+        )[:6]:
             name = o.user.get_full_name().strip()
             rows.append(
                 {
                     "id": o.id, "url": reverse(
                     "admin:checkout_order_change",
                     args=[o.id]
-                    ),
+                ),
                     "name": name, "email": o.user.email,
                     "initials": _initials(name, o.user.email),
                     "total": _money(o.total_price),
@@ -213,35 +209,35 @@ class DashboardView(UnfoldModelAdminViewMixin, TemplateView):
     def _low_stock_qs(self):
         return ProductStock.objects.filter(
             product__is_active=True
-            ).annotate(
+        ).annotate(
             avail=ExpressionWrapper(
                 F("quantity") - F("reserved_quantity"),
                 output_field=IntegerField()
-                )
+            )
         ).filter(avail__lte=F("low_stock_threshold"))
 
     def _low_stock(self):
         qs = self._low_stock_qs().select_related("product").order_by(
             "avail"
-            )
+        )
         return [{
             "name": s.product.name, "sku": s.product.sku,
             "avail": max(s.avail, 0),
             "tone": "danger" if (
-                        s.avail <= 0 or not s.is_available) else "warning",
+                    s.avail <= 0 or not s.is_available) else "warning",
             "status": _("Out of stock") if (
-                        s.avail <= 0 or not s.is_available) else _(
+                    s.avail <= 0 or not s.is_available) else _(
                 "Running low"
-                ),
+            ),
             "fill": min(
                 round(
                     _ratio(
                         max(s.avail, 0),
                         max(s.low_stock_threshold * 2, 1)
-                        )
-                    ),
-                100
+                    )
                 ),
+                100
+            ),
         } for s in qs.order_by("avail")[:5]]
 
     def _attention(self, start, end, flags):
@@ -262,13 +258,13 @@ class DashboardView(UnfoldModelAdminViewMixin, TemplateView):
                     (
                         OrderShipment.objects.filter(
                             status="pending"
-                            ).count(),
+                        ).count(),
                         _("shipments to send"),
                         "info",
                         cl(
                             "checkout_ordershipment",
                             "?status__exact=pending"
-                            ),
+                        ),
                     ),
                 ]
             )
@@ -302,8 +298,6 @@ class DashboardView(UnfoldModelAdminViewMixin, TemplateView):
             for n, label, tone, url in rows
             if n
         ]
-
-
 
 
 def dashboard_view(request, *args, **kwargs):

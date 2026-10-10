@@ -6,7 +6,7 @@ from django.dispatch import receiver
 from simple_history.models import HistoricalRecords
 
 from inventory.models import (
-    ProductStock, StockTransactionLog, Product,
+    ProductStock, StockTransactionLog, Product, ProductPrice,
     ProductReview,
 )
 
@@ -65,3 +65,27 @@ def _review_saved(sender, instance, raw=False, **kwargs):
 @receiver(post_delete, sender=ProductReview)
 def _review_deleted(sender, instance, **kwargs):
     refresh_rating(instance.product_id)
+
+
+def sync_product_price(product_id):
+    """Product.base/store_price always mirror the cheapest active option."""
+    prices = list(ProductPrice.objects.filter(product_id=product_id, is_active=True))
+    if not prices:
+        return
+    cheapest = min(prices, key=lambda p: p.store_price)
+    if not any(p.is_default for p in prices):
+        ProductPrice.objects.filter(pk=cheapest.pk).update(is_default=True)
+    Product.objects.filter(pk=product_id).update(
+        base_price=cheapest.base_price, store_price=cheapest.store_price,
+    )
+
+
+@receiver(post_save, sender=ProductPrice)
+def _price_saved(sender, instance, raw=False, **kwargs):
+    if not raw:
+        sync_product_price(instance.product_id)
+
+
+@receiver(post_delete, sender=ProductPrice)
+def _price_deleted(sender, instance, **kwargs):
+    sync_product_price(instance.product_id)

@@ -19,7 +19,7 @@ const VALUES = [
         icon: ShieldCheck,
         title: "Privacy Conscious",
         description:
-            "We aim to collect and process only the information needed to operate the store, process orders, provide support, and maintain customer accounts.",
+            "We only collect what we need to take your order, ship it and answer your questions. See the Privacy Policy for details.",
     },
     {
         icon: Network,
@@ -37,7 +37,7 @@ const VALUES = [
         icon: Target,
         title: "Reliable Commerce",
         description:
-            "The store combines inventory management, secure checkout, payment processing, shipping, and order tracking into one system.",
+            "Clear prices, stock you can see before you pay, and an order page that shows payment, packing and delivery status.",
     },
     {
         icon: Heart,
@@ -89,10 +89,7 @@ export default function AboutPage() {
                         Making mycology research and supplies easier to access
                     </Typography>
 
-                    <Typography
-                        type="body"
-                        className="text-muted leading-relaxed mb-4"
-                    >
+                    <Typography type="body" className="text-muted leading-relaxed mb-4">
                         FOG brings together products, research-oriented information,
                         and practical tools for people interested in fungi and mycology.
                         Our goal is to make the process of discovering products,
@@ -104,10 +101,8 @@ export default function AboutPage() {
                         type="body"
                         className="text-muted leading-relaxed"
                     >
-                        The FOG Direct storefront provides product discovery,
-                        inventory information, customer accounts, multiple payment
-                        options, shipping management, and order tracking while
-                        maintaining a strong focus on responsible and lawful use.
+                        You can browse the catalog, pay by card or cryptocurrency, and follow each
+                        order from payment to delivery, with a focus on lawful and responsible use.
                     </Typography>
                 </div>
 
@@ -180,7 +175,8 @@ export default function AboutPage() {
                                     className="size-6 text-accent stroke-[1.5]"
                                 />
 
-                                <span className="text-[10px] font-mono text-muted/50 tracking-widest">
+                                <span
+                                    className="text-[10px] font-mono text-muted/50 tracking-widest">
                                     {String(index + 1).padStart(2, "0")}
                                 </span>
                             </div>

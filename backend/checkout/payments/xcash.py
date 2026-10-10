@@ -7,12 +7,15 @@ import time
 import uuid
 
 import requests
-from django.conf import settings
-from constance import config
-from django.utils import timezone
 
-from checkout.exceptions import CheckoutError
+from decimal import Decimal, InvalidOperation
+from django.conf import settings
+from django.utils import timezone
+from constance import config
+
 from core.logging import get_logger
+from checkout.exceptions import CheckoutError
+
 from .base import PaymentProvider, Session, payment_deadline
 from .registry import register
 

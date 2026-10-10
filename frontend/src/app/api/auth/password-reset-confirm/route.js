@@ -39,7 +39,6 @@ export async function POST(request) {
             e?.data?.non_field_errors?.[0] ||
             e?.data?.detail ||
             e?.data?.error ||
-            e?.message ||
             "Password reset failed. The link may have expired.";
 
         return NextResponse.json({error: message}, {status});

@@ -17,12 +17,12 @@ import {
 import {Eye, EyeOff, LogIn} from "lucide-react";
 import Icon from "@/components/icon/Icon";
 import {useLogin} from "@/queries/auth";
-import {validateEmail, validatePassword} from "@/lib/utils";
+import {isInvalidEmail, validatePassword} from "@/lib/utils";
 import {useAuthStore} from "@/stores/auth";
 import {useCartStore} from "@/stores/cart";
 
 export default function LoginPage() {
-    const {logged_in} = useAuthStore(state => state)
+    const logged_in = useAuthStore((s) => s.logged_in)
     const router = useRouter();
     const {mutate: login, isPending} = useLogin();
 
@@ -41,23 +41,26 @@ export default function LoginPage() {
                     await useCartStore
                         .getState()
                         .syncGuestCart();
-
-                    toast.success("Successfully logged in.");
                 } catch (error) {
-                    console.error("Cart sync failed:", error);
-
+                    // error
+                }finally {
                     toast.success("Successfully logged in.");
                 }
             },
 
-            onError: () => {
+            onError: (error) => {
+                const description =
+                    [400, 401].includes(error?.status) ? "Email or password is incorrect."
+                    : error?.status === 429 ? "Too many attempts. Please wait a minute and try again."
+                    : "We couldn't sign you in. Please try again.";
+
                 const id = toast.danger("Login Failed", {
                     actionProps: {
                         children: "Dismiss",
                         onPress: () => toast.close(id),
                         variant: "tertiary",
                     },
-                    description: "Email or password is incorrect.",
+                    description: description,
                 });
             },
         });
@@ -92,7 +95,7 @@ export default function LoginPage() {
                             name="email"
                             type="email"
                             validate={(value) => {
-                                return validateEmail(value) ? "Please enter a valid email address" : null
+                                return isInvalidEmail(value) ? "Please enter a valid email address" : null
                             }}
                             value={form.email}
                             onChange={(value) => handleChange(value, "email")}
@@ -108,7 +111,7 @@ export default function LoginPage() {
                             minLength={4}
                             name="password"
                             type={showPassword ? 'text' : 'password'}
-                            validate={(value) => validatePassword(value)}
+                            // validate={(value) => validatePassword(value)}
                             value={form.password}
                             onChange={(value) => handleChange(value, "password")}
                         >
@@ -130,9 +133,6 @@ export default function LoginPage() {
                                     </Button>
                                 </InputGroup.Suffix>
                             </InputGroup>
-                            <Description>
-                                Must be at least 8 characters with 1 uppercase and 1 number
-                            </Description>
                             <FieldError/>
                         </TextField>
 

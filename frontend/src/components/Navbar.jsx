@@ -3,16 +3,7 @@
 import {Avatar, Button, Drawer, Dropdown, Label, Separator, Typography} from "@heroui/react";
 import Link from "next/link";
 import {
-    ClipboardList,
-    LayoutDashboard,
-    LogOut,
-    MapPinHouse,
-    Menu,
-    Moon,
-    Search,
-    ShoppingCart,
-    Sun,
-    UserRound
+    ClipboardList, LayoutDashboard, LogOut, MapPinHouse, Menu, Moon, ShoppingCart, Sun, UserRound
 } from "lucide-react";
 import {useState} from "react";
 import Icon from "@/components/icon/Icon";
@@ -26,16 +17,17 @@ import {useCartStore} from "@/stores/cart";
 
 
 const Navbar = () => {
-    const {theme, toggleTheme} = useThemeStore(state => state)
-    const {user, logged_in} = useAuthStore(state => state)
-    const cartItems = useCartStore((state) => state.items);
     const {data: config} = useConfig()
+    const theme = useThemeStore((s) => s.theme)
+    const toggleTheme = useThemeStore((s) => s.toggleTheme)
+    const user = useAuthStore((s) => s.user)
+    const logged_in = useAuthStore((s) => s.logged_in)
+    const totalQuantity = useCartStore((s) => s.items.reduce((t, i) => t + Number(i.quantity), 0))
     const [sidebarOpen, setSidebarOpen] = useState(false)
     const [dropdownOpen, setDropdownOpen] = useState(false)
     const router = useRouter()
     const logout = useLogout()
     const logo = theme === 'dark' ? config.WEBSITE_SECONDARY_ICON : config?.WEBSITE_PRIMARY_ICON
-    const totalQuantity = cartItems.reduce((total, item) => total + Number(item.quantity), 0);
 
 
     const navigation = [{
@@ -43,11 +35,11 @@ const Navbar = () => {
     }, {
         title: "Shop", href: "/products",
     }, {
+
         title: "About", href: "/about",
     }, {
-        title: "Contact US", href: "/contact",
-    },
-    ]
+        title: "Contact us", href: "/contact",
+    },]
 
     const handleLogout = () => {
         logout.mutate()
@@ -56,7 +48,7 @@ const Navbar = () => {
     return <header className={"container sticky top-0 bg-background z-100"}>
         <div className={"w-full py-4 flex justify-between items-center border-b-2"}>
             <div className={"xl:w-1/3 flex flex-row justify-start items-center gap-2"}>
-                <Button isIconOnly variant={"ghost"}
+                <Button isIconOnly variant={"ghost"} aria-label="Open menu"
                         className={"lg:hidden"}
                         onPress={() => setSidebarOpen(prevState => !prevState)}>
                     <Icon icon={Menu}/>
@@ -85,7 +77,7 @@ const Navbar = () => {
                 {/*</Button>*/}
 
                 {logged_in && user ? <Dropdown isOpen={dropdownOpen} onOpenChange={setDropdownOpen}>
-                        <Button isIconOnly variant={"ghost"}>
+                        <Button isIconOnly variant={"ghost"} aria-label={"Account Menu"}>
                             <Icon icon={UserRound}/>
                         </Button>
                         <Dropdown.Popover>
@@ -104,7 +96,7 @@ const Navbar = () => {
                                     </div>
                                 </div>
                             </div>
-                            <Dropdown.Menu onAction={(key) => console.log(`Selected: ${key}`)}>
+                            <Dropdown.Menu>
                                 <Dropdown.Section/>
                                 <Dropdown.Item id="Dashboard" textValue="Dashboard">
                                     <Link href={"/dashboard/"}
@@ -146,12 +138,14 @@ const Navbar = () => {
                             </Dropdown.Menu>
                         </Dropdown.Popover>
                     </Dropdown> :
-                    <Button isIconOnly variant="ghost" onPress={() => router.push("/login")}>
+                    <Button isIconOnly variant="ghost" aria-label="Sign in"
+                            onPress={() => router.push("/login")}>
                         <Icon icon={UserRound}/>
                     </Button>}
 
-                <Link href={"/cart"}>
-                    <Button isIconOnly variant={"ghost"}>
+
+                    <Button isIconOnly variant={"ghost"} onPress={()=> router.push("/cart")}
+                            aria-label={`Cart, ${totalQuantity} items`}>
                         <Icon icon={ShoppingCart}/>
                         {totalQuantity > 0 && (<div
                             className="absolute -right-1 -top-1 flex h-[20px] w-[20px] items-center justify-center rounded-full bg-foreground ring-2 ring-background">
@@ -163,10 +157,12 @@ const Navbar = () => {
                             </Typography>
                         </div>)}
                     </Button>
-                </Link>
 
 
-                <Button isIconOnly variant={"ghost"} onPress={() => toggleTheme()}>
+
+                <Button isIconOnly variant={"ghost"}
+                        aria-label={`Switch to ${theme === "dark" ? "light" : "dark"} theme`}
+                        onPress={() => toggleTheme()}>
                     {theme === 'dark' ? <Icon icon={Sun}/> : <Icon icon={Moon}/>}
 
                 </Button>

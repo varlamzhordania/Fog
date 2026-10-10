@@ -19,7 +19,7 @@ from inventory.services.reviews import ReviewService
 
 from .filters import ProductFilter
 from .serializers import (
-    CategorySerializer, ProductSerializer,
+    CategorySerializer, ProductSerializer, ProductListSerializer,
     TagSerializer, ProductReviewSerializer, ProductReviewWriteSerializer,
 )
 
@@ -39,16 +39,14 @@ class HomeView(APIView):
     def get(self, request):
         data = cache.get(self.CACHE_KEY)
         if data is None:
-            data = self._build(request)
+            data = self._build()
             cache.set(self.CACHE_KEY, data, self.CACHE_SECONDS)
         return Response(data)
 
-    @staticmethod
-    def _build(request):
-        context = {"request": request, **catalog.serializer_context()}
 
+    def _build(request):
         def ser(qs):
-            return ProductSerializer(qs, many=True, context=context).data
+            return ProductListSerializer(qs, many=True).data
 
         sections = home.home_sections()
         return {
@@ -89,7 +87,6 @@ class TagViewSet(OptionalPaginationMixin, ListAPIView):
 @extend_schema(tags=["Inventory"])
 class ProductViewSet(
     OptionalPaginationMixin,
-    CatalogContextMixin,
     ReadOnlyModelViewSet
 ):
     serializer_class = ProductSerializer
@@ -102,8 +99,14 @@ class ProductViewSet(
     ordering_fields = ["store_price", "created_at", "rating_average"]
     ordering = ["-created_at"]
 
+    def get_serializer_class(self):
+        return ProductListSerializer if self.action == "list" else ProductSerializer
+
     def get_queryset(self):
-        return catalog.catalog_products().distinct()
+        return catalog.catalog_products(
+            detail=self.action != "list"
+        ).distinct()
+
 
 class ReviewProductMixin:
     def get_product(self):
@@ -124,7 +127,9 @@ class ProductReviewListCreateView(ReviewProductMixin, ListAPIView):
         return [permissions.AllowAny()]
 
     def get_queryset(self):
-        return self.get_product().reviews.filter(is_active=True).select_related("user")
+        return self.get_product().reviews.filter(
+            is_active=True
+            ).select_related("user")
 
     def list(self, request, *args, **kwargs):
         response = super().list(request, *args, **kwargs)
@@ -136,13 +141,23 @@ class ProductReviewListCreateView(ReviewProductMixin, ListAPIView):
             }
         return response
 
-    @extend_schema(request=ProductReviewWriteSerializer, responses=ProductReviewSerializer)
+    @extend_schema(
+        request=ProductReviewWriteSerializer,
+        responses=ProductReviewSerializer
+        )
     def post(self, request, slug):
         data = ProductReviewWriteSerializer(data=request.data)
         data.is_valid(raise_exception=True)
-        review = ReviewService.create(request.user, self.get_product(), **data.validated_data)
+        review = ReviewService.create(
+            request.user,
+            self.get_product(),
+            **data.validated_data
+            )
         return Response(
-            ProductReviewSerializer(review, context={"request": request}).data,
+            ProductReviewSerializer(
+                review,
+                context={"request": request}
+                ).data,
             status=status.HTTP_201_CREATED,
         )
 
@@ -154,23 +169,44 @@ class MyProductReviewView(ReviewProductMixin, APIView):
     def get(self, request, slug):
         product = self.get_product()
         review = product.reviews.filter(user=request.user).first()
-        return Response({
-            "enabled": ReviewService.enabled(),
-            "has_purchased": ReviewService.has_purchased(request.user, product),
-            "review": ProductReviewSerializer(review, context={"request": request}).data
-            if review else None,
-        })
+        return Response(
+            {
+                "enabled": ReviewService.enabled(),
+                "has_purchased": ReviewService.has_purchased(
+                    request.user,
+                    product
+                    ),
+                "review": ProductReviewSerializer(
+                    review,
+                    context={"request": request}
+                    ).data
+                if review else None,
+            }
+        )
 
-    @extend_schema(request=ProductReviewWriteSerializer, responses=ProductReviewSerializer)
+    @extend_schema(
+        request=ProductReviewWriteSerializer,
+        responses=ProductReviewSerializer
+        )
     def patch(self, request, slug):
         data = ProductReviewWriteSerializer(data=request.data)
         data.is_valid(raise_exception=True)
-        review = ReviewService.update(request.user, self.get_product(), **data.validated_data)
-        return Response(ProductReviewSerializer(review, context={"request": request}).data)
+        review = ReviewService.update(
+            request.user,
+            self.get_product(),
+            **data.validated_data
+            )
+        return Response(
+            ProductReviewSerializer(
+                review,
+                context={"request": request}
+                ).data
+            )
 
     def delete(self, request, slug):
         ReviewService.delete(request.user, self.get_product())
         return Response(status=status.HTTP_204_NO_CONTENT)
+
 
 @extend_schema(tags=["Inventory"])
 class ProductPriceRangeView(APIView):

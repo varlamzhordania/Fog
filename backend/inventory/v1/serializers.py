@@ -1,7 +1,8 @@
+from django.core.exceptions import ObjectDoesNotExist
 from rest_framework import serializers
 
 from inventory.models import (
-    Media, Category, Tag, ProductMedia, Product, ProductReview,
+    Media, Category, Tag, ProductMedia, Product, ProductReview, ProductPrice,
 )
 
 
@@ -70,18 +71,6 @@ class TagMinimalSerializer(serializers.ModelSerializer):
         read_only_fields = fields
 
 
-class CategoryMinimalSerializer(serializers.ModelSerializer):
-    breadcrumb = serializers.CharField(
-        source="get_breadcrumb",
-        read_only=True
-    )
-
-    class Meta:
-        model = Category
-        fields = ["id", "name", "slug", "breadcrumb"]
-        read_only_fields = fields
-
-
 class ProductMediaSerializer(serializers.ModelSerializer):
     media = MediaSerializer(read_only=True)
 
@@ -91,10 +80,25 @@ class ProductMediaSerializer(serializers.ModelSerializer):
         read_only_fields = fields
 
 
+class ProductPriceSerializer(serializers.ModelSerializer):
+    discount_percentage = serializers.IntegerField(read_only=True)
+    max_quantity = serializers.SerializerMethodField()
+
+    class Meta:
+        model = ProductPrice
+        fields = ["id", "label", "stock_quantity", "base_price", "store_price",
+                  "discount_percentage", "is_default", "max_quantity"]
+        read_only_fields = fields
+
+    def get_max_quantity(self, obj):
+        return self.context.get("available", 0) // obj.stock_quantity
+
+
 class ProductSerializer(serializers.ModelSerializer):
     category = CategoryMinimalSerializer(read_only=True)
     tags = TagMinimalSerializer(many=True, read_only=True)
     primary_image = MediaSerializer(read_only=True)
+    prices = serializers.SerializerMethodField()
 
     gallery = ProductMediaSerializer(
         source="product_media_items",
@@ -131,6 +135,8 @@ class ProductSerializer(serializers.ModelSerializer):
             "short_description",
             "description",
 
+            "stock_unit",
+            "prices",
             "base_price",
             "store_price",
             "discount_percentage",
@@ -149,6 +155,45 @@ class ProductSerializer(serializers.ModelSerializer):
 
             "created_at",
             "updated_at",
+        ]
+        read_only_fields = fields
+
+    def get_prices(self, obj):
+        rows = getattr(obj, "active_prices", None)
+        if rows is None:
+            rows = list(obj.prices.filter(is_active=True))
+        if not rows:
+            rows = [obj.get_default_price()]
+        try:
+            available = obj.product_stock.available_quantity
+        except ObjectDoesNotExist:
+            available = 0
+        return ProductPriceSerializer(
+            rows,
+            many=True,
+            context={"available": available}
+        ).data
+
+
+class ProductListSerializer(serializers.ModelSerializer):
+    primary_image = MediaSerializer(read_only=True)
+    available_stock = serializers.IntegerField(
+        source="product_stock.available_quantity", read_only=True, default=0,
+    )
+    is_available = serializers.BooleanField(
+        source="product_stock.is_available", read_only=True, default=False,
+    )
+    discount_percentage = serializers.IntegerField(read_only=True)
+    rating_average = serializers.FloatField(read_only=True)
+    rating_count = serializers.IntegerField(read_only=True)
+
+    class Meta:
+        model = Product
+        fields = [
+            "id", "name", "slug", "product_type", "short_description",
+            "base_price", "store_price", "discount_percentage",
+            "rating_average", "rating_count", "is_featured",
+            "primary_image", "available_stock", "is_available", "created_at",
         ]
         read_only_fields = fields
 

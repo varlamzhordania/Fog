@@ -16,7 +16,7 @@ import {
 import {ArrowLeft, CheckCircle, Mail} from "lucide-react";
 import Icon from "@/components/icon/Icon";
 import {useRequestPasswordReset} from "@/queries/auth";
-import {validateEmail} from "@/lib/utils";
+import {isInvalidEmail} from "@/lib/utils";
 
 export default function PasswordResetPage() {
     const {mutate: requestReset, isPending, isSuccess} = useRequestPasswordReset();
@@ -125,7 +125,7 @@ export default function PasswordResetPage() {
                                     name="email"
                                     type="email"
                                     validate={(value) => {
-                                        return validateEmail(value)
+                                        return isInvalidEmail(value)
                                             ? "Please enter a valid email address"
                                             : null;
                                     }}

@@ -17,7 +17,29 @@ from inventory.models import (
 )
 from inventory.services.stock import StockService
 
+class ProductListApiTests(TestCase):
+    URL = "/api/v1/inventory/products/?pagination=false"
 
+    def _make(self, start, n):
+        for i in range(start, start + n):
+            p = Product.objects.create(name=f"P{i}", sku=f"L{i}", base_price=10,
+                                       store_price=10, description="<p>x</p>")
+            ProductStock.objects.create(product=p, quantity=5)
+
+    def _get(self):
+        with CaptureQueriesContext(connection) as ctx:
+            r = self.client.get(self.URL)
+        self.assertEqual(r.status_code, 200)
+        return len(ctx), r.json()
+
+    def test_list_is_light_and_query_count_is_flat(self):
+        self._make(0, 2)
+        small, _ = self._get()
+        self._make(2, 8)
+        big, data = self._get()
+        self.assertEqual(big, small)
+        for key in ("description", "gallery", "category", "tags"):
+            self.assertNotIn(key, data[0])
 
 class StockServiceTests(TestCase):
     def setUp(self):
@@ -113,8 +135,6 @@ class CategoryQueryTests(TestCase):
             "/api/v1/inventory/categories/?pagination=false"
         ).json()]
         self.assertNotIn("Child", names)
-
-
 
 
 class ReviewTests(APITestCase):

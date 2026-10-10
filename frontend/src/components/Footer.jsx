@@ -4,11 +4,11 @@ import {Typography} from "@heroui/react";
 import Link from "next/link";
 import {useCategories} from "@/queries/inventory";
 import {useConfig} from "@/queries/settings";
-import Image from "next/image";
 import {useThemeStore} from "@/stores/theme";
+import Image from "@/components/Image";
 
 const Footer = () => {
-    const {theme} = useThemeStore(state => state)
+    const theme = useThemeStore((s) => s.theme)
     const {data: config} = useConfig()
     const {data, isLoading} = useCategories({
         page_size: 4,
@@ -63,7 +63,7 @@ const Footer = () => {
 
                     <div className="flex max-w-sm flex-col gap-5">
                         <Link href="/" className="w-fit">
-                            {logo && <Image unoptimized={true} src={logo} width={64} height={64}
+                            {logo && <Image src={logo} width={64} height={64}
                                             alt={"FOG LOGO"}
                                             className={"object-cover"}/>}
                             <Typography

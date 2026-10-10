@@ -14,11 +14,11 @@ const FAQ_GROUPS = [
         items: [
             {
                 q: "What is FOG Direct?",
-                a: "FOG Direct is the online storefront for the FOG project. It provides products and supplies related to mycology and research together with information and resources surrounding fungal study.",
+                a: "FOG Direct is the shop for the FOG mycology project: research materials, grow kits, lab supplies and printed guides.",
             },
             {
                 q: "What types of products are available?",
-                a: "The store supports physical products and is also structured to support downloadable products. The products currently available for purchase are shown in the store catalog.",
+                a: "We sell dried mushrooms, extracts, grow kits, spore prints and syringes for microscopy, lab supplies and printed guides.",
             },
             {
                 q: "Who are the products intended for?",
@@ -36,7 +36,7 @@ const FAQ_GROUPS = [
         items: [
             {
                 q: "Do I need an account?",
-                a: "FOG Direct supports customer accounts for managing orders, addresses, and account information. Account functionality is required for features that depend on customer-specific order and profile data.",
+                a: "You can browse and fill a cart without one. To check out you need an account, so we can send order updates and keep your addresses and order history in one place.",
             },
             {
                 q: "Can I save delivery addresses?",
@@ -48,7 +48,7 @@ const FAQ_GROUPS = [
             },
             {
                 q: "Can I cancel an order?",
-                a: "Unpaid orders can be cancelled while they are still eligible for cancellation. Once an order has progressed further through fulfillment, cancellation may no longer be available.",
+                a: "You can cancel an order that is still awaiting payment from its order page. If you’ve already paid, contact support before it ships and we’ll cancel and refund it. Once an order has shipped it can’t be cancelled.",
             },
         ],
     },
@@ -58,7 +58,7 @@ const FAQ_GROUPS = [
         items: [
             {
                 q: "What payment methods are available?",
-                a: "Depending on the current store configuration, checkout can offer manual payment confirmation, card payments through Stripe, and cryptocurrency payments through XCash. The available options are shown during checkout.",
+                a: "You can pay by card (processed by Stripe) or by cryptocurrency (processed by Xcash). The options available to you are shown at checkout.",
             },
             {
                 q: "How does cryptocurrency payment work?",
@@ -66,7 +66,7 @@ const FAQ_GROUPS = [
             },
             {
                 q: "How long do I have to pay?",
-                a: "Some orders have a limited payment window. Inventory can be temporarily reserved while payment is pending. If the order expires without successful payment, the reservation can be released.",
+                a: "Your items are reserved while you pay. The countdown is shown on your order page (usually 60 minutes). If it runs out, the order is cancelled and the items go back on sale. If a payment arrives after that, contact support and we’ll refund it or reopen the order.",
             },
             {
                 q: "Can I use another payment method after creating an order?",
@@ -80,11 +80,11 @@ const FAQ_GROUPS = [
         items: [
             {
                 q: "How are shipping costs calculated?",
-                a: "Shipping methods are configured by the store. Depending on the method, shipping may have a fixed price, delivery estimate, tracking availability, country restrictions, or a free-shipping threshold. Available options are shown during checkout.",
+                a: "Each shipping method has its own price and delivery estimate, and some are free above a minimum order. They are listed on the Shipping page and shown at checkout for your address.",
             },
             {
                 q: "Do you ship internationally?",
-                a: "International shipping depends on the destinations and shipping methods currently configured by the store. Customers are responsible for ensuring that products can legally be imported into their destination.",
+                a: "We ship to the countries offered at checkout. If your country isn’t offered, no shipping method will appear for your address. You are responsible for customs rules and import duties.",
             },
             {
                 q: "Will my order have tracking?",

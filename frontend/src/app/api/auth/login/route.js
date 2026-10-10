@@ -49,7 +49,6 @@ export async function POST(request) {
             e?.data?.error_description ||
             e?.data?.detail ||
             e?.data?.error ||
-            e?.message ||
             "Invalid credentials.";
 
         return NextResponse.json({error: message}, {status});

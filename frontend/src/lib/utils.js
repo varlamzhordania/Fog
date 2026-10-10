@@ -1,16 +1,16 @@
-export const validateEmail = (value) => {
+export const isInvalidEmail = (value) => {
     return !/^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i.test(value);
 }
 export const validatePassword = (value) => {
-    // if (value.length < 8) {
-    //     return "Password must be at least 8 characters";
-    // }
-    // if (!/[A-Z]/.test(value)) {
-    //     return "Password must contain at least one uppercase letter";
-    // }
-    // if (!/[0-9]/.test(value)) {
-    //     return "Password must contain at least one number";
-    // }
+    if (value.length < 8) {
+        return "Password must be at least 8 characters";
+    }
+    if (!/[A-Z]/.test(value)) {
+        return "Password must contain at least one uppercase letter";
+    }
+    if (!/[0-9]/.test(value)) {
+        return "Password must contain at least one number";
+    }
     return null;
 }
 
@@ -51,3 +51,8 @@ export const getApiErrorMessage = (error, fallback = "Something went wrong.") =>
     if (first && typeof first === "object") return String(Object.values(first)[0]?.[0] ?? fallback);
     return fallback;
 };
+
+export const productImageUrl = (product) =>
+    typeof product?.primary_image === "string"
+        ? product.primary_image
+        : product?.primary_image?.file ?? product?.image ?? null;

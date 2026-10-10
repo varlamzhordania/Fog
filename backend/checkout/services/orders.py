@@ -1,6 +1,7 @@
 from datetime import timedelta
 from decimal import Decimal
-
+from collections import defaultdict
+from types import SimpleNamespace
 from constance import config
 from django.db import transaction
 from django.shortcuts import get_object_or_404
@@ -50,7 +51,8 @@ class OrderService:
     ):
         """Validate the cart, reserve stock, create order + payment. DB work only."""
         cart = CartService.get_or_create_cart(user)
-        items = list(cart.items.select_related("product"))
+        items = list(cart.items.select_related("product", "price"))
+
         if not items:
             raise CheckoutError("Your cart is empty.")
 
@@ -98,12 +100,15 @@ class OrderService:
         OrderItem.objects.bulk_create(
             [
                 OrderItem(
-                    order=order, product=i.product, quantity=i.quantity,
-                    unit_price=i.product.final_price,
-                    total_price=i.product.final_price * i.quantity,
+                    order=order, product=i.product, price=i.price,
+                    price_label=i.price.label, stock_units=i.price.stock_quantity,
+                    quantity=i.quantity,
+                    unit_price=i.price.store_price,
+                    total_price=i.price.store_price * i.quantity,
                 ) for i in items
             ]
         )
+
         payment = OrderPayment.objects.create(
             order=order,
             amount=totals.total,
@@ -113,23 +118,32 @@ class OrderService:
             method_code=method.code,
         )
         expires_at = timezone.now() + timedelta(minutes=_window_minutes())
-        StockService.reserve(order, items, stocks, expires_at)
+        holds = [SimpleNamespace(
+            product_id=i.product_id,
+            quantity=i.quantity * i.price.stock_quantity
+            ) for i in items]
+        StockService.reserve(order, holds, stocks, expires_at)
         return order, payment
 
     @staticmethod
     def _price(items, stocks):
-        total = Decimal("0.00")
+        total, needed, names = Decimal("0.00"), defaultdict(int), {}
         for item in items:
             product, stock = item.product, stocks.get(item.product_id)
-            if not product.is_active or not stock or not stock.is_available:
+            if (not product.is_active or not item.price.is_active
+                    or not stock or not stock.is_available):
                 raise CheckoutError(
-                    f"“{product.name}” is no longer available."
-                )
-            if stock.available_quantity < item.quantity:
+                    f"“{product.name}” ({item.price.label}) is no longer available."
+                    )
+            needed[product.pk] += item.quantity * item.price.stock_quantity
+            names[product.pk] = product.name
+            total += item.price.store_price * item.quantity
+        for pid, units in needed.items():
+            if stocks[pid].available_quantity < units:
                 raise CheckoutError(
-                    f"Only {stock.available_quantity} of “{product.name}” left in stock."
+                    f"Only {stocks[pid].available_quantity} of “{names[pid]}” left in stock; "
+                    "reduce the quantity in your cart."
                 )
-            total += product.final_price * item.quantity
         return total
 
     @staticmethod
@@ -169,7 +183,9 @@ class OrderService:
 
         order.status = S.CANCELLED
         append_note(order, reason)
-        order.save(update_fields=["status", "internal_notes", "updated_at"])
+        order.save(
+            update_fields=["status", "internal_notes", "updated_at"]
+        )
 
         expired = reason == EXPIRED_REASON
         payment = getattr(order, "payment", None)

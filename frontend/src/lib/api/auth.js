@@ -2,6 +2,7 @@ import {API_ENDPOINTS} from "@/lib/config";
 import apiClient from "@/lib/api/client";
 import {serverFetch} from "@/lib/api/server";
 import axios from "axios";
+import {ApiError} from "@/lib/api/error";
 
 export async function retrieveSelf(token) {
     return await serverFetch(API_ENDPOINTS.account.me, {token});
@@ -22,10 +23,7 @@ async function tokenRequest(url, data, config = {}) {
         });
         return res.data;
     } catch (e) {
-        throw {
-            status: e.response?.status ?? 502,
-            data: e.response?.data ?? {error_description: "Authentication service is unreachable."},
-        };
+        throw new ApiError(e.response?.status ?? 502, e.response?.data ?? {error_description: "Authentication service is unreachable."});
     }
 }
 

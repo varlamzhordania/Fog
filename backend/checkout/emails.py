@@ -14,6 +14,8 @@ from checkout.models import Order, OrderNotification as N
 log = get_logger(__name__)
 
 CUSTOMER, ADMIN = N.Audience.CUSTOMER, N.Audience.ADMIN
+CUSTOMER_FOOTER = "You received this because of activity on your {app} order."
+ADMIN_FOOTER = "Automated store notification from {app}."
 
 SPEC = {
     "order_created": {
@@ -57,10 +59,11 @@ SPEC = {
                    "This order has been cancelled."),
     },
     "order_refunded": {
-        CUSTOMER: ("Order #{id} refunded", "Your order was refunded",
-                   "The order was cancelled before dispatch and refunded."),
+        CUSTOMER: ("Order #{id} cancelled", "Your order was cancelled",
+                   "Your order was cancelled before dispatch. Card payments are refunded to your card. "
+                   "For cryptocurrency payments our team will contact you to arrange the refund."),
         ADMIN: ("Order #{id} refunded", "Order refunded",
-                "A paid order was refunded and restocked."),
+                "A paid order was cancelled and restocked. Check the order notes for any manual refund."),
     },
     "late_payment": {
         ADMIN: ("ACTION: late payment on order #{id}",
@@ -111,7 +114,7 @@ def _order_context(order, audience, extra):
     if order.shipping_method_name:
         cost = _money(
             order.shipping_cost
-            ) if order.shipping_cost else "Free"
+        ) if order.shipping_cost else "Free"
         rows.append(("Shipping", f"{order.shipping_method_name} · {cost}"))
 
     if order.tax_amount:
@@ -148,12 +151,20 @@ def _order_context(order, audience, extra):
         label = "View order"
 
     items = [
-        (i.product.name if i.product else "Removed product", i.quantity,
-         _money(i.total_price))
+        ((f"{i.product.name} ({i.price_label})" if i.price_label else i.product.name)
+         if i.product else "Removed product", i.quantity, _money(i.total_price))
         for i in order.items.all()
     ]
-    return {"rows": rows, "items": items, "cta_url": url,
-            "cta_label": label}
+    return {
+        "rows": rows,
+        "items": items,
+        "cta_url": url,
+        "cta_label": label,
+        "footer": (
+            ADMIN_FOOTER if audience == ADMIN else CUSTOMER_FOOTER).format(
+            app=APP_NAME
+        )
+    }
 
 
 def _build(
@@ -163,12 +174,16 @@ def _build(
         rows=(),
         items=(),
         cta_url=None,
-        cta_label=None
+        cta_label=None,
+        footer=None,
+
 ):
     ctx = {"app_name": APP_NAME, "headline": headline, "intro": intro,
            "rows": list(rows),
            "items": list(items), "cta_url": cta_url,
-           "cta_label": cta_label}
+           "cta_label": cta_label,
+           "footer": footer or ADMIN_FOOTER.format(app=APP_NAME),
+           }
     html = render_to_string("emails/message.html", ctx)
     text = "\n".join(
         [
@@ -235,7 +250,7 @@ def send(order_id, event, audience, extra=None):
             )
 
         notification.recipients, notification.subject, notification.error = ", ".join(
-        to
+            to
         ), subject, error
         notification.status = N.Status.FAILED if error else N.Status.SENT
         notification.sent_at = None if error else timezone.now()
@@ -255,7 +270,8 @@ def send_admin_message(
         rows=(),
         items=(),
         url=None,
-        label=None
+        label=None,
+        footer=None,
 ):
     to = admin_emails()
     if to:

@@ -268,12 +268,19 @@ class Product(BaseModel):
             "Detailed product description displayed on the product detail page."
         ),
     )
-
+    stock_unit = models.CharField(
+        max_length=20, default="unit", verbose_name=_("Stock Unit"),
+        help_text=_(
+            "Unit the stock is counted in: unit, g, ml… Stock quantity, "
+            "reserved stock and the low-stock threshold use this unit."
+        ),
+    )
     base_price = models.DecimalField(
         max_digits=12,
         decimal_places=2,
         validators=[MinValueValidator(Decimal("0.00"))],
         verbose_name=_("Base Price (USD)"),
+        default=Decimal("0.00"),
         help_text=_(
             "Original/reference price of the product before any store discount. "
             "Used to calculate the displayed discount."
@@ -285,6 +292,7 @@ class Product(BaseModel):
         decimal_places=2,
         validators=[MinValueValidator(Decimal("0.00"))],
         verbose_name=_("Store Price (USD)"),
+        default=Decimal("0.00"),
         help_text=_(
             "Current selling price shown to customers and used as the product price during checkout."
         ),
@@ -343,6 +351,22 @@ class Product(BaseModel):
 
     def __str__(self):
         return f"{self.name} ({self.sku})"
+
+    def get_default_price(self):
+        price = self.prices.filter(is_active=True).order_by(
+            "-is_default",
+            "store_price"
+        ).first()
+        if price is None:
+            price = ProductPrice.objects.create(
+                product=self,
+                label="Each",
+                stock_quantity=1,
+                base_price=self.base_price,
+                store_price=self.store_price,
+                is_default=True,
+            )
+        return price
 
     @property
     def primary_image(self) -> Media | None:
@@ -419,6 +443,62 @@ class ProductMedia(BaseModel):
         return f"{self.product.name} ↔ {self.media}"
 
 
+class ProductPrice(BaseModel):
+    product = models.ForeignKey(
+        Product,
+        on_delete=models.CASCADE,
+        related_name="prices"
+    )
+    label = models.CharField(
+        max_length=60, verbose_name=_("Label"),
+        help_text=_("Shown to the buyer, e.g. Each, 0.5 lb, 1 kg.")
+    )
+    stock_quantity = models.PositiveIntegerField(
+        default=1, validators=[MinValueValidator(1)],
+        verbose_name=_("Stock used per purchase"),
+        help_text=_(
+            "How many of the product's stock units one purchase of this "
+            "option uses (e.g. 1000 for '1 kg' when stock is in grams)."
+        ),
+    )
+    base_price = models.DecimalField(
+        max_digits=12, decimal_places=2,
+        validators=[MinValueValidator(Decimal("0.00"))]
+    )
+    store_price = models.DecimalField(
+        max_digits=12, decimal_places=2,
+        validators=[MinValueValidator(Decimal("0.00"))]
+    )
+    is_default = models.BooleanField(
+        default=False,
+        verbose_name=_("Preselected")
+    )
+    display_order = models.PositiveIntegerField(default=0)
+
+    class Meta:
+        verbose_name = _("Product Price")
+        verbose_name_plural = _("Product Prices")
+        ordering = ["display_order", "store_price"]
+        unique_together = ("product", "label")
+
+    def __str__(self):
+        return f"{self.product.name} · {self.label}"
+
+    def save(self, *args, **kwargs):
+        super().save(*args, **kwargs)
+        if self.is_default:
+            ProductPrice.objects.filter(
+                product_id=self.product_id
+            ).exclude(pk=self.pk).update(is_default=False)
+
+    @property
+    def discount_percentage(self) -> int:
+        if self.base_price <= 0 or self.store_price >= self.base_price:
+            return 0
+        pct = (self.base_price - self.store_price) / self.base_price * Decimal("100")
+        return int(pct.quantize(Decimal("1"), rounding=ROUND_HALF_UP))
+
+
 class ProductStock(BaseModel):
     product = models.OneToOneField(
         Product,
@@ -436,7 +516,7 @@ class ProductStock(BaseModel):
         validators=[MinValueValidator(0)],
         verbose_name=_("Reserved Stock"),
         help_text=_(
-            "Locked stock during active 60-minute payment windows."
+            "Stock held for unpaid orders while the payment window is open."
         ),
     )
     is_available = models.BooleanField(
@@ -461,11 +541,11 @@ class ProductStock(BaseModel):
 
     @property
     def available_quantity(self) -> int:
-        """Physical stock minus units locked in pending cryptocurrency payments."""
         return max(0, self.quantity - self.reserved_quantity)
 
     def is_below_threshold(self) -> bool:
         return self.available_quantity <= self.low_stock_threshold
+
 
 class ProductReview(BaseModel):
     product = models.ForeignKey(
@@ -480,7 +560,11 @@ class ProductReview(BaseModel):
         validators=[MinValueValidator(1), MaxValueValidator(5)],
         verbose_name=_("Rating"),
     )
-    comment = models.TextField(blank=True, default="", verbose_name=_("Comment"))
+    comment = models.TextField(
+        blank=True,
+        default="",
+        verbose_name=_("Comment")
+    )
 
     class Meta:
         verbose_name = _("Product Review")
@@ -491,6 +575,7 @@ class ProductReview(BaseModel):
 
     def __str__(self):
         return f"{self.product.name}: {self.rating}/5 by {self.user.email}"
+
 
 class StockReservation(BaseModel):
     class ReservationStatus(models.TextChoices):

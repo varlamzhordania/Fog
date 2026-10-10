@@ -33,7 +33,7 @@ const ProductGallery = ({product}) => {
                 },
             ]
             : []),
-        ...gallery.map((item) => item.media).filter(Boolean),
+        ...gallery.map((item) => item.media).filter((m) => m?.media_type === "IMAGE"),
     ].filter((image, index, array) =>
             array.findIndex((item) => item.id === image.id) === index
     );
@@ -177,7 +177,7 @@ const ProductGallery = ({product}) => {
                     {images.map((image, index) => (
                         <SwiperSlide
                             key={image.id}
-                            className="!h-auto cursor-pointer"
+                            className="h-auto! cursor-pointer"
                         >
                             <div
                                 className={[
