@@ -30,13 +30,17 @@ const Footer = () => {
     ]
 
     const discoverLinks = [
-        {
-            label: "Research Policy",
-            href: "/research/",
-        },
+        // {
+        //     label: "Research Policy",
+        //     href: "/research/",
+        // },
         {
             label: "About",
             href: "/about/",
+        },
+        {
+            label: "FAQ",
+            href: "/faq/",
         },
     ]
 
@@ -49,15 +53,12 @@ const Footer = () => {
             label: "Shipping",
             href: "/shipping/",
         },
-        {
-            label: "FAQ",
-            href: "/faq/",
-        },
+
     ]
 
     return (
         <footer className="container">
-            <div className={"border-t container-space pb-0"}>
+            <div className={"border-t container-space pt-12 pb-0"}>
                 <div
                     className="grid grid-cols-1 gap-12 pb-14 sm:grid-cols-2 lg:grid-cols-[1.8fr_1fr_1fr_1fr] lg:gap-10">
 
@@ -79,14 +80,6 @@ const Footer = () => {
                         >
                             {config?.WEBSITE_TAGLINE ||
                                 "Premium mycology research & laboratory supplies."}
-                        </Typography>
-
-                        <Typography
-                            className="max-w-sm text-sm leading-6 opacity-50"
-                        >
-                            Independent research, documentation, and carefully
-                            selected supplies for mycology enthusiasts and
-                            researchers.
                         </Typography>
 
                         {/* Social */}

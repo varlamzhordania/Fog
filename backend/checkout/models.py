@@ -482,10 +482,17 @@ class OrderItem(BaseModel):
         return self.quantity * self.stock_units
 
     @property
+    def effective_stock_unit(self) -> str:
+        if self.stock_unit and self.stock_unit != "unit":
+            return self.stock_unit
+        return self.product.stock_unit if self.product else "unit"
+
+    @property
     def sold_total(self) -> str:
-        if self.stock_unit in ("", "unit"):
+        unit = self.effective_stock_unit
+        if unit in ("", "unit"):
             return ""
-        return format_stock(self.stock_used, self.stock_unit)
+        return format_stock(self.stock_used, unit)
 
 class OrderShipment(BaseModel):
     class StatusChoices(models.TextChoices):

@@ -544,6 +544,7 @@ class AnalyticsDashboardView(UnfoldModelAdminViewMixin, TemplateView):
                 units=Sum("quantity"), revenue=Sum("total_price"),
                 used=Sum(F("quantity") * F("stock_units"))
             )
+            .order_by("-revenue")[:6]
         )
         top = _dec(rows[0]["revenue"]) if rows else Decimal("0")
 

@@ -378,7 +378,7 @@ class OrderAdmin(UnfoldImportExportHistoryAdmin):
             g["name"] = i.product_name or (
                 i.product.name if i.product else "Removed product")
             g["sku"] = i.product_sku or (i.product.sku if i.product else "")
-            g["unit"] = i.stock_unit or "unit"
+            g["unit"] = i.effective_stock_unit
             g["used"] += i.stock_used
             g["lines"].append(f"{i.quantity} × {i.price_label or 'Each'}")
         rows = format_html_join(
