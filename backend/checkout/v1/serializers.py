@@ -36,7 +36,7 @@ class CartProductSerializer(serializers.ModelSerializer):
     class Meta:
         model = Product
         fields = [
-            'id', 'name', 'slug', 'sku', 'product_type',
+            'id', 'name', 'slug', 'sku', 'product_type', "stock_unit",
             'base_price', 'store_price', 'primary_image',
             'available_stock', 'is_available', 'discount_percentage'
         ]
@@ -62,8 +62,8 @@ class CartPriceSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = ProductPrice
-        fields = ["id", "label", "stock_quantity", "base_price",
-                  "store_price", "discount_percentage"]
+        fields = ["id", "label", "amount", "unit", "stock_quantity",
+                  "base_price", "store_price", "discount_percentage"]
 
 
 class ShoppingCartItemSerializer(serializers.ModelSerializer):
@@ -180,13 +180,15 @@ class OrderShipmentPublicSerializer(serializers.ModelSerializer):
 
 
 class OrderItemSerializer(serializers.ModelSerializer):
+    sold_total = serializers.CharField(read_only=True)
     product_name = serializers.SerializerMethodField()
     product_slug = serializers.SerializerMethodField()
 
     class Meta:
         model = OrderItem
         fields = ["id", "product", "product_name", "product_slug",
-                  "quantity", "unit_price", "total_price", "price_label"]
+                  "quantity", "unit_price", "total_price", "price_label",
+                  "sold_total"]
 
     def get_product_name(self, obj):
         return obj.product_name or (obj.product.name if obj.product else None)

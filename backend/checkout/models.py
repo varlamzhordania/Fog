@@ -11,6 +11,7 @@ from django.core.exceptions import (
 )
 from rest_framework.exceptions import ValidationError
 
+from inventory.units import format_stock
 from core.models import BaseModel, UploadPath
 
 User = get_user_model()
@@ -425,8 +426,18 @@ class OrderItem(BaseModel):
         related_name='order_items',
         verbose_name=_('Product'),
     )
-    product_name = models.CharField(max_length=255, blank=True, default="", verbose_name=_('Product name'))
-    product_sku = models.CharField(max_length=64, blank=True, default="", verbose_name=_('SKU'))
+    product_name = models.CharField(
+        max_length=255,
+        blank=True,
+        default="",
+        verbose_name=_('Product name')
+        )
+    product_sku = models.CharField(
+        max_length=64,
+        blank=True,
+        default="",
+        verbose_name=_('SKU')
+        )
     quantity = models.PositiveSmallIntegerField(
         verbose_name=_('Quantity'),
         validators=[MinValueValidator(1)],
@@ -445,9 +456,14 @@ class OrderItem(BaseModel):
     price = models.ForeignKey(
         'inventory.ProductPrice', on_delete=models.SET_NULL,
         null=True, blank=True, related_name='order_items'
-        )
+    )
     price_label = models.CharField(max_length=60, blank=True, default="")
     stock_units = models.PositiveIntegerField(default=1)
+    stock_unit = models.CharField(
+        max_length=10,
+        blank=True,
+        default="unit"
+    )
 
     class Meta:
         verbose_name = _('Order Item')
@@ -461,6 +477,15 @@ class OrderItem(BaseModel):
     def __str__(self):
         return f"{self.product} x {self.quantity}"
 
+    @property
+    def stock_used(self) -> int:
+        return self.quantity * self.stock_units
+
+    @property
+    def sold_total(self) -> str:
+        if self.stock_unit in ("", "unit"):
+            return ""
+        return format_stock(self.stock_used, self.stock_unit)
 
 class OrderShipment(BaseModel):
     class StatusChoices(models.TextChoices):

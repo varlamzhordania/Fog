@@ -284,22 +284,22 @@ export default function OrderPage() {
 
                             <ul className="flex flex-col gap-3">
                                 {order.items.map((item) => (
-                                    <li key={item.id}
-                                        className="flex justify-between gap-3 text-sm">
-                                        {item.product_slug ? (
-                                            <Link
-                                                href={`/products/${item.product_slug}/`}
-                                                className="min-w-0 truncate no-underline hover:text-accent"
-                                            >
-                                                {item.quantity} × {item.product_name} {item.price_label ? item.price_label : ""}
-                                            </Link>
-                                        ) : (
-                                            <span className="min-w-0 truncate">
-                                                {item.quantity} × {item.product_name ?? "Removed product"} {item.price_label ? item.price_label : ""}
+                                    <li key={item.id} className="flex justify-between gap-3 text-sm">
+                                        <div className="min-w-0">
+                                            {item.product_slug ? (
+                                                <Link href={`/products/${item.product_slug}/`}
+                                                      className="block truncate no-underline hover:text-accent">
+                                                    {item.product_name}
+                                                </Link>
+                                            ) : (
+                                                <span className="block truncate">{item.product_name ?? "Removed product"}</span>
+                                            )}
+                                            <span className="text-xs text-muted">
+                                                {item.quantity} × {item.price_label || "Each"}
+                                                {item.sold_total ? ` · ${item.sold_total} total` : ""}
                                             </span>
-                                        )}
-                                        <span
-                                            className="shrink-0">{formatPrice(item.total_price)}</span>
+                                        </div>
+                                        <span className="shrink-0">{formatPrice(item.total_price)}</span>
                                     </li>
                                 ))}
                             </ul>

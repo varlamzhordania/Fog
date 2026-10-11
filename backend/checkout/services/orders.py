@@ -101,6 +101,8 @@ class OrderService:
             [
                 OrderItem(
                     order=order, product=i.product, price=i.price,
+                    product_name=i.product.name, product_sku=i.product.sku,
+                    stock_unit=i.product.stock_unit,
                     price_label=i.price.label, stock_units=i.price.stock_quantity,
                     quantity=i.quantity,
                     unit_price=i.price.store_price,

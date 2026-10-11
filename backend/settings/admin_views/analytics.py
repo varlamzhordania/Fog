@@ -27,6 +27,7 @@ from core.permissions import is_store_admin
 
 from checkout.models import Order, OrderItem, OrderPayment, ShoppingCart
 from inventory.models import ProductStock
+from inventory.units import format_stock
 
 COMPLETED = OrderPayment.StatusChoices.COMPLETED
 
@@ -38,6 +39,7 @@ ORDER_TONE = {
     "payment": "info", "pending": "warning", "processing": "warning",
     "shipped": "primary", "delivered": "success", "cancelled": "danger",
 }
+
 
 def _dec(value):
     return Decimal(str(value or 0))
@@ -91,8 +93,6 @@ def _ratio(part, whole):
     return (part / whole * 100) if whole else 0
 
 
-
-
 def _nice_ceiling(value):
     if value <= 0:
         return 1
@@ -131,14 +131,13 @@ def _sparkline(values, width=96, height=32, pad=3):
     points = [
         (
             i * step,
-            height / 2 if not span else pad + (height - 2 * pad) * (1 - (v - low) / span),
+            height / 2 if not span else pad + (height - 2 * pad) * (
+                    1 - (v - low) / span),
         )
         for i, v in enumerate(values)
     ]
     line = _smooth_path(points)
     return {"line": line, "area": f"{line} L{width} {height} L0 {height} Z"}
-
-
 
 
 def _payments(start, end):
@@ -183,8 +182,8 @@ class AnalyticsDashboardView(UnfoldModelAdminViewMixin, TemplateView):
     def _is_htmx(self):
         headers = self.request.headers
         return (
-            headers.get("HX-Request") == "true"
-            and headers.get("HX-History-Restore-Request") != "true"
+                headers.get("HX-Request") == "true"
+                and headers.get("HX-History-Restore-Request") != "true"
         )
 
     def _orders_only(self):
@@ -226,7 +225,8 @@ class AnalyticsDashboardView(UnfoldModelAdminViewMixin, TemplateView):
             "prev_start": _local_start(prev_start_date),
             "prev_end": start,
             "days": [start_date + timedelta(days=i) for i in range(period)],
-            "prev_days": [prev_start_date + timedelta(days=i) for i in range(period)],
+            "prev_days": [prev_start_date + timedelta(days=i) for i in
+                          range(period)],
             "range_label": f"{_fmt_day(start_date)} – {_fmt_day(today)}, {today.year}",
             "prev_range_label": (
                 f"{_fmt_day(prev_start_date)} – "
@@ -306,7 +306,8 @@ class AnalyticsDashboardView(UnfoldModelAdminViewMixin, TemplateView):
         revenue = [_dec(cur_days.get(d, {}).get("revenue")) for d in days]
         orders = [cur_days.get(d, {}).get("orders", 0) for d in days]
         customers = [cur_days.get(d, {}).get("customers", 0) for d in days]
-        prev_revenue = [_dec(prev_days.get(d, {}).get("revenue")) for d in prev_day_list]
+        prev_revenue = [_dec(prev_days.get(d, {}).get("revenue")) for d in
+                        prev_day_list]
         aov = [r / o if o else Decimal("0") for r, o in zip(revenue, orders)]
 
         total = sum(revenue, Decimal("0"))
@@ -329,7 +330,8 @@ class AnalyticsDashboardView(UnfoldModelAdminViewMixin, TemplateView):
             frac = i / 4
             y = CHART_TOP + inner * (1 - frac)
             ticks.append(
-                {"pct": f"{y / CHART_H * 100:.2f}", "label": _compact(ceiling * frac)}
+                {"pct": f"{y / CHART_H * 100:.2f}",
+                 "label": _compact(ceiling * frac)}
             )
 
         n = len(days)
@@ -521,7 +523,7 @@ class AnalyticsDashboardView(UnfoldModelAdminViewMixin, TemplateView):
                 "name": (r["method"] or str(_("Unknown"))).replace("_", " ").title(),
                 "revenue": _money(r["revenue"], 0),
                 "orders": ngettext("%(n)d order", "%(n)d orders", r["orders"])
-                % {"n": r["orders"]},
+                          % {"n": r["orders"]},
                 "share": f"{_ratio(_dec(r['revenue']), total):.1f}",
                 "tone": min(i + 1, 6),
             }
@@ -537,9 +539,11 @@ class AnalyticsDashboardView(UnfoldModelAdminViewMixin, TemplateView):
             _paid_items(w)
             .filter(product__isnull=False)
             .order_by()
-            .values("product__name", "product__sku")
-            .annotate(units=Sum("quantity"), revenue=Sum("total_price"))
-            .order_by("-revenue")[:6]
+            .values("product__name", "product__sku", "product__stock_unit")
+            .annotate(
+                units=Sum("quantity"), revenue=Sum("total_price"),
+                used=Sum(F("quantity") * F("stock_units"))
+            )
         )
         top = _dec(rows[0]["revenue"]) if rows else Decimal("0")
 
@@ -550,6 +554,8 @@ class AnalyticsDashboardView(UnfoldModelAdminViewMixin, TemplateView):
                 "sku": r["product__sku"],
                 "units": f"{r['units']:,}",
                 "revenue": _money(r["revenue"]),
+                "sold": format_stock(r["used"], r["product__stock_unit"]) if
+                r["product__stock_unit"] != "unit" else "",
                 "width": f"{_ratio(_dec(r['revenue']), top):.1f}",
             }
             for i, r in enumerate(rows)
@@ -566,7 +572,11 @@ class AnalyticsDashboardView(UnfoldModelAdminViewMixin, TemplateView):
             )
         )
         out_q = Q(avail__lte=0) | Q(is_available=False)
-        low_q = Q(is_available=True, avail__gt=0, avail__lte=F("low_stock_threshold"))
+        low_q = Q(
+            is_available=True,
+            avail__gt=0,
+            avail__lte=F("low_stock_threshold")
+        )
 
         counts = stock.aggregate(
             out=Count("id", filter=out_q),
@@ -577,9 +587,9 @@ class AnalyticsDashboardView(UnfoldModelAdminViewMixin, TemplateView):
 
         watch = []
         for item in (
-            stock.filter(out_q | low_q)
-            .select_related("product")
-            .order_by("avail", "product__name")[:6]
+                stock.filter(out_q | low_q)
+                        .select_related("product")
+                        .order_by("avail", "product__name")[:6]
         ):
             avail = max(item.avail, 0)
             is_out = avail == 0 or not item.is_available
@@ -588,7 +598,7 @@ class AnalyticsDashboardView(UnfoldModelAdminViewMixin, TemplateView):
                 {
                     "name": item.product.name,
                     "sku": item.product.sku,
-                    "avail": f"{avail:,}",
+                    "avail": format_stock(avail, item.product.stock_unit),
                     "fill": f"{min(_ratio(avail, scale), 100):.0f}",
                     "tone": "danger" if is_out else "warning",
                     "status": _("Out of stock") if is_out else _("Running low"),
@@ -669,7 +679,7 @@ class AnalyticsDashboardView(UnfoldModelAdminViewMixin, TemplateView):
                     "email": email,
                     "initials": _initials(name, email),
                     "orders": ngettext("%(n)d order", "%(n)d orders", row["orders"])
-                    % {"n": row["orders"]},
+                              % {"n": row["orders"]},
                     "spent": _money(row["spent"]),
                 }
             )
@@ -702,7 +712,7 @@ class AnalyticsDashboardView(UnfoldModelAdminViewMixin, TemplateView):
                     "label": ngettext("failed payment", "failed payments", failed),
                     "tone": "danger",
                     "url": reverse("admin:checkout_orderpayment_changelist")
-                    + "?status__exact=FAILED",
+                           + "?status__exact=FAILED",
                 }
             )
 
@@ -721,7 +731,7 @@ class AnalyticsDashboardView(UnfoldModelAdminViewMixin, TemplateView):
                     ),
                     "tone": "warning",
                     "url": reverse("admin:checkout_order_changelist")
-                    + "?status__exact=pending",
+                           + "?status__exact=pending",
                 }
             )
 
@@ -730,7 +740,9 @@ class AnalyticsDashboardView(UnfoldModelAdminViewMixin, TemplateView):
                 {
                     "value": stock_counts["out"],
                     "label": ngettext(
-                        "product out of stock", "products out of stock", stock_counts["out"]
+                        "product out of stock",
+                        "products out of stock",
+                        stock_counts["out"]
                     ),
                     "tone": "danger",
                     "url": reverse("admin:inventory_productstock_changelist"),
@@ -749,7 +761,7 @@ class AnalyticsDashboardView(UnfoldModelAdminViewMixin, TemplateView):
                     "label": _("refunded"),
                     "tone": "neutral",
                     "url": reverse("admin:checkout_orderpayment_changelist")
-                    + "?status__exact=REFUNDED",
+                           + "?status__exact=REFUNDED",
                 }
             )
         return items
@@ -772,14 +784,13 @@ class AnalyticsDashboardView(UnfoldModelAdminViewMixin, TemplateView):
             qs = qs.filter(status=status)
         if query:
             search = (
-                Q(user__email__icontains=query)
-                | Q(user__first_name__icontains=query)
-                | Q(user__last_name__icontains=query)
+                    Q(user__email__icontains=query)
+                    | Q(user__first_name__icontains=query)
+                    | Q(user__last_name__icontains=query)
             )
             if query.lstrip("#").isdigit():
                 search |= Q(id=int(query.lstrip("#")))
             qs = qs.filter(search)
-
 
         payment_tone = {
             OrderPayment.StatusChoices.PENDING: "warning",
@@ -790,7 +801,7 @@ class AnalyticsDashboardView(UnfoldModelAdminViewMixin, TemplateView):
 
         rows = []
         for order in qs.select_related("user", "payment", "shipment").order_by(
-            "-created_at"
+                "-created_at"
         )[:10]:
             payment = getattr(order, "payment", None)
             shipment = getattr(order, "shipment", None)
@@ -805,7 +816,9 @@ class AnalyticsDashboardView(UnfoldModelAdminViewMixin, TemplateView):
                     "total": _money(order.total_price),
                     "status": order.get_status_display(),
                     "status_tone": ORDER_TONE.get(order.status, "neutral"),
-                    "payment": payment.get_status_display() if payment else _("No payment"),
+                    "payment": payment.get_status_display() if payment else _(
+                        "No payment"
+                    ),
                     "payment_tone": payment_tone.get(payment.status, "neutral")
                     if payment
                     else "neutral",
@@ -828,11 +841,13 @@ class AnalyticsDashboardView(UnfoldModelAdminViewMixin, TemplateView):
                 .annotate(n=Count("id"))
             )
             data["order_tabs"] = [
-                {"value": "", "label": _("All"), "count": sum(counts.values())}
-            ] + [
-                {"value": value, "label": label, "count": counts.get(value, 0)}
-                for value, label in Order.StatusChoices.choices
-            ]
+                                     {"value": "", "label": _("All"),
+                                      "count": sum(counts.values())}
+                                 ] + [
+                                     {"value": value, "label": label,
+                                      "count": counts.get(value, 0)}
+                                     for value, label in Order.StatusChoices.choices
+                                 ]
         return data
 
 

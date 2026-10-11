@@ -44,3 +44,43 @@ export const stockLabel = (product) =>
     product.stock_unit && product.stock_unit !== "unit"
         ? `${product.available_stock} ${product.stock_unit} in stock`
         : `${product.available_stock} available`;
+
+const UNIT_TEXT = {
+    piece: "pcs", g: "g", kg: "kg", oz: "oz", lb: "lb", ml: "ml", l: "l", fl_oz: "fl oz",
+};
+
+const trim = (n) => String(parseFloat(Number(n).toFixed(3)));
+
+export const formatAmount = (amount, unit) => `${trim(amount)} ${UNIT_TEXT[unit] ?? unit}`;
+
+const isEach = (price) => price?.unit === "piece" && Number(price?.amount) === 1;
+
+export const optionSuffix = (price) => {
+    if (!price) return "";
+    return isEach(price) ? "pcs" : `× ${price.label || formatAmount(price.amount, price.unit)}`;
+};
+
+export const totalLabel = (product, price, quantity) => {
+    if (!product || !price || !quantity) return null;
+    if ((product.stock_unit ?? "unit") === "unit") return null;
+
+    const stock = `${price.stock_quantity * quantity} ${product.stock_unit}`;
+    if (price.unit === "piece") return stock;
+
+    const own = formatAmount(Number(price.amount) * quantity, price.unit);
+    return own.endsWith(` ${product.stock_unit}`) ? own : `${own} (${stock})`;
+};
+
+export const pricePerBase = (product, price) => {
+    if (!product || !price?.stock_quantity) return null;
+    if ((product.stock_unit ?? "unit") === "unit") return null;
+    const value = (Number(price.store_price) / price.stock_quantity) * 100;
+    return `$${value.toFixed(2)} / 100 ${product.stock_unit}`;
+};
+
+export const bestValueId = (product) => {
+    const prices = product?.prices ?? [];
+    if (prices.length < 2 || (product.stock_unit ?? "unit") === "unit") return null;
+    const rate = (p) => Number(p.store_price) / p.stock_quantity;
+    return prices.reduce((best, p) => (rate(p) < rate(best) ? p : best)).id;
+};

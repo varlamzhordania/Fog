@@ -2,15 +2,19 @@ import nested_admin
 from django.contrib import admin as django_admin
 from django.urls import NoReverseMatch, reverse
 from django.utils import timezone
-from django.utils.html import format_html
+from django.utils.html import format_html, format_html_join
 from django.utils.translation import gettext_lazy as _
 from treebeard.admin import TreeAdmin
 from treebeard.forms import movenodeform_factory
 from unfold import admin
+from unfold.decorators import display
 from simple_history.admin import SimpleHistoryAdmin
+from django.core.exceptions import ValidationError, ObjectDoesNotExist
+from nested_admin.formsets import NestedInlineFormSet
 
 from core.admin import UnfoldImportExportHistoryAdmin
 from inventory.services.stock import StockService
+from inventory.units import format_stock
 
 from .models import (
     Category,
@@ -27,6 +31,27 @@ from .resources import (
     ProductResource, ProductStockResource, TagResource,
     CategoryResource,
 )
+
+
+class ProductPriceFormSet(NestedInlineFormSet):
+    def clean(self):
+        super().clean()
+        live = [f.cleaned_data for f in self.forms
+                if getattr(f, "cleaned_data", None) and not f.cleaned_data.get(
+                "DELETE"
+            )]
+        if not live:
+            return
+        if not any(c.get("is_active", True) for c in live):
+            raise ValidationError(_("At least one price option must be active."))
+        seen = set()
+        for c in live:
+            key = (c.get("amount"), c.get("unit"))
+            if key in seen:
+                raise ValidationError(
+                    _("Two options have the same amount and unit.")
+                )
+            seen.add(key)
 
 
 class ProductMediaInline(
@@ -85,20 +110,33 @@ class ProductMediaInline(
         )
 
 
-class ProductPriceInline(admin.StackedInline, nested_admin.NestedStackedInline):
+class ProductPriceInline(admin.TabularInline, nested_admin.NestedTabularInline):
     model = ProductPrice
+    formset = ProductPriceFormSet
     extra = 0
     min_num = 1
     validate_min = True
     fields = ["amount", "unit", "label", "base_price", "store_price",
-              "uses_stock", "is_default", "display_order", "is_active"]
-    readonly_fields = ["uses_stock"]
+              "uses_stock", "per_base", "discount", "is_default", "display_order",
+              "is_active"]
+    readonly_fields = ["uses_stock", "per_base", "discount"]
 
-    @django_admin.display(description=_("Uses from stock"))
+    @display(description=_("Uses from stock"))
     def uses_stock(self, obj):
         if not obj or not obj.pk:
             return "—"
-        return f"{obj.stock_quantity} {obj.product.stock_unit}"
+        return format_stock(obj.stock_quantity, obj.product.stock_unit) \
+            if obj.product.stock_unit != "unit" else f"{obj.stock_quantity} pcs"
+
+    @display(description=_("Per 100"))
+    def per_base(self, obj):
+        if not obj or not obj.pk or obj.product.stock_unit == "unit":
+            return "—"
+        return f"${obj.store_price / obj.stock_quantity * 100:.2f} / 100 {obj.product.stock_unit}"
+
+    @display(description=_("Discount"))
+    def discount(self, obj):
+        return f"-{obj.discount_percentage}%" if obj and obj.pk and obj.discount_percentage else "—"
 
 
 class MediaInline(admin.StackedInline):
@@ -117,11 +155,11 @@ class StockReservationInline(admin.TabularInline):
     can_delete = False
     show_change_link = True
 
-    @django_admin.display(description=_("ID"))
+    @display(description=_("ID"))
     def id_short(self, obj):
         return str(obj.id)[:8]
 
-    @django_admin.display(description=_("Order"))
+    @display(description=_("Order"))
     def order_link(self, obj):
         if not getattr(obj, "order", None):
             return "—"
@@ -138,7 +176,7 @@ class StockReservationInline(admin.TabularInline):
         except NoReverseMatch:
             return f"Order #{str(obj.order.id)[:8]}"
 
-    @django_admin.display(boolean=True, description=_("Expired?"))
+    @display(boolean=True, description=_("Expired?"))
     def is_expired(self, obj):
         if obj.expires_at:
             return timezone.now() > obj.expires_at
@@ -222,7 +260,7 @@ class MediaAdmin(admin.ModelAdmin):
         ),
     )
 
-    @django_admin.display(description=_("Preview"))
+    @display(description=_("Preview"))
     def preview(self, obj):
         if (
                 obj
@@ -274,6 +312,7 @@ class ProductAdmin(
         "base_price",
         "store_price",
         "discount_display",
+        "options_display",
         "stock_status",
         "is_active",
         "is_featured",
@@ -329,7 +368,7 @@ class ProductAdmin(
             _("Pricing"),
             {
                 "fields": (("stock_unit", "unit_size"),
-                           ("base_price", "store_price")),
+                           ("base_price", "store_price"), "pricing_overview"),
                 "description": _(
                     "Prices are set per option in the Product Prices table below. "
                     "The figures here show the cheapest option and update automatically."
@@ -338,10 +377,55 @@ class ProductAdmin(
         ),
     ]
 
-    readonly_fields = ["id", "slug", "base_price", "store_price", "created_at",
+    readonly_fields = ["id", "slug", "base_price", "store_price", "pricing_overview",
+                       "created_at",
                        "updated_at"]
 
-    @django_admin.display(
+    def get_queryset(self, request):
+        return super().get_queryset(request).select_related(
+            "product_stock"
+        ).prefetch_related("prices")
+
+    @display(description=_("Options"))
+    def options_display(self, obj):
+        live = [p for p in obj.prices.all() if p.is_active]
+        return " · ".join(f"{p.label} ${p.store_price}" for p in live) or "—"
+
+    @display(description=_("Options overview"))
+    def pricing_overview(self, obj):
+        if not obj or not obj.pk:
+            return _("Save the product to see the overview.")
+        try:
+            avail = obj.product_stock.available_quantity
+        except ObjectDoesNotExist:
+            avail = 0
+        weighed = obj.stock_unit != "unit"
+        rows = format_html_join(
+            "",
+            '<tr class="{}"><td class="py-1 pr-4"><strong>{}</strong></td><td class="pr-4">${}</td>'
+            '<td class="pr-4">{}</td><td class="pr-4">{}</td><td>{}</td></tr>',
+            (
+                ("opacity-50" if not p.is_active else "",
+                 p.label, p.store_price,
+                 format_stock(
+                     p.stock_quantity,
+                     obj.stock_unit
+                 ) if weighed else f"{p.stock_quantity} pcs",
+                 f"${p.store_price / p.stock_quantity * 100:.2f} / 100 {obj.stock_unit}" if weighed else "—",
+                 f"{avail // p.stock_quantity} available")
+                for p in obj.prices.all()
+            ),
+        )
+        return format_html(
+            '<table class="text-sm"><thead><tr class="text-left text-xs uppercase text-gray-400">'
+            '<th class="pr-4">Option</th><th class="pr-4">Price</th><th class="pr-4">Uses stock</th>'
+            '<th class="pr-4">Per 100</th><th>Sellable now</th></tr></thead><tbody>{}</tbody></table>'
+            '<p class="mt-2 text-xs text-gray-400">In stock: {} (updates after saving)</p>',
+            rows,
+            format_stock(avail, obj.stock_unit),
+        )
+
+    @display(
         description=_("Discount"),
         ordering="store_price",
     )
@@ -363,7 +447,7 @@ class ProductAdmin(
             discount,
         )
 
-    @django_admin.display(description=_("Inventory on Hand (Avail / Res)"))
+    @display(description=_("Inventory on Hand (Avail / Res)"))
     def stock_status(self, obj):
         try:
             stock = obj.product_stock
@@ -384,18 +468,14 @@ class ProductAdmin(
                     "dark:bg-emerald-950 dark:text-emerald-300"
                 )
 
+            unit = obj.stock_unit
             return format_html(
-                '<span class="inline-flex items-center px-2 py-0.5 '
-                'rounded text-xs font-semibold {}">'
-                '{} avail '
-                '<span class="ml-1 opacity-70">'
-                '({} res / {} tot)'
-                '</span>'
-                '</span>',
+                '<span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold {}">'
+                '{} avail <span class="ml-1 opacity-70">({} res / {} tot)</span></span>',
                 badge_class,
-                stock.available_quantity,
-                stock.reserved_quantity,
-                stock.quantity,
+                format_stock(stock.available_quantity, unit),
+                format_stock(stock.reserved_quantity, unit),
+                format_stock(stock.quantity, unit),
             )
 
         except ProductStock.DoesNotExist:
@@ -419,7 +499,7 @@ class ProductReviewAdmin(SimpleHistoryAdmin, admin.ModelAdmin):
     def has_add_permission(self, request):
         return False
 
-    @django_admin.display(description=_("Comment"))
+    @display(description=_("Comment"))
     def short_comment(self, obj):
         return (obj.comment[:60] + "…") if len(
             obj.comment
@@ -444,19 +524,33 @@ class ProductReviewAdmin(SimpleHistoryAdmin, admin.ModelAdmin):
 class ProductStockAdmin(UnfoldImportExportHistoryAdmin):
     inlines = [StockReservationInline]
     resource_classes = [ProductStockResource]
-    list_display = [
-        "product",
-        "quantity",
-        "reserved_quantity",
-        "available_display",
-        "low_stock_threshold",
-        "is_available",
-    ]
+    list_display = ["product", "quantity_display", "reserved_display",
+                    "available_display",
+                    "low_stock_display", "is_available"]
     list_filter = ["is_available"]
     search_fields = ["product__name", "product__sku"]
     readonly_fields = ["reserved_quantity"]
 
-    @django_admin.display(description=_("Available Quantity"))
+    def get_queryset(self, request):
+        return super().get_queryset(request).select_related("product")
+
+    @display(description=_("On hand"), ordering="quantity")
+    def quantity_display(self, obj):
+        return format_stock(obj.quantity, obj.product.stock_unit)
+
+    @display(description=_("Reserved"), ordering="reserved_quantity")
+    def reserved_display(self, obj):
+        return format_stock(obj.reserved_quantity, obj.product.stock_unit)
+
+    @display(description=_("Available"))
+    def available_display(self, obj):
+        return format_stock(obj.available_quantity, obj.product.stock_unit)
+
+    @display(description=_("Low stock alert"))
+    def low_stock_display(self, obj):
+        return format_stock(obj.low_stock_threshold, obj.product.stock_unit)
+
+    @display(description=_("Available Quantity"))
     def available_display(self, obj):
         return obj.available_quantity
 
@@ -477,11 +571,11 @@ class StockReservationAdmin(SimpleHistoryAdmin, admin.ModelAdmin):
     readonly_fields = ["id", "created_at", "updated_at"]
     actions = ["manually_release_reservations"]
 
-    @django_admin.display(description=_("ID"))
+    @display(description=_("ID"))
     def id_short(self, obj):
         return str(obj.id)[:8]
 
-    @django_admin.display(description=_("Order"))
+    @display(description=_("Order"))
     def order_link(self, obj):
         if not getattr(obj, "order", None):
             return "—"
@@ -498,7 +592,7 @@ class StockReservationAdmin(SimpleHistoryAdmin, admin.ModelAdmin):
         except NoReverseMatch:
             return f"Order #{str(obj.order.id)[:8]}"
 
-    @django_admin.display(description=_("Status"))
+    @display(description=_("Status"))
     def status_badge(self, obj):
         colors = {
             StockReservation.ReservationStatus.ACTIVE: "bg-blue-50 text-blue-700 dark:bg-blue-950 dark:text-blue-300",
@@ -512,7 +606,7 @@ class StockReservationAdmin(SimpleHistoryAdmin, admin.ModelAdmin):
             obj.get_status_display(),
         )
 
-    @django_admin.display(boolean=True, description=_("Expired?"))
+    @display(boolean=True, description=_("Expired?"))
     def is_expired(self, obj):
         return timezone.now() > obj.expires_at
 
@@ -561,7 +655,7 @@ class StockTransactionLogAdmin(SimpleHistoryAdmin, admin.ModelAdmin):
     def has_delete_permission(self, request, obj=None):
         return False
 
-    @django_admin.display(description=_("Action"))
+    @display(description=_("Action"))
     def action_badge(self, obj):
         colors = {
             StockTransactionLog.ActionChoices.RESTOCK: "bg-emerald-50 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300",

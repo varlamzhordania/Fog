@@ -16,7 +16,7 @@ import {useCartActions} from "@/hooks/useCartActions";
 import {useRouter} from "next/navigation";
 import {useAuthStore} from "@/stores/auth";
 import {useConfig} from "@/queries/settings";
-import {computeTotals, taxLabel} from "@/lib/pricing";
+import {computeTotals, taxLabel, totalLabel} from "@/lib/pricing";
 import {productImageUrl} from "@/lib/utils";
 import {formatPrice} from "@/lib/payments";
 
@@ -239,10 +239,7 @@ function ProductItem({data}) {
                                          showRemoveButton={false} size="sm"/>
                     <div className="min-w-0 text-right">
                         <Typography type="body-xs" className="text-muted">
-                            Subtotal
-                        </Typography>
-                        <Typography type="body" className="font-medium">
-                            {formatPrice(lineTotal)}
+                            Subtotal{totalLabel(product, price, quantity) ? ` · ${totalLabel(product, price, quantity)}` : ""}
                         </Typography>
                     </div>
                 </div>

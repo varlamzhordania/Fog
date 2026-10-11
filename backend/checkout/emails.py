@@ -151,8 +151,15 @@ def _order_context(order, audience, extra):
         label = "View order"
 
     items = [
-        ((f"{i.product.name} ({i.price_label})" if i.price_label else i.product.name)
-         if i.product else "Removed product", i.quantity, _money(i.total_price))
+        (
+            ((
+                 f"{i.product_name or i.product.name} ({i.price_label})" if i.price_label
+                 else (i.product_name or i.product.name)) if (
+                    i.product or i.product_name)
+             else "Removed product")
+            + (f" — {i.sold_total} total" if i.sold_total else ""),
+            i.quantity, _money(i.total_price),
+        )
         for i in order.items.all()
     ]
     return {

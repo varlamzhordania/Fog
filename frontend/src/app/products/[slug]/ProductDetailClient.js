@@ -1,13 +1,7 @@
 "use client";
 
-import {
-    Breadcrumbs, Chip, Separator, Typography,
-} from "@heroui/react";
-
-import {
-    CloudDownload, Warehouse,
-} from "lucide-react";
-
+import {Breadcrumbs, Chip, Separator, Typography,} from "@heroui/react";
+import {CloudDownload, Warehouse,} from "lucide-react";
 import ProductGallery from "@/components/Sliders/ProductGallery";
 import Link from "next/link";
 import Icon from "@/components/icon/Icon";
@@ -20,7 +14,7 @@ import Stars from "@/components/inventory/Stars";
 import FeaturedProducts from "@/components/inventory/FeaturedProducts";
 import {useState} from "react";
 import {Label, Radio, RadioGroup} from "@heroui/react";
-import {getDefaultPrice, stockLabel} from "@/lib/pricing";
+import {getDefaultPrice, stockLabel, pricePerBase, bestValueId} from "@/lib/pricing";
 
 
 export default function ProductDetailClient({product: initialProduct}) {
@@ -30,6 +24,8 @@ export default function ProductDetailClient({product: initialProduct}) {
     const prices = product.prices ?? [];
     const [selectedId, setSelectedId] = useState(() => String(getDefaultPrice(product)?.id ?? ""));
     const price = prices.find((p) => String(p.id) === selectedId) ?? getDefaultPrice(product);
+    const bestId = bestValueId(product);
+    const perBase = pricePerBase(product, price);
 
     const formattedBasePrice = Number(price?.base_price ?? product.base_price).toFixed(2);
     const formattedPrice = Number(price?.store_price ?? product.store_price).toFixed(2);
@@ -39,7 +35,6 @@ export default function ProductDetailClient({product: initialProduct}) {
 
     return (<div className="container container-space md:py-12">
 
-        {/* Breadcrumbs */}
         <div className="mb-8 min-w-0 overflow-hidden">
             <Breadcrumbs className="min-w-0">
                 <Breadcrumbs.Item href="/" className="shrink-0">
@@ -123,6 +118,10 @@ export default function ProductDetailClient({product: initialProduct}) {
                                 ${formattedBasePrice}
                             </Typography>
                         )}
+                        {perBase && (
+                            <Typography type="body-xs"
+                                        className="mt-1 text-muted">{perBase}</Typography>
+                        )}
 
                         <Typography
                             type="body"
@@ -169,39 +168,82 @@ export default function ProductDetailClient({product: initialProduct}) {
 
 
                     {prices.length > 1 && (
-                        <RadioGroup
-                            name="price_option"
-                            aria-label="Purchase option"
-                            value={selectedId}
-                            onChange={setSelectedId}
-                            className="mb-6 flex flex-row flex-wrap gap-3"
-                        >
-                            {prices.map((p) => (
-                                <Radio
-                                    key={p.id}
-                                    value={String(p.id)}
-                                    isDisabled={p.max_quantity < 1}
-                                    className={`w-auto flex-row rounded-xl border px-4 py-3 transition-colors ${
-                                        p.max_quantity < 1
-                                            ? "cursor-not-allowed opacity-50 border-border"
-                                            : String(p.id) === selectedId
-                                                ? "border-accent bg-accent/5"
-                                                : "border-border hover:border-accent/50"
-                                    }`}
-                                >
-                                    <Radio.Content>
-                                        <Radio.Control><Radio.Indicator/></Radio.Control>
-                                        <div className="flex flex-col">
-                                            <Label className="font-medium">{p.label}</Label>
-                                            <span className="text-xs text-muted">
-                                                ${Number(p.store_price).toFixed(2)}
-                                                {p.max_quantity < 1 && " · out of stock"}
-                                            </span>
-                                        </div>
-                                    </Radio.Content>
-                                </Radio>
-                            ))}
-                        </RadioGroup>
+                        <div className="mb-6">
+                            <Typography type="body-xs" className="mb-2 uppercase tracking-wider">
+                                Choose size
+                            </Typography>
+
+                            <RadioGroup
+                                name="price_option"
+                                aria-label="Purchase option"
+                                value={selectedId}
+                                onChange={setSelectedId}
+                                className="grid grid-cols-1 gap-3 sm:grid-cols-2"
+                            >
+                                {prices.map((p) => {
+                                    const soldOut = p.max_quantity < 1;
+                                    const selected = String(p.id) === selectedId;
+                                    const rate = pricePerBase(product, p);
+
+                                    return (
+                                        <Radio
+                                            key={p.id}
+                                            value={String(p.id)}
+                                            isDisabled={soldOut}
+                                            className={`relative w-full flex-row rounded-xl border p-3.5 transition-colors ${
+                                                soldOut
+                                                    ? "cursor-not-allowed border-border opacity-50"
+                                                    : selected
+                                                        ? "border-accent bg-accent/5 ring-1 ring-accent"
+                                                        : "border-border hover:border-accent/50"
+                                            }`}
+                                        >
+                                            <Radio.Content>
+                                                <Radio.Control><Radio.Indicator/></Radio.Control>
+
+                                                <div
+                                                    className="flex min-w-0 flex-1 flex-col gap-0.5">
+                                                    <div
+                                                        className="flex items-center justify-between gap-2">
+                                                        <Label
+                                                            className="font-medium">{p.label}</Label>
+                                                        <span className="font-semibold">
+                                        ${Number(p.store_price).toFixed(2)}
+                                    </span>
+                                                    </div>
+
+                                                    {rate && <span
+                                                        className="text-xs text-muted">{rate}</span>}
+
+                                                    <div
+                                                        className="mt-1 flex flex-wrap items-center gap-1.5">
+                                                        {p.id === bestId && (
+                                                            <Chip size="sm" color="success"
+                                                                  variant="soft">
+                                                                <Chip.Label>Best value</Chip.Label>
+                                                            </Chip>
+                                                        )}
+                                                        {p.discount_percentage > 0 && (
+                                                            <Chip size="sm" color="danger"
+                                                                  variant="soft">
+                                                                <Chip.Label>-{p.discount_percentage}%</Chip.Label>
+                                                            </Chip>
+                                                        )}
+                                                        {soldOut ? (
+                                                            <span className="text-xs text-danger">Out of stock</span>
+                                                        ) : p.max_quantity <= 5 ? (
+                                                            <span className="text-xs text-warning">
+                                            Only {p.max_quantity} left
+                                        </span>
+                                                        ) : null}
+                                                    </div>
+                                                </div>
+                                            </Radio.Content>
+                                        </Radio>
+                                    );
+                                })}
+                            </RadioGroup>
+                        </div>
                     )}
 
                     <CartQuantityControl product={product} price={price}/>

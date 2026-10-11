@@ -284,7 +284,7 @@
                             <td>
                                 <span class="fog-product"><strong>{{ p.name }}</strong><small>{{ p.sku }}</small></span>
                             </td>
-                            <td class="num">{{ p.units }}</td>
+                            <td class="num">{{ p.units }}{% if p.sold %}<br><small>{{ p.sold }}</small>{% endif %}</td>
                             <td class="num fog-strong">{{ p.revenue }}</td>
                             <td class="fog-col-share"><div class="fog-meter"><i style="width:{{ p.width }}%"></i></div></td>
                         </tr>

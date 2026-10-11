@@ -1,8 +1,10 @@
+from collections import defaultdict
+
 from django.contrib import admin as django_admin
 from django.http import Http404
 from django.urls import NoReverseMatch, reverse
 from django.utils import timezone
-from django.utils.html import format_html
+from django.utils.html import format_html, format_html_join
 from django.utils.translation import gettext_lazy as _
 from django.contrib import messages
 from rest_framework.exceptions import APIException
@@ -13,6 +15,7 @@ from checkout.services.fulfilment import FulfilmentService
 from checkout.services.orders import OrderService
 from checkout.services.payments import PaymentService
 from inventory.models import StockReservation
+from inventory.units import format_stock
 from core.admin import UnfoldImportExportHistoryAdmin
 
 from .models import (
@@ -67,11 +70,35 @@ class OrderItemInline(admin.TabularInline):
     model = OrderItem
     extra = 0
     can_delete = False
-    fields = ["product", "quantity", "unit_price", "total_price"]
+    fields = ["item", "option", "quantity", "unit_price", "total_price",
+              "stock_deducted"]
     readonly_fields = fields
 
     def has_add_permission(self, request, obj=None):
         return False
+
+    @display(description=_("Product"))
+    def item(self, obj):
+        name = obj.product_name or (
+            obj.product.name if obj.product else _("Removed product"))
+        sku = obj.product_sku or (obj.product.sku if obj.product else "")
+        return format_html(
+            '<strong>{}</strong><br><small class="text-gray-400">{}</small>',
+            name,
+            sku
+            )
+
+    @display(description=_("Option sold"))
+    def option(self, obj):
+        return format_html(
+            '<span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold '
+            'bg-primary-50 text-primary-700 dark:bg-primary-950 dark:text-primary-300">{}</span>',
+            obj.price_label or "Each",
+        )
+
+    @display(description=_("Stock deducted"))
+    def stock_deducted(self, obj):
+        return obj.sold_total or f"{obj.stock_used} pcs"
 
 
 class OrderPaymentInline(admin.StackedInline):
@@ -80,7 +107,8 @@ class OrderPaymentInline(admin.StackedInline):
     can_delete = False
     fields = [("provider", "method", "status"),
               ("amount", "transaction_id"), "paid_at"]
-    readonly_fields = ["provider","method","status","amount","transaction_id","paid_at"]
+    readonly_fields = ["provider", "method", "status", "amount", "transaction_id",
+                       "paid_at"]
 
     def has_add_permission(self, request, obj=None):
         return False
@@ -264,12 +292,8 @@ class OrderAdmin(UnfoldImportExportHistoryAdmin):
     ]
 
     list_display = [
-        "id_short",
-        "customer_display",
-        "status_badge",
-        "payment_status_badge",
-        "shipment_status_badge",
-        "total_price_display",
+        "id_short", "customer_display", "items_display", "status_badge",
+        "payment_status_badge", "shipment_status_badge", "total_price_display",
         "created_at",
     ]
     list_filter = ["status", "payment__status", "shipment__status",
@@ -286,10 +310,11 @@ class OrderAdmin(UnfoldImportExportHistoryAdmin):
                        "total_price", "created_at", "updated_at",
                        "subtotal", "tax_amount", "tax_rate", "tax_name",
                        "tax_included", "shipping_method_name",
-                       "shipping_cost"]
+                       "shipping_cost", "pick_list"]
     ordering = ["-created_at"]
 
     fieldsets = [
+        (_("Pick list"), {"fields": ("pick_list",)}),
         (
             _("Order Information"),
             {
@@ -323,27 +348,70 @@ class OrderAdmin(UnfoldImportExportHistoryAdmin):
                "mark_shipped",
                "mark_delivered", "refund_orders", "cancel_unpaid"]
 
+    def get_queryset(self, request):
+        return super().get_queryset(request).prefetch_related("items__product")
+
     def has_add_permission(self, request):
         return False
 
     def has_delete_permission(self, request, obj=None):
         return request.user.is_superuser
 
-    @django_admin.display(description=_("Order #"))
+    @display(description=_("Items"))
+    def items_display(self, obj):
+        parts = [f"{i.quantity} × {i.price_label or 'Each'}" for i in
+                 obj.items.all()]
+        text = ", ".join(parts[:3]) + (
+            f" +{len(parts) - 3}" if len(parts) > 3 else "")
+        return text or "—"
+
+    @display(description=_("What to pack"))
+    def pick_list(self, obj):
+        if not obj.pk:
+            return "—"
+        groups = defaultdict(
+            lambda: {"name": "", "sku": "", "unit": "unit", "used": 0, "lines": []}
+            )
+        for i in obj.items.all():
+            key = i.product_id or i.product_name
+            g = groups[key]
+            g["name"] = i.product_name or (
+                i.product.name if i.product else "Removed product")
+            g["sku"] = i.product_sku or (i.product.sku if i.product else "")
+            g["unit"] = i.stock_unit or "unit"
+            g["used"] += i.stock_used
+            g["lines"].append(f"{i.quantity} × {i.price_label or 'Each'}")
+        rows = format_html_join(
+            "",
+            '<tr><td class="py-1 pr-4"><strong>{}</strong><br><small class="text-gray-400">{}</small></td>'
+            '<td class="py-1 pr-4">{}</td><td class="py-1 font-semibold">{}</td></tr>',
+            ((g["name"], g["sku"], ", ".join(g["lines"]),
+              format_stock(g["used"], g["unit"]) if g[
+                                                        "unit"] != "unit" else f'{g["used"]} pcs')
+             for g in groups.values()),
+        )
+        return format_html(
+            '<table class="text-sm"><thead><tr class="text-left text-xs uppercase text-gray-400">'
+            '<th class="pr-4">Product</th><th class="pr-4">Sold as</th><th>Total to pack</th>'
+            '</tr></thead><tbody>{}</tbody></table>',
+            rows,
+        )
+
+    @display(description=_("Order #"))
     def id_short(self, obj):
         return format_html(
             '<span class="font-mono font-semibold">#{}</span>',
             obj.id
         )
 
-    @django_admin.display(description=_("Customer"))
+    @display(description=_("Customer"))
     def customer_display(self, obj):
         if obj.user:
             name = obj.user.get_full_name().strip()
             return f"{name} ({obj.user.email})" if name else obj.user.email
         return _("Anonymous")
 
-    @django_admin.display(description=_("Total"))
+    @display(description=_("Total"))
     def total_price_display(self, obj):
         return f"${obj.total_price:,.2f}"
 
@@ -395,7 +463,7 @@ class OrderAdmin(UnfoldImportExportHistoryAdmin):
 
         return shipment.status, shipment.get_status_display()
 
-    @django_admin.action(
+    @action(
         description=_("Confirm payment manually (commits stock)")
     )
     def confirm_payment_manually(self, request, queryset):
