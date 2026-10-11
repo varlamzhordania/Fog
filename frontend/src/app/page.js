@@ -24,6 +24,8 @@ import DealsBand from "@/components/bands/DealsBand";
 import ResearchBand from "@/components/bands/ResearchBand";
 import {BestSellers, Deals, LastFew, NewArrivals} from "@/components/home/HomeSections";
 import StatsStrip from "@/components/StatsStrip";
+import SporeDrift from "@/components/SporeDrift";
+import React from "react";
 
 const RESEARCH_URL = process.env.NEXT_PUBLIC_RESEARCH_URL;
 const btnPrimary = "inline-flex items-center gap-2 rounded-full bg-accent px-6 py-3 font-medium text-accent-foreground no-underline transition-opacity hover:opacity-90";
@@ -75,16 +77,19 @@ const STEPS = [{
 export default function Home() {
     return (
         <>
-
             <HeroSection/>
 
-            <Reveal><TrustStrip/></Reveal>
+            <Reveal>
+                <TrustStrip/>
+            </Reveal>
 
-            <Reveal><CategoriesShowCase title="Shop by category"/></Reveal>
+            <Reveal>
+                <CategoriesShowCase title="Shop by category"/>
+            </Reveal>
 
             <section className="container">
                 <FeaturedProducts
-                    title="hand picked"
+                    title="Hand picked"
                     cardVariant="image"
                     page_size={12}
                     slidesPerView={1.15}
@@ -99,18 +104,49 @@ export default function Home() {
                 />
             </section>
 
-            <Reveal><DealsBand/></Reveal>
-            <Reveal><NewArrivals/></Reveal>
-            <Reveal><BestSellers/></Reveal>
-            <Reveal><Deals/></Reveal>
-            <Reveal><ResearchBand/></Reveal>
-            <Reveal><HowItWorks/></Reveal>
-            <Reveal><Story/></Reveal>
-            <Reveal><StatsStrip/></Reveal>
-            <Reveal><Research/></Reveal>
-            <Reveal><FinalCta/></Reveal>
-            <Reveal><LastFew/></Reveal>
+            <Reveal>
+                <DealsBand/>
+            </Reveal>
 
+            <Reveal>
+                <NewArrivals/>
+            </Reveal>
+
+            <Reveal>
+                <BestSellers/>
+            </Reveal>
+
+            <Reveal>
+                <Deals/>
+            </Reveal>
+
+            <Reveal>
+                <LastFew/>
+            </Reveal>
+
+            <Reveal>
+                <ResearchBand/>
+            </Reveal>
+
+            <Reveal>
+                <Story/>
+            </Reveal>
+
+            <Reveal>
+                <StatsStrip/>
+            </Reveal>
+
+            <Reveal>
+                <Research/>
+            </Reveal>
+
+            <Reveal>
+                <HowItWorks/>
+            </Reveal>
+
+            <Reveal>
+                <FinalCta/>
+            </Reveal>
         </>
     );
 }
@@ -147,7 +183,14 @@ function TrustStrip() {
 }
 
 function HowItWorks() {
-    return (<section className="container max-w-7xl">
+    return (<section className="relative container max-w-7xl">
+        <div
+            className="fx-grain pointer-events-none absolute inset-0 overflow-hidden text-accent"
+            aria-hidden="true"
+        >
+            <SporeDrift count={20}/>
+
+        </div>
         <div className="mb-6 flex flex-row items-center justify-between gap-4">
             <Typography
                 type="h3"
@@ -247,25 +290,48 @@ function Research() {
     </section>);
 }
 
+
 function FinalCta() {
-    const delay = (ms) => ({animationDelay: `${ms}ms`});
-
     return (
-        <div className={"container-space"}>
-            <BackgroundImage svg={<ContourField levels={12} cell={26}/>}>
-
+        <div className="container-space pb-0">
+            <BackgroundImage
+                svg={
+                    <ContourField
+                        levels={14}
+                        cell={26}
+                        speed={0.000055}
+                        interactive={false}
+                    />
+                }
+            >
                 <section className="relative isolate overflow-hidden text-accent">
                     <div
-                        className="container flex flex-col items-center gap-5 py-20 text-center text-foreground">
-                        <Typography type="h2"
-                                    className="text-4xl uppercase tracking-tight sm:text-5xl">
-                            Ready when you are
+                        className="pointer-events-none absolute inset-0 bg-gradient-to-b from-background/10 via-background/20 to-background/60"/>
+
+                    <div
+                        className="container relative z-10 flex flex-col items-center gap-5 py-24 text-center text-foreground">
+                        <p className="text-xs font-semibold uppercase tracking-[0.3em] text-accent">
+                            The FOG collection
+                        </p>
+
+                        <Typography
+                            type="h2"
+                            className="text-4xl font-medium text-center uppercase tracking-tight sm:text-5xl lg:text-6xl"
+                        >
+                            Follow the unknown
                         </Typography>
-                        <Typography type="body" className="max-w-md text-muted text-center">
-                            Pick your products, check out securely, and we pack it plain.
+
+                        <Typography
+                            type="body"
+                            className="max-w-md text-center text-muted"
+                        >
+                            Explore carefully selected materials
+                            for your next mycology project.
                         </Typography>
+
                         <Link href="/products" className={btnPrimary}>
-                            Browse the shop <Icon icon={ArrowRight} className="size-4"/>
+                            Explore the collection
+                            <Icon icon={ArrowRight} className="size-4"/>
                         </Link>
                     </div>
                 </section>
@@ -290,7 +356,32 @@ function Story() {
                 </div>
 
                 <div
-                    className="flex h-full flex-col items-start gap-6 rounded-xl border bg-background-secondary p-6 lg:col-span-7 lg:p-8">
+                    className="relative flex h-full flex-col items-start gap-6 rounded-xl border bg-background-secondary p-6 lg:col-span-7 lg:p-8">
+
+                    <div
+                        className="fx-grain pointer-events-none absolute inset-0 overflow-hidden text-accent"
+                        aria-hidden="true"
+                    >
+                        <div className="absolute inset-y-0 right-0 w-[75%] opacity-35">
+                            <ContourField
+                                levels={20}
+                                cell={38}
+                                speed={0.00006}
+                                interactive={false}
+                                className="mask-[linear-gradient(to_left,black,transparent_100%)]"
+                            />
+                        </div>
+                        <span className="fx-fog -left-1/4 top-1/4"/>
+                        <span
+                            className="fx-fog -right-1/4 bottom-0"
+                            style={{
+                                animationDelay: "-14s",
+                                animationDuration: "40s",
+                            }}
+                        />
+                        <span className="fx-vignette"/>
+                    </div>
+
                     <Typography
                         type="h3"
                         className="text-2xl font-bold lg:text-4xl"

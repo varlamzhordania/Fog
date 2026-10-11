@@ -1,16 +1,18 @@
 import Link from "next/link";
-import { ArrowRight } from "lucide-react";
+import {ArrowRight} from "lucide-react";
 
-import  BackgroundImage  from "@/components/BackgroundImage";
-import  Icon  from "@/components/icon/Icon";
+import BackgroundImage from "@/components/BackgroundImage";
+import Icon from "@/components/icon/Icon";
 import {Skeleton, Typography} from "@heroui/react";
+import ContourField from "@/components/ContourField";
+import SporeDrift from "@/components/SporeDrift";
 
 
 function BaseBandSkeleton() {
     return (
         <section className="container container-space">
             <div className="overflow-hidden rounded-xl">
-                <Skeleton className="h-95 w-full rounded-xl" />
+                <Skeleton className="h-95 w-full rounded-xl"/>
             </div>
         </section>
     );
@@ -18,30 +20,30 @@ function BaseBandSkeleton() {
 
 
 export default function BaseBand({
-    isLoading = false,
+                                     isLoading = false,
 
-    darkImage,
-    lightImage,
-    objectPosition = "right",
-    opacity = 100,
-    backdrop = false,
+                                     darkImage,
+                                     lightImage,
+                                     objectPosition = "right",
+                                     opacity = 100,
+                                     backdrop = false,
 
-    badge,
-    badgeIcon,
-    badgeClassName = "border-accent bg-accent-soft",
-    badgeIconClassName = "text-accent",
-    badgeTextClassName = "text-accent",
+                                     badge,
+                                     badgeIcon,
+                                     badgeClassName = "border-accent bg-accent-soft",
+                                     badgeIconClassName = "text-accent",
+                                     badgeTextClassName = "text-accent",
 
-    title,
-    description,
+                                     title,
+                                     description,
 
-    href,
-    linkText,
+                                     href,
+                                     linkText,
 
-    children,
-}) {
+                                     children,
+                                 }) {
     if (isLoading) {
-        return <BaseBandSkeleton />;
+        return <BaseBandSkeleton/>;
     }
 
     return (
@@ -54,6 +56,29 @@ export default function BaseBand({
                     opacity={opacity}
                     backdrop={backdrop}
                 >
+                    <div
+                        className="fx-grain pointer-events-none absolute inset-0 overflow-hidden text-accent"
+                        aria-hidden="true"
+                    >
+                        <div className="absolute inset-y-0 left-0 w-[75%] opacity-35">
+                            <ContourField
+                                levels={10}
+                                cell={30}
+                                speed={0.00006}
+                                interactive={false}
+                                className="mask-[linear-gradient(to_right,black,transparent_100%)]"
+                            />
+                        </div>
+                        <span className="fx-fog -left-1/4 top-1/4"/>
+                        <span
+                            className="fx-fog -right-1/4 bottom-0"
+                            style={{
+                                animationDelay: "-14s",
+                                animationDuration: "40s",
+                            }}
+                        />
+                    </div>
+
                     <div
                         className="
                             grid min-h-95 items-center

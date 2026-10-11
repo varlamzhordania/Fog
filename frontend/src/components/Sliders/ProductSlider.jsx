@@ -305,7 +305,7 @@ function ProductCardSkeleton({
             <Skeleton
                 className={[
                     "w-full overflow-hidden rounded-2xl",
-                    featured ? "aspect-[4/5]" : "aspect-square",
+                    featured ? "aspect-4/5" : "aspect-square",
                 ].join(" ")}
             />
 

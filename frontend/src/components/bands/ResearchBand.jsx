@@ -11,7 +11,6 @@ export default function ResearchBand() {
             darkImage="/banner-research.jpg"
             lightImage="/banner-research.jpg"
             objectPosition="right"
-
             badge="FOG Research"
             badgeIcon={Microscope}
 

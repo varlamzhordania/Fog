@@ -23,12 +23,32 @@ const HeroSection = () => {
     return (
         <BackgroundImage lightImage={"/hero-light.jpg"} darkImage={"/hero-dark.jpg"}
                          objectPosition={"right"} opacity={100}>
-            <div className="fx-grain pointer-events-none absolute inset-0 overflow-hidden text-accent" aria-hidden="true">
-                <span className="fx-fog -left-1/4 top-1/4"/>
-                <span className="fx-fog -right-1/4 bottom-0" style={{animationDelay: "-14s", animationDuration: "40s"}}/>
-                <SporeDrift count={60}/>
-                <span className="fx-vignette"/>
+
+            <div
+                className="fx-grain pointer-events-none absolute inset-0 overflow-hidden text-accent"
+                aria-hidden="true"
+            >
+                <div className="absolute inset-y-0 right-0 w-[75%] opacity-35">
+                    <ContourField
+                        levels={10}
+                        cell={30}
+                        speed={0.00006}
+                        interactive={false}
+                        className="mask-[linear-gradient(to_left,black,transparent_100%)]"
+                    />
+                </div>
+                <SporeDrift count={38} />
+                <span className="fx-fog -left-1/4 top-1/4" />
+                <span
+                    className="fx-fog -right-1/4 bottom-0"
+                    style={{
+                        animationDelay: "-14s",
+                        animationDuration: "40s",
+                    }}
+                />
+                <span className="fx-vignette" />
             </div>
+
 
             <section className="container relative">
                 <div
