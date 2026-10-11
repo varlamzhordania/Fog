@@ -7,6 +7,8 @@ import {MoveRight} from "lucide-react";
 import Icon from "@/components/icon/Icon";
 import BackgroundImage from "@/components/BackgroundImage";
 import {useThemeStore} from "@/stores/theme";
+import ContourField from "@/components/ContourField";
+import SporeDrift from "@/components/SporeDrift";
 
 
 const btnBase = "inline-flex w-full items-center justify-center gap-2 rounded-full px-6 py-3 font-medium no-underline transition sm:w-auto";
@@ -19,7 +21,15 @@ const HeroSection = () => {
     }, []);
 
     return (
-        <BackgroundImage lightImage={"/hero-light.jpg"} darkImage={"/hero-dark.jpg"} objectPosition={"right"} opacity={100}>
+        <BackgroundImage lightImage={"/hero-light.jpg"} darkImage={"/hero-dark.jpg"}
+                         objectPosition={"right"} opacity={100}>
+            <div className="fx-grain pointer-events-none absolute inset-0 overflow-hidden text-accent" aria-hidden="true">
+                <span className="fx-fog -left-1/4 top-1/4"/>
+                <span className="fx-fog -right-1/4 bottom-0" style={{animationDelay: "-14s", animationDuration: "40s"}}/>
+                <SporeDrift count={60}/>
+                <span className="fx-vignette"/>
+            </div>
+
             <section className="container relative">
                 <div
                     className="relative z-10 flex flex-col items-start justify-center gap-4 py-10 sm:gap-5 sm:py-14 lg:min-h-[520px] lg:py-0 xl:min-h-[540px]"
@@ -36,7 +46,8 @@ const HeroSection = () => {
                     <div className="relative z-10 max-w-xl">
                         <div className="mb-2 flex items-center gap-2">
                             <span className="h-1.5 w-1.5 rounded-full bg-accent"/>
-                            <span className="text-xs font-semibold uppercase tracking-[0.18em] text-accent">
+                            <span
+                                className="text-xs font-semibold uppercase tracking-[0.18em] text-accent">
                                 Fungi Fact
                             </span>
                         </div>

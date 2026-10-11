@@ -116,8 +116,7 @@ const ProductCard = ({
                         )}
 
                         <Typography type="span" className="text-foreground text-lg font-bold">
-                            {hasOptions &&
-                                <span className="mr-1 text-xs font-normal text-muted">From</span>}
+
                             ${formattedPrice}
                         </Typography>
                     </div>

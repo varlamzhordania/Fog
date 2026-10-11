@@ -13,6 +13,8 @@ import {
 } from "lucide-react";
 import Icon from "@/components/icon/Icon";
 import ContourBackground from "@/components/ContourBackground";
+import ContourField from "@/components/ContourField";
+import Reveal from "@/components/Reveal";
 import CategoriesShowCase from "@/components/inventory/CategoriesShowCase";
 import FeaturedProducts from "@/components/inventory/FeaturedProducts";
 import HeroSection from "@/components/heros/HeroSection";
@@ -21,6 +23,7 @@ import BackgroundImage from "@/components/BackgroundImage";
 import DealsBand from "@/components/bands/DealsBand";
 import ResearchBand from "@/components/bands/ResearchBand";
 import {BestSellers, Deals, LastFew, NewArrivals} from "@/components/home/HomeSections";
+import StatsStrip from "@/components/StatsStrip";
 
 const RESEARCH_URL = process.env.NEXT_PUBLIC_RESEARCH_URL;
 const btnPrimary = "inline-flex items-center gap-2 rounded-full bg-accent px-6 py-3 font-medium text-accent-foreground no-underline transition-opacity hover:opacity-90";
@@ -75,9 +78,9 @@ export default function Home() {
 
             <HeroSection/>
 
-            <TrustStrip/>
+            <Reveal><TrustStrip/></Reveal>
 
-            <CategoriesShowCase title="Shop by category"/>
+            <Reveal><CategoriesShowCase title="Shop by category"/></Reveal>
 
             <section className="container">
                 <FeaturedProducts
@@ -96,24 +99,17 @@ export default function Home() {
                 />
             </section>
 
-            <DealsBand/>
-
-            <NewArrivals/>
-
-            <BestSellers/>
-
-            <Deals/>
-
-            <ResearchBand/>
-
-            <HowItWorks/>
-
-            <Story/>
-
-            <Research/>
-            <FinalCta/>
-
-            <LastFew/>
+            <Reveal><DealsBand/></Reveal>
+            <Reveal><NewArrivals/></Reveal>
+            <Reveal><BestSellers/></Reveal>
+            <Reveal><Deals/></Reveal>
+            <Reveal><ResearchBand/></Reveal>
+            <Reveal><HowItWorks/></Reveal>
+            <Reveal><Story/></Reveal>
+            <Reveal><StatsStrip/></Reveal>
+            <Reveal><Research/></Reveal>
+            <Reveal><FinalCta/></Reveal>
+            <Reveal><LastFew/></Reveal>
 
         </>
     );
@@ -206,7 +202,7 @@ function HowItWorks() {
 
 function Research() {
     if (!RESEARCH_URL) return null;
-    return (<section className="container  max-w-7xl">
+    return (<section className="container container-space  max-w-7xl">
         <div
             className="grid items-center gap-8 overflow-hidden rounded-3xl border border-border bg-surface p-6 sm:p-10 lg:grid-cols-2">
             {/* Image: immersive macro photography of mycelium spreading across agar */}
@@ -252,9 +248,12 @@ function Research() {
 }
 
 function FinalCta() {
+    const delay = (ms) => ({animationDelay: `${ms}ms`});
+
     return (
         <div className={"container-space"}>
-            <BackgroundImage svg={<ContourBackground/>}>
+            <BackgroundImage svg={<ContourField levels={12} cell={26}/>}>
+
                 <section className="relative isolate overflow-hidden text-accent">
                     <div
                         className="container flex flex-col items-center gap-5 py-20 text-center text-foreground">
@@ -262,7 +261,7 @@ function FinalCta() {
                                     className="text-4xl uppercase tracking-tight sm:text-5xl">
                             Ready when you are
                         </Typography>
-                        <Typography type="body" className="max-w-md text-muted">
+                        <Typography type="body" className="max-w-md text-muted text-center">
                             Pick your products, check out securely, and we pack it plain.
                         </Typography>
                         <Link href="/products" className={btnPrimary}>

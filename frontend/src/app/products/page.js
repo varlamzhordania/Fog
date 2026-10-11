@@ -5,12 +5,25 @@ import TagsFilter from "@/components/inventory/TagsFilter";
 import ProductsFilter from "@/components/filters/ProductsFilter";
 import ProductList from "@/components/inventory/ProductList";
 import SuspenseBoundary from "@/components/SuspenseBoundary";
+import ContourField from "@/components/ContourField";
+import SporeDrift from "@/components/SporeDrift";
 
 export default function ProductsPage() {
     return (
         <div className={"w-full flex flex-col items-stretch justify-start"}>
-            <BackgroundImage lightImage="/hero-light.jpg" darkImage="/hero-dark.jpg" opacity={100} objectPosition={"right"}>
-                <div className="container relative flex min-h-80 flex-col justify-center lg:min-h-95">
+            <BackgroundImage lightImage="/hero-light.jpg" darkImage="/hero-dark.jpg" opacity={100}
+                             objectPosition={"right"}>
+                <div
+                    className="fx-grain pointer-events-none absolute inset-0 overflow-hidden text-accent"
+                    aria-hidden="true">
+                    <span className="fx-fog -left-1/4 top-1/4"/>
+                    <span className="fx-fog -right-1/4 bottom-0"
+                          style={{animationDelay: "-14s", animationDuration: "40s"}}/>
+                    <SporeDrift count={60}/>
+                    <span className="fx-vignette"/>
+                </div>
+                <div
+                    className="container relative flex min-h-80 flex-col justify-center lg:min-h-95">
                     <div className="relative z-10 flex flex-col gap-5">
                         <Typography
                             type="h1"

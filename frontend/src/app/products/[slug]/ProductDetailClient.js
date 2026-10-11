@@ -109,27 +109,31 @@ export default function ProductDetailClient({product: initialProduct}) {
                     </Typography>)}
 
                     {/* Price */}
-                    <div className="mt-8 flex items-center gap-3">
-                        {isOnSale && (
+                    <div>
+                        <div className="mt-8 flex items-center gap-3">
+                            {isOnSale && (
+                                <Typography
+                                    type="span"
+                                    className="text-lg font-medium text-foreground/50 line-through"
+                                >
+                                    ${formattedBasePrice}
+                                </Typography>
+                            )}
                             <Typography
-                                type="span"
-                                className="text-lg font-medium text-foreground/50 line-through"
+                                type="body"
+                                className="text-3xl font-semibold text-accent"
                             >
-                                ${formattedBasePrice}
+                                ${formattedPrice}
                             </Typography>
-                        )}
+                        </div>
+
+
                         {perBase && (
                             <Typography type="body-xs"
                                         className="mt-1 text-muted">{perBase}</Typography>
                         )}
-
-                        <Typography
-                            type="body"
-                            className="text-3xl font-semibold text-accent"
-                        >
-                            ${formattedPrice}
-                        </Typography>
                     </div>
+
 
                     <Separator className="my-8"/>
 
