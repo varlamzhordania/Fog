@@ -27,7 +27,7 @@ const Navbar = () => {
     const [dropdownOpen, setDropdownOpen] = useState(false)
     const router = useRouter()
     const logout = useLogout()
-    const logo = theme === 'dark' ? config.WEBSITE_SECONDARY_ICON : config?.WEBSITE_PRIMARY_ICON
+    const logo = theme === 'dark' ? config?.WEBSITE_SECONDARY_ICON : config?.WEBSITE_PRIMARY_ICON
 
 
     const navigation = [{

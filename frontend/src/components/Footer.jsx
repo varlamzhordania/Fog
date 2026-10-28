@@ -14,7 +14,7 @@ const Footer = () => {
         page_size: 4,
         is_featured: true
     })
-    const logo = theme === 'dark' ? config.WEBSITE_SECONDARY_ICON : config?.WEBSITE_PRIMARY_ICON
+    const logo = theme === 'dark' ? config?.WEBSITE_SECONDARY_ICON : config?.WEBSITE_PRIMARY_ICON
 
     const categories = isLoading ? [] : data?.results ?? []
 

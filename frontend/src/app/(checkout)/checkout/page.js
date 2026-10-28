@@ -477,7 +477,7 @@ export default function CheckoutPage() {
                             our{" "}
                             <Link href="/terms"
                                   className="underline underline-offset-2">Terms</Link> and{" "}
-                            <Link href="/research-policy"
+                            <Link href="/research"
                                   className="underline underline-offset-2">Research
                                 Policy</Link>.
                         </Typography>
