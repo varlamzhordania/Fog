@@ -100,29 +100,40 @@ Fill in the three files:
 
 | File                    | Contains                                                      |
 |-------------------------|---------------------------------------------------------------|
-| `env/prod/compose.env`  | `SITE_DOMAIN`, `PUBLIC_URL`, `NGINX_MODE`, database credentials |
-| `env/prod/backend.env`  | Django secret key, Stripe, SHKeeper key, SMTP settings        |
+| `env/prod/compose.env`  | `SITE_DOMAIN`, `API_DOMAIN`, `PUBLIC_URL`, `API_URL`, `NGINX_MODE`, database credentials |
+| `env/prod/backend.env`  | Django secret key, SMTP settings; other payment credentials are configured in Django Admin |
 | `env/prod/frontend.env` | OAuth client id and secret (see step 5)                       |
 
 The application image, Docker volumes and `DEBUG=False` are handled by `docker-compose.prod.yml`; there is nothing to comment or uncomment.
 
-### 3. Payment network
+### 3. Generate initial Django migrations (required before first deployment)
 
-The production stack joins the `shkeeper_net` network. If you do not run SHKeeper on this server yet, create the network once:
-
-```bash
-docker network create shkeeper_net
-```
-
-To run SHKeeper on the same server:
+The custom apps (`account`, `inventory`, `checkout`, and `settings`) must have their migration files in source control. The archive may contain only empty migration directories, so generate the initial migrations before starting the production stack:
 
 ```bash
-cd shkeeper
-cp .env.example .env && cp shkeeper.env.example shkeeper.env   # fill both in
-docker compose up -d
+# First configure env/prod/compose.env and env/prod/backend.env as described above.
+docker compose -f docker-compose.prod.yml --env-file env/prod/compose.env \
+  run --rm backend python manage.py makemigrations account inventory checkout settings
 ```
 
-### 4. First start (HTTP) and certificate
+Review the generated files under `backend/<app>/migrations/`, keep them with the project source, and then validate the migration plan:
+
+```bash
+docker compose -f docker-compose.prod.yml --env-file env/prod/compose.env \
+  run --rm backend python manage.py makemigrations --check --dry-run
+```
+
+Do not start production until this command reports no model changes pending. The production backend runs `migrate --noinput` automatically at startup.
+
+### 4. Payment network
+
+This version integrates XCash and Stripe; it does not require a `shkeeper_net` Docker network or a SHKeeper container. Configure the payment provider values in Django Admin under the site's Constance settings. For XCash, set the API URL, AppID, HMAC key, and the public HTTPS callback URL:
+
+`https://api.<your-domain>/api/v1/checkout/webhooks/xcash/`
+
+Keep the XCash project webhook enabled and restrict its API IP allowlist to the FOG server's outbound IP where practical.
+
+### 5. First start (HTTP) and certificate
 
 Keep `NGINX_MODE=http` and `USE_HTTPS_IN_ABSOLUTE_URLS=False` *set it to False* for the first start:
 
@@ -138,7 +149,7 @@ docker run --rm \
   -v "$PWD/nginx/letsencrypt:/etc/letsencrypt" \
   -v "$PWD/nginx/certbot-webroot:/var/www/certbot" \
   certbot/certbot certonly --webroot -w /var/www/certbot \
-  -d shop.example.com --email you@example.com --agree-tos --no-eff-email
+  -d domain.com -d api.domain.com --email you@example.com --agree-tos --no-eff-email
 ```
 
 Then switch to HTTPS: set `NGINX_MODE=https` in `env/prod/compose.env`, set `USE_HTTPS_IN_ABSOLUTE_URLS=True` in `env/prod/backend.env`, and run:
@@ -157,22 +168,22 @@ docker run --rm \
 && docker compose -f docker-compose.prod.yml --env-file env/prod/compose.env exec nginx nginx -s reload
 ```
 
-### 5. Admin user and OAuth application
+### 6. Admin user and OAuth application
 
 ```bash
 make prod-superuser
 ```
 
-Open `https://<your-domain>/admin/`, create an **OAuth Application** exactly as described in the local steps above, put its credentials in `env/prod/frontend.env`, and apply:
+Open `https://api.<your-domain>/admin/`, create an **OAuth Application** exactly as described in the local steps above, put its credentials in `env/prod/frontend.env`, and apply:
 
 ```bash
 make prod-up
 ```
 
-### 6. Webhooks
+### 7. Webhooks
 
-- **Stripe:** add `https://<your-domain>/api/v1/checkout/webhooks/stripe/` as an endpoint in the Stripe dashboard and set the signing secret as `STRIPE_WEBHOOK_KEY`.
-- **SHKeeper:** callbacks are configured automatically; set `SHKEEPER_API_KEY` in `env/prod/backend.env`.
+- **Stripe:** add `https://api.<your-domain>/api/v1/checkout/webhooks/stripe/` as an endpoint in the Stripe dashboard and configure the signing secret in Django Admin.
+- **XCash:** configure the project notify URL as `https://api.<your-domain>/api/v1/checkout/webhooks/xcash/`, and set the matching AppID and HMAC key in Django Admin.
 
 ### Operations
 

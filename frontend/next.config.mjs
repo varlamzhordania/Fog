@@ -1,4 +1,18 @@
 /** @type {import('next').NextConfig} */
+const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8000";
+let apiMediaPattern = null;
+try {
+    const apiUrl = new URL(apiBaseUrl);
+    apiMediaPattern = {
+        protocol: apiUrl.protocol.slice(0, -1),
+        hostname: apiUrl.hostname,
+        ...(apiUrl.port ? {port: apiUrl.port} : {}),
+        pathname: "/media/**",
+    };
+} catch {
+    // Keep the localhost defaults below if the API URL is unset or invalid.
+}
+
 const nextConfig = {
     output: "standalone",
     images: {
@@ -25,6 +39,7 @@ const nextConfig = {
                 port: "8000",
                 pathname: "/media/**",
             },
+            ...(apiMediaPattern ? [apiMediaPattern] : []),
             {
                 protocol: "http",
                 hostname: "localhost",

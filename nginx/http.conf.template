@@ -1,7 +1,14 @@
-# HTTP only: first start and certificate issuance (NGINX_MODE=http).
+# HTTP only: initial start and ACME certificate issuance.
 server {
     listen 80 default_server;
-    server_name _;
+    server_name ${SITE_DOMAIN};
     location ^~ /.well-known/acme-challenge/ { root /var/www/certbot; }
-    include /etc/nginx/locations.conf;
+    include /etc/nginx/frontend-locations.conf;
+}
+
+server {
+    listen 80;
+    server_name ${API_DOMAIN};
+    location ^~ /.well-known/acme-challenge/ { root /var/www/certbot; }
+    include /etc/nginx/api-locations.conf;
 }

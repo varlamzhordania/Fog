@@ -9,8 +9,8 @@ x-backend: &backend
   environment:
     DJANGO_DEBUG: "False"
     DJANGO_ENV: "prod"
-    DJANGO_ALLOWED_HOSTS: ${SITE_DOMAIN:?set SITE_DOMAIN in env/prod/compose.env},backend,localhost
-    SERVER_DOMAIN: ${SITE_DOMAIN}
+    DJANGO_ALLOWED_HOSTS: ${SITE_DOMAIN:?set SITE_DOMAIN in env/prod/compose.env},${API_DOMAIN:?set API_DOMAIN in env/prod/compose.env},backend,localhost
+    SERVER_DOMAIN: ${API_DOMAIN}
     FRONTEND_DOMAIN: ${SITE_DOMAIN}
     DB_ENGINE: postgresql
     DB_HOST: db
@@ -77,7 +77,7 @@ services:
     build:
       context: ./frontend
       args:   # baked in at build time
-        NEXT_PUBLIC_API_BASE_URL: ${PUBLIC_URL:?set PUBLIC_URL in env/prod/compose.env}
+        NEXT_PUBLIC_API_BASE_URL: ${API_URL:?set API_URL in env/prod/compose.env}
         NEXT_PUBLIC_MEDIA_BASE_URL: http://backend:8000
         NEXT_PUBLIC_SITE_URL: ${PUBLIC_URL}
         NEXT_PUBLIC_RESEARCH_URL: https://fleshofgod.org
@@ -94,11 +94,13 @@ services:
     image: nginx:1.27-alpine
     environment:
       SITE_DOMAIN: ${SITE_DOMAIN}
+      API_DOMAIN: ${API_DOMAIN}
     ports: ["80:80", "443:443"]
     volumes:
       - ./nginx/zones.conf:/etc/nginx/conf.d/00-zones.conf:ro
       - ./nginx/${NGINX_MODE:-http}.conf.template:/etc/nginx/templates/default.conf.template:ro
-      - ./nginx/locations.conf:/etc/nginx/locations.conf:ro
+      - ./nginx/frontend-locations.conf:/etc/nginx/frontend-locations.conf:ro
+      - ./nginx/api-locations.conf:/etc/nginx/api-locations.conf:ro
       - ./nginx/letsencrypt:/etc/letsencrypt:ro
       - ./nginx/certbot-webroot:/var/www/certbot:ro
       - static:/srv/static:ro
