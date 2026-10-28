@@ -78,13 +78,13 @@ services:
       context: ./frontend
       args:   # baked in at build time
         NEXT_PUBLIC_API_BASE_URL: ${API_URL:?set API_URL in env/prod/compose.env}
-        NEXT_PUBLIC_MEDIA_BASE_URL: http://backend:8000
+        NEXT_PUBLIC_MEDIA_BASE_URL: ${API_URL}
         NEXT_PUBLIC_SITE_URL: ${PUBLIC_URL}
         NEXT_PUBLIC_RESEARCH_URL: https://fleshofgod.org
     image: fog-frontend:prod
     env_file: env/prod/frontend.env
     environment:
-      INTERNAL_API_BASE_URL: http://backend:8000
+      INTERNAL_API_BASE_URL: ${API_URL}
     expose: ["3000"]
     depends_on:
       backend: {condition: service_healthy}
