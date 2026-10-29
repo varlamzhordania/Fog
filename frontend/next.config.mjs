@@ -1,5 +1,7 @@
 /** @type {import('next').NextConfig} */
 const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8000";
+const researchUrl = process.env.NEXT_PUBLIC_RESEARCH_URL;
+
 let apiMediaPattern = null;
 try {
     const apiUrl = new URL(apiBaseUrl);
@@ -73,7 +75,17 @@ const nextConfig = {
                 {key: "X-Robots-Tag", value: "noindex, nofollow"},
             ],
         }];
-    }
+    },
+    async redirects() {
+        if (!researchUrl) return [];
+        return [
+            {
+                source: "/research",
+                destination: researchUrl,
+                permanent: false,
+            },
+        ];
+    },
 
 };
 
