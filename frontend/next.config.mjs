@@ -70,6 +70,7 @@ const nextConfig = {
             headers: [
                 {key: "X-Frame-Options", value: "SAMEORIGIN"},
                 {key: "Permissions-Policy", value: "camera=(), microphone=(), geolocation=()"},
+                {key: "X-Robots-Tag", value: "noindex, nofollow"},
             ],
         }];
     }

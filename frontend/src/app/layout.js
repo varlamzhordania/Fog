@@ -65,6 +65,7 @@ export async function generateMetadata() {
         },
         description,
         keywords,
+        robots: {index: false, follow: false},
         icons: {
             icon: faviconUrl,
             shortcut: faviconUrl,
