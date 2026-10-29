@@ -5,11 +5,12 @@ PROD  := docker compose -f docker-compose.prod.yml  --env-file env/prod/compose.
 .PHONY: help secret \
     init-local local-up local-up-build local-down local-reset local-logs local-ps local-shell \
     local-superuser local-fixtures local-restart-workers \
-    init-prod prod-up prod-down prod-logs prod-ps prod-superuser prod-backup local-makemigrations local-migrate
+    init-prod prod-up prod-down prod-logs prod-ps prod-superuser prod-backup local-makemigrations local-migrate \
+    prod-frontend prod-frontend-clean prod-frontend-env prod-backend prod-frontend-logs
 
 help:
 	@echo "Local:       make local-up | local-down | local-logs | local-shell | local-superuser | local-fixtures | local-restart-workers | local-reset"
-	@echo "Production:  make init-prod | prod-up | prod-down | prod-logs | prod-superuser | prod-backup"
+	@echo "Production:  make init-prod | prod-up | prod-down | prod-logs | prod-superuser | prod-backup | prod-frontend | prod-frontend-clean | prod-frontend-env | prod-backend"
 	@echo "Utilities:   make secret"
 
 secret:
@@ -90,3 +91,23 @@ prod-backup:
 	@mkdir -p backups
 	$(PROD) exec -T db sh -c 'pg_dump -U "$$POSTGRES_USER" "$$POSTGRES_DB"' > backups/db-$$(date +%F-%H%M).sql
 	@echo "saved to backups/"
+
+prod-frontend:
+	$(PROD) up -d --build --no-deps frontend
+	$(PROD) exec nginx nginx -s reload
+
+prod-frontend-clean:
+	$(PROD) build --no-cache frontend
+	$(PROD) up -d --no-deps frontend
+	$(PROD) exec nginx nginx -s reload
+
+prod-frontend-env:
+	$(PROD) up -d --no-deps --force-recreate frontend
+	$(PROD) exec nginx nginx -s reload
+
+prod-backend:
+	$(PROD) up -d --build --no-deps backend celery celery-beat
+	$(PROD) exec nginx nginx -s reload
+
+prod-frontend-logs:
+	$(PROD) logs -f --tail=100 frontend
